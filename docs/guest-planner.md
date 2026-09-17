@@ -55,7 +55,11 @@ missing scenario references, absent or unknown semester allocations and
 contradictory statuses. Caps: 5 MB serialized import, 24 semesters, 20 scenarios,
 500 courses and 500 unavailable periods per scenario, 1,000 meetings per
 offering, 1,000 exceptions per meeting. Titles and source text are length-bounded.
-The runtime refinement rules are part of the schema contract.
+The runtime refinement rules are part of the schema contract. The 5 MB UTF-8
+limit applies per plan, including all its scenarios, to both the input and its
+indented export representation. Saving uses the same validation as reading and
+importing, so a successful save always has an importable JSON backup. Independent
+valid plans may collectively exceed 5 MB.
 
 The documented v0 envelope is exactly the v1 shape except `schemaVersion: 0`
 and absence of `activeScenarioId`; the first scenario is its active scenario.
@@ -74,8 +78,11 @@ periods, including information that cannot currently be scheduled.
 Database `unifr-planner`, version 2, has `plans` (key path `id`) and `preferences`
 (key `activeId`). Version 1 contains only the `plans` store; the upgrade adds
 preferences without deleting old records. Reading validates every record and
-performs the documented JSON migration. Corrupt data is reported, never silently
-turned into an empty plan list. Stored legacy records are rewritten as v1 JSON
+performs the documented JSON migration. Each unreadable or oversized record is
+reported and left untouched; the other valid plans still load. A visible warning
+persists while valid plans remain usable, and an unreadable active selection
+falls back to a valid plan. No record is automatically repaired or deleted.
+Stored legacy records are rewritten as v1 JSON
 only on an explicit subsequent save.
 
 Plan and active-plan selection are saved in one IndexedDB transaction. The UI
@@ -98,7 +105,10 @@ alone. Overnight intervals retain the following date. Recurrences expand in
 Europe/Zurich wall time before conversion to UTC, preserving local class times
 through daylight-saving changes. Bounded DAILY/WEEKLY/MONTHLY/YEARLY rules are
 supported through the pinned `rrule` library, with positive intervals/counts,
-up to 2,000 generated instances per source meeting. EXDATE/RDATE and source-UID
+up to 2,000 generated instances per source meeting. Supported RRULE field values,
+numeric ranges, duplicate fields and frequency/selector combinations are validated
+before expansion; malformed values such as `BYMONTH=13` remain unresolved rather
+than silently becoming an empty calendar. EXDATE/RDATE and source-UID
 RECURRENCE-ID replacements/cancellations are applied before conflicts.
 
 Unbounded/high-frequency/invalid rules, missing timestamps, ambiguous overrides,

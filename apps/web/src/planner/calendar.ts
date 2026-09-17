@@ -44,6 +44,94 @@ const key = (value: string, time: Temporal.PlainTime) =>
     ? localInstant(`${value}T${time}`)
     : instant(value).toString();
 
+// rrule accepts/normalizes some invalid values (e.g. BYMONTH=13) into an
+// empty set. Validate the supported RFC field grammar before expansion so
+// malformed input cannot masquerade as a clash-free calendar.
+function validateRecurrence(raw: string): void {
+  const fields = new Map<string, string>();
+  const ranges: Record<string, [number, number]> = {
+    BYMONTH: [1, 12],
+    BYMONTHDAY: [-31, 31],
+    BYYEARDAY: [-366, 366],
+    BYWEEKNO: [-53, 53],
+    BYSETPOS: [-366, 366],
+    INTERVAL: [1, 2147483647],
+    COUNT: [1, 2000],
+  };
+  for (const part of raw.split(";")) {
+    const [field, value, extra] = part.split("=");
+    if (!value || extra !== undefined || fields.has(field))
+      throw new Error("invalid recurrence field");
+    fields.set(field, value);
+    if (field in ranges) {
+      const values = value.split(",");
+      if ((field === "COUNT" || field === "INTERVAL") && values.length !== 1)
+        throw new Error("invalid recurrence integer");
+      const [min, max] = ranges[field];
+      if (
+        values.some(
+          (v) =>
+            !/^[+-]?\d+$/.test(v) ||
+            !Number.isSafeInteger(Number(v)) ||
+            Number(v) === 0 ||
+            Number(v) < min ||
+            Number(v) > max,
+        )
+      )
+        throw new Error("invalid recurrence range");
+    } else if (field === "BYDAY") {
+      for (const day of value.split(",")) {
+        const match = /^([+-]?\d+)?(MO|TU|WE|TH|FR|SA|SU)$/.exec(day);
+        if (
+          !match ||
+          (match[1] &&
+            (Number(match[1]) === 0 || Math.abs(Number(match[1])) > 53))
+        )
+          throw new Error("invalid recurrence weekday");
+      }
+    } else if (field === "WKST") {
+      if (!/^(MO|TU|WE|TH|FR|SA|SU)$/.test(value))
+        throw new Error("invalid week start");
+    } else if (field === "UNTIL") {
+      const match =
+        /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value);
+      if (!match) throw new Error("invalid recurrence until");
+      Temporal.PlainDate.from(`${match[1]}-${match[2]}-${match[3]}`);
+      if (match[4])
+        Temporal.PlainTime.from(`${match[4]}:${match[5]}:${match[6]}`);
+    } else if (
+      field !== "FREQ" ||
+      !/^(DAILY|WEEKLY|MONTHLY|YEARLY)$/.test(value)
+    )
+      throw new Error("unsupported recurrence field");
+  }
+  const frequency = fields.get("FREQ");
+  if (
+    !frequency ||
+    (!fields.has("COUNT") && !fields.has("UNTIL")) ||
+    (fields.has("COUNT") && fields.has("UNTIL"))
+  )
+    throw new Error("invalid recurrence bounds");
+  if (fields.has("BYWEEKNO") && frequency !== "YEARLY")
+    throw new Error("invalid week number frequency");
+  if (fields.has("BYYEARDAY") && frequency !== "YEARLY")
+    throw new Error("invalid year day frequency");
+  if (fields.has("BYMONTHDAY") && frequency === "WEEKLY")
+    throw new Error("invalid month day frequency");
+  if (
+    /\d/.test(fields.get("BYDAY") ?? "") &&
+    (frequency === "DAILY" || frequency === "WEEKLY" || fields.has("BYWEEKNO"))
+  )
+    throw new Error("invalid ordinal weekday frequency");
+  if (
+    fields.has("BYSETPOS") &&
+    !["BYMONTH", "BYMONTHDAY", "BYYEARDAY", "BYWEEKNO", "BYDAY"].some((key) =>
+      fields.has(key),
+    )
+  )
+    throw new Error("missing BYSETPOS selector");
+}
+
 /** Expand bounded source recurrences in Zurich wall time, then compare instants.
  * Unsupported/high-frequency/unbounded rules are explicitly unresolved. */
 export function expandMeetings(
@@ -92,6 +180,7 @@ export function expandMeetings(
       let dates = [start];
       if (meeting.recurrence) {
         const raw = meeting.recurrence.replace(/^RRULE:/, "");
+        validateRecurrence(raw);
         if (
           !/^FREQ=(DAILY|WEEKLY|MONTHLY|YEARLY)(;|$)/.test(raw) ||
           !/(^|;)(COUNT|UNTIL)=/.test(raw) ||

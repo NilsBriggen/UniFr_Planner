@@ -15,6 +15,7 @@ type PlansContext = {
   ready: boolean;
   busy: boolean;
   error: boolean;
+  unreadableIds: string[];
   save: (plan: Plan) => Promise<boolean>;
   select: (id: string) => Promise<void>;
 };
@@ -23,6 +24,7 @@ const Context = createContext<PlansContext>({
   ready: false,
   busy: false,
   error: false,
+  unreadableIds: [],
   save: async () => false,
   select: async () => {},
 });
@@ -34,6 +36,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(false);
+  const [unreadableIds, setUnreadableIds] = useState<string[]>([]);
   const store = useRef<PlanStore | null>(null);
   const locked = useRef(false);
   useEffect(() => {
@@ -45,6 +48,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
         .then((saved) => {
           if (active) {
             setState(saved);
+            setUnreadableIds(saved.unreadableIds ?? []);
             setReady(true);
           }
         })
@@ -107,6 +111,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
         ready,
         busy,
         error,
+        unreadableIds,
         save,
         select,
       }}

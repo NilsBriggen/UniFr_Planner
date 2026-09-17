@@ -18,6 +18,38 @@ const mount = (path = "/setup") =>
       <App />
     </MemoryRouter>,
   );
+it("warns about unreadable records without hiding a usable saved plan", async () => {
+  const plan = createPlan({
+    id: "good",
+    scenarioId: "s",
+    name: "Recovered degree",
+    programme: "CS",
+    startTerm: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  await new PlanStore(indexedDB).save(plan);
+  await new Promise<void>((resolve) => {
+    const open = indexedDB.open("unifr-planner");
+    open.onsuccess = () => {
+      const db = open.result;
+      const tx = db.transaction("plans", "readwrite");
+      tx.objectStore("plans").put({ id: "bad", schemaVersion: 99 });
+      tx.oncomplete = () => {
+        db.close();
+        resolve();
+      };
+    };
+  });
+  mount("/plan");
+  await screen.findByRole("heading", { name: "Recovered degree" });
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Some saved plans could not be opened",
+  );
+  expect(
+    screen.getByRole("button", { name: "Export plan JSON" }),
+  ).toBeEnabled();
+});
 it("opens a semester belonging to the active degree from the main navigation", async () => {
   const plan = createPlan({
     id: "future",

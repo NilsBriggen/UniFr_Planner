@@ -119,7 +119,14 @@ export function parsePlan(json: string): Plan {
         : undefined,
     };
   }
-  return planSchema.parse(value);
+  const plan = planSchema.parse(value);
+  // The UI exports indented JSON. A committed plan must fit the same import
+  // limit in that exact representation, including UTF-8 and formatting bytes.
+  if (
+    new TextEncoder().encode(JSON.stringify(plan, null, 2)).length > 5_000_000
+  )
+    throw new Error("plan exceeds 5 MB");
+  return plan;
 }
 export function createPlan(input: {
   id: string;

@@ -35,7 +35,9 @@ export class PlanStore {
     });
   }
   async save(value: Plan): Promise<void> {
-    const plan = planSchema.parse(value);
+    // Validate before JSON serialization so nonfinite numbers cannot turn into
+    // otherwise valid nulls. Then apply the identical read/import byte limits.
+    const plan = parsePlan(JSON.stringify(planSchema.parse(value)));
     const db = await this.open();
     try {
       const tx = db.transaction(["plans", "preferences"], "readwrite");
@@ -58,7 +60,11 @@ export class PlanStore {
       db.close();
     }
   }
-  async load(): Promise<{ plans: Plan[]; activeId: string | null }> {
+  async load(): Promise<{
+    plans: Plan[];
+    activeId: string | null;
+    unreadableIds?: string[];
+  }> {
     const db = await this.open();
     try {
       const tx = db.transaction(["plans", "preferences"], "readonly");
@@ -68,9 +74,20 @@ export class PlanStore {
         request(tx.objectStore("preferences").get("activeId")),
       ]);
       await done;
-      const plans = rows.map((row) => parsePlan(JSON.stringify(row)));
+      const plans: Plan[] = [];
+      const unreadableIds: string[] = [];
+      for (const [index, row] of rows.entries()) {
+        try {
+          plans.push(parsePlan(JSON.stringify(row)));
+        } catch {
+          unreadableIds.push(
+            typeof row?.id === "string" ? row.id : `record-${index + 1}`,
+          );
+        }
+      }
       return {
         plans,
+        ...(unreadableIds.length ? { unreadableIds } : {}),
         activeId: plans.some((p) => p.id === activeId)
           ? activeId
           : (plans[0]?.id ?? null),

@@ -29,6 +29,35 @@ const events = (id: string, meetings: Meeting[]) =>
   expandMeetings(id, id, meetings, range);
 
 describe("actual-date calendar", () => {
+  it.each([
+    "BYMONTH=13",
+    "BYMONTH=0",
+    "BYMONTHDAY=32",
+    "BYDAY=0MO",
+    "BYDAY=54MO",
+    "BYDAY=XX",
+    "BYSETPOS=367",
+    "BYWEEKNO=54",
+    "BYYEARDAY=367",
+    "BYMONTH=1.5",
+    "COUNT=3",
+    "UNTIL=20260230T000000Z",
+  ])(
+    "keeps malformed recurrence %s unresolved across conflict and ICS boundaries",
+    (field) => {
+      const result = events("bad", [
+        meeting(undefined, undefined, {
+          recurrence: `FREQ=WEEKLY;COUNT=2;${field}`,
+        }),
+      ]);
+      expect(result.unresolved).toEqual(["bad:0"]);
+      expect(result.events).toEqual([]);
+      expect(detectConflicts(result.events, [], 0)).toEqual([]);
+      expect(() => exportCalendar(result, "2026-09-01T00:00:00Z")).toThrow(
+        /unresolved/,
+      );
+    },
+  );
   it("resolves complete recurrence metadata even when catalogue filtering marked it unresolved", () => {
     const course = {
       id: "c",

@@ -11,6 +11,8 @@ const en = {
   programmeHelp:
     "Enter your programme as a personal label. Degree requirement validation will be available later.",
   saved: "Saved on this device",
+  unreadable:
+    "Some saved plans could not be opened. They remain on this device; other plans are available.",
   saving: "Saving…",
   loading: "Opening local plans…",
   storageError:
@@ -105,6 +107,8 @@ const de: PlannerMessages = {
   programmeHelp:
     "Trage deinen Studiengang als persönliche Bezeichnung ein. Die Prüfung von Studienanforderungen folgt später.",
   saved: "Auf diesem Gerät gespeichert",
+  unreadable:
+    "Einige gespeicherte Pläne konnten nicht geöffnet werden. Sie bleiben auf diesem Gerät; andere Pläne sind verfügbar.",
   saving: "Wird gespeichert…",
   loading: "Lokale Pläne werden geöffnet…",
   storageError:
@@ -199,6 +203,8 @@ const fr: PlannerMessages = {
   programmeHelp:
     "Indiquez votre programme comme libellé personnel. La vérification des exigences du cursus sera disponible ultérieurement.",
   saved: "Enregistré sur cet appareil",
+  unreadable:
+    "Certains plans enregistrés n’ont pas pu être ouverts. Ils restent sur cet appareil ; les autres plans sont disponibles.",
   saving: "Enregistrement…",
   loading: "Ouverture des plans locaux…",
   storageError:

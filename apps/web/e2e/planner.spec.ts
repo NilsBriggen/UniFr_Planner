@@ -9,6 +9,105 @@ import ICAL from "ical.js";
 for (const language of ["de", "fr", "en"] as const) {
   const t = plannerMessages[language],
     shell = messages[language];
+  test(`guest recovery and malformed recurrence ${language}`, async ({
+    page,
+  }) => {
+    await page.addInitScript(
+      (lang) => localStorage.setItem("unifr.language", lang),
+      language,
+    );
+    await page.goto("/plan");
+    const imported = createPlan({
+      id: "original",
+      scenarioId: "main",
+      name: "Recovery degree",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    });
+    imported.scenarios[0].courses = [
+      {
+        id: "invalid",
+        code: "INVALID",
+        titles: { en: "Invalid recurrence" },
+        ects: 6,
+        status: "planned",
+        semester: "AS-2026",
+        pinned: false,
+        offering: {
+          source_id: "fixture",
+          terms: ["AS-2026"],
+          meeting_state: "resolved",
+          source_url: "https://www.unifr.ch",
+          snapshot_id: "test",
+          development_fixture: true,
+          meetings: [
+            {
+              starts_at: "2026-09-21T10:00:00Z",
+              ends_at: "2026-09-21T11:00:00Z",
+              location: "PER",
+              unresolved: false,
+              cancelled: false,
+              excluded_dates: [],
+              additional_dates: [],
+              note: "",
+              recurrence: "FREQ=WEEKLY;COUNT=2;BYMONTH=13",
+            },
+          ],
+        },
+      },
+    ];
+    await page
+      .getByLabel(t.json, { exact: true })
+      .fill(JSON.stringify(imported));
+    await page.getByRole("button", { name: t.preview, exact: true }).click();
+    await page
+      .getByRole("button", { name: t.confirmImport, exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: "Recovery degree", exact: true }),
+    ).toBeVisible();
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          const open = indexedDB.open("unifr-planner", 2);
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const db = open.result;
+            const tx = db.transaction(["plans", "preferences"], "readwrite");
+            tx.objectStore("plans").put({ id: "bad", schemaVersion: 99 });
+            tx.objectStore("preferences").put("bad", "activeId");
+            tx.oncomplete = () => {
+              db.close();
+              resolve();
+            };
+            tx.onerror = () => reject(tx.error);
+          };
+        }),
+    );
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "Recovery degree", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("alert")).toContainText(t.unreadable);
+    await expect(
+      page.getByRole("button", { name: t.exportJson, exact: true }),
+    ).toBeEnabled();
+    await page.goto("/semester/AS-2026");
+    await expect(page.locator(".calendar-check")).toContainText(t.unresolved);
+    await expect(page.getByText(t.clear, { exact: true })).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: t.exportIcs, exact: true }),
+    ).toBeDisabled();
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+  });
   test(`guest JSON import ${language}: validation, preview and independent backup`, async ({
     page,
   }) => {

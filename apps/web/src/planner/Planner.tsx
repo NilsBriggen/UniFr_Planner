@@ -47,23 +47,30 @@ export function Download({
   );
 }
 export function SaveStatus({ language }: { language: Language }) {
-  const { ready, busy, error, plan } = usePlans();
+  const { ready, busy, error, plan, unreadableIds } = usePlans();
   const t = plannerMessages[language];
   return (
-    <p
-      role={error ? "alert" : "status"}
-      className={error ? "planner-error" : "save-status"}
-    >
-      {error
-        ? t.storageError
-        : !ready
-          ? t.loading
-          : busy
-            ? t.saving
-            : plan
-              ? t.saved
-              : t.localHelp}
-    </p>
+    <>
+      {unreadableIds.length > 0 && (
+        <p role="alert" className="planner-error">
+          {t.unreadable} ({unreadableIds.length})
+        </p>
+      )}
+      <p
+        role={error ? "alert" : "status"}
+        className={error ? "planner-error" : "save-status"}
+      >
+        {error
+          ? t.storageError
+          : !ready
+            ? t.loading
+            : busy
+              ? t.saving
+              : plan
+                ? t.saved
+                : t.localHelp}
+      </p>
+    </>
   );
 }
 export function Setup({ language }: { language: Language }) {
