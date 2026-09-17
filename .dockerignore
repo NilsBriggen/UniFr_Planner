@@ -1,0 +1,12 @@
+.git
+.superpowers
+.venv
+node_modules
+**/node_modules
+**/dist
+**/__pycache__
+**/test-results
+**/playwright-report
+.env
+assets
+docs/superpowers

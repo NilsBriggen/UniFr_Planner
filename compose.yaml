@@ -1,0 +1,46 @@
+name: unifr-planner
+services:
+  db:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-unifr}
+      POSTGRES_USER: ${POSTGRES_USER:-unifr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unifr_dev}
+    ports: ["127.0.0.1:${DB_PORT:-5432}:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  migrate:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment:
+      UNIFR_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-unifr}:${POSTGRES_PASSWORD:-unifr_dev}@db:5432/${POSTGRES_DB:-unifr}
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db: { condition: service_healthy }
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment:
+      UNIFR_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-unifr}:${POSTGRES_PASSWORD:-unifr_dev}@db:5432/${POSTGRES_DB:-unifr}
+    ports: ["127.0.0.1:${API_PORT:-8000}:8000"]
+    command: ["uvicorn", "unifr_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes: ["./apps/api:/app/apps/api:ro", "./packages:/app/packages:ro"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ready', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile, target: development }
+    environment:
+      API_PROXY_TARGET: http://api:8000
+    ports: ["127.0.0.1:${WEB_PORT:-5173}:5173"]
+    volumes: ["./apps/web/src:/app/apps/web/src:ro"]
+    depends_on:
+      api: { condition: service_healthy }
+volumes:
+  postgres-data:

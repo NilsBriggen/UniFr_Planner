@@ -1,0 +1,47 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck && npm run lint && npm run format:check && npm test && npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-results
+          path: apps/web/test-results
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_USER: unifr
+          POSTGRES_PASSWORD: unifr_test
+          POSTGRES_DB: unifr
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U unifr -d unifr"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      UNIFR_DATABASE_URL: postgresql+psycopg://unifr:unifr_test@localhost:5432/unifr
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: 0.11.23
+          python-version: "3.13"
+      - run: uv sync --frozen
+      - run: uv run ruff check apps/api packages && uv run ruff format --check apps/api packages && uv run mypy && uv run pytest
+      - run: uv run alembic upgrade head && uv run alembic downgrade base && uv run alembic upgrade head
+      - run: docker compose config -q
