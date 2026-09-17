@@ -127,3 +127,35 @@ def test_prerequisites_equivalents_and_cancelled_html_session():
     assert offering.prerequisites == "Prior programming course"
     assert offering.equivalents == "UE-SIN.00123"
     assert offering.meetings[0].cancelled
+
+
+@pytest.mark.parametrize("damage", ["footer-only", "missing-panel", "missing-table-end"])
+def test_detail_requires_complete_document_and_advertised_sections(damage):
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    raw = fixture("detail.html")
+    if damage == "footer-only":
+        first = raw.index("<td>17.09.2026</td>")
+        raw = raw[: raw.index("</tr>", first) + len("</tr>")] + "</main></body></html>"
+    elif damage == "missing-panel":
+        raw = raw.replace('data-accordion-content="tab-2"', 'data-accordion-content="missing"')
+    else:
+        first = raw.index("<td>17.09.2026</td>")
+        end = raw.index("</table>", first)
+        raw = raw[:end] + raw[end + len("</table>") :]
+    with pytest.raises(ValueError, match="[Ii]ncomplete detail"):
+        p.parse_detail(raw, entry)
+
+
+def test_structurally_complete_single_session_is_valid():
+    from bs4 import BeautifulSoup
+
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    soup = BeautifulSoup(fixture("detail.html"), "html.parser")
+    rows = soup.select('[data-accordion-content="tab-2"] tbody tr')
+    for row in rows[1:]:
+        row.decompose()
+    offering = p.parse_detail(str(soup), entry)
+    assert len(offering.meetings) == 1
+    assert not offering.meetings[0].unresolved

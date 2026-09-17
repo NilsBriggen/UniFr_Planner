@@ -150,3 +150,57 @@ def test_staged_report_does_not_claim_published(tmp_path):
     with engine.connect() as conn:
         value = conn.execute(select(m.snapshots.c.report)).scalar_one()
     assert not value["published"]
+
+
+def test_truncated_detail_cannot_replace_published_sessions(tmp_path):
+    from datetime import timedelta
+    from unifr_ingest.sync import sync
+
+    _, repo, _ = repository(tmp_path)
+    raw = (FIXTURES / "detail.html").read_text()
+    first_session = raw.index("<td>17.09.2026</td>")
+    truncated = raw[: raw.index("</tr>", first_session) + len("</tr>")]
+
+    class FixtureSource:
+        html = raw
+
+        def listing(self, number):
+            return sample()[0].pages[0]
+
+        def detail(self, entry):
+            return self.html
+
+    source = FixtureSource()
+    first = sync(source, repo, detail_ttl=timedelta(0))
+    assert first.published
+    before = repo.get("135192").meetings
+    assert len(before) == 8
+    source.html = truncated
+    rejected = sync(source, repo, detail_ttl=timedelta(0))
+    assert not rejected.published, (
+        f"Truncated detail published {len(repo.get('135192').meetings)} meetings"
+    )
+    assert any("incomplete detail" in error.lower() for error in rejected.errors)
+    assert repo.current().snapshot_id == first.snapshot_id
+    assert repo.get("135192").meetings == before
+
+
+def test_publication_rejects_missing_time_even_if_model_validation_was_bypassed(tmp_path):
+    _, repo, _ = repository(tmp_path)
+    first, report = sample()
+    repo.stage(first, report)
+    with repo.lock():
+        repo.publish(first, report)
+    offering = first.offerings[0]
+    meeting = offering.meetings[0].model_copy(update={"ends_at": None, "unresolved": False})
+    invalid = first.model_copy(
+        update={
+            "snapshot_id": "invalid-meeting",
+            "offerings": (offering.model_copy(update={"meetings": (meeting,)}),),
+        }
+    )
+    report = report.model_copy(update={"snapshot_id": "invalid-meeting"})
+    repo.stage(invalid, report)
+    with repo.lock(), pytest.raises(ValueError, match="unresolved"):
+        repo.publish(invalid, report)
+    assert repo.current().snapshot_id == first.snapshot_id

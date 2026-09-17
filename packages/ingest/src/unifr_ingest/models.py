@@ -1,8 +1,8 @@
 """Typed catalogue contracts. No HTTP, database, or application dependencies."""
 
 from datetime import datetime
-from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Literal, Self
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Record(BaseModel):
@@ -51,6 +51,12 @@ class Meeting(Record):
     recurrence_id: str | None = None
     source_uid: str | None = None
     note: str = ""
+
+    @model_validator(mode="after")
+    def require_unresolved_for_missing_time(self) -> Self:
+        if not self.unresolved and (self.starts_at is None or self.ends_at is None):
+            raise ValueError("A meeting without both timestamps must be unresolved")
+        return self
 
 
 class ProgrammeAssignment(Record):

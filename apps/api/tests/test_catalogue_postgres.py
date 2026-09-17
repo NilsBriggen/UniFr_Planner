@@ -43,7 +43,8 @@ def test_postgres_advisory_lock_excludes_second_connection_and_releases(postgres
         assert second.locked
 
 
-def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo):
+@pytest.mark.parametrize("damage", ["broken", "truncated"])
+def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo, damage):
     fixtures = Path("packages/ingest/tests/fixtures")
 
     class FixtureSource:
@@ -54,11 +55,13 @@ def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo)
             return page.model_copy(update={"reported_count": 1, "entries": (page.entries[1],)})
 
         def detail(self, entry):
-            return (
-                "<html>deliberately broken</html>"
-                if self.broken
-                else (fixtures / "detail.html").read_text()
-            )
+            raw = (fixtures / "detail.html").read_text()
+            if not self.broken:
+                return raw
+            if damage == "truncated":
+                first_session = raw.index("<td>17.09.2026</td>")
+                return raw[: raw.index("</tr>", first_session) + len("</tr>")]
+            return "<html>deliberately broken</html>"
 
     from datetime import timedelta
 
@@ -67,6 +70,8 @@ def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo)
     assert first.published
     assert len(postgres_repo.search("écologie")) == 1
     before = postgres_repo.current().snapshot_id
+    meetings_before = postgres_repo.get("135192").meetings
+    assert len(meetings_before) == 8
     source.broken = True
     rejected = sync(source, postgres_repo, detail_ttl=timedelta(0))
     after = postgres_repo.current().snapshot_id
@@ -74,6 +79,9 @@ def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo)
     assert rejected.outcome == "rejected_validation"
     assert before == after == first.snapshot_id
     assert rejected.snapshot_id != first.snapshot_id
+    assert any("Incomplete detail" in error for error in rejected.errors)
+    assert postgres_repo.get("135192").meetings == meetings_before
     print(
-        f"positive={first.snapshot_id} rejected={rejected.snapshot_id} before={before} after={after}"
+        f"case={damage} positive={first.snapshot_id} rejected={rejected.snapshot_id} "
+        f"before={before} after={after} meetings_before=8 meetings_after=8"
     )

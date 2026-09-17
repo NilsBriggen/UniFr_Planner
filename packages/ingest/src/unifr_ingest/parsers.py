@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 from datetime import datetime
+from html.parser import HTMLParser
 from zoneinfo import ZoneInfo
 from urllib.parse import urljoin
 
@@ -22,6 +23,41 @@ def digest(raw: str) -> str:
 
 def clean(tag: Tag | None) -> str:
     return " ".join(tag.get_text(" ", strip=True).split()) if tag else ""
+
+
+class DetailStructure(HTMLParser):
+    """Check source boundaries before BeautifulSoup repairs incomplete markup.
+
+    Only document roots and the course's structural containers are tracked;
+    unrelated navigation markup and HTML void elements are not validated.
+    """
+
+    containers = {"article", "aside", "table", "thead", "tbody", "tr", "td", "th"}
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.stack: list[str] = []
+        self.seen: set[str] = set()
+
+    def tracked(self, tag: str) -> bool:
+        return tag in {"html", "body", "main"} or ("main" in self.stack and tag in self.containers)
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if self.tracked(tag):
+            self.stack.append(tag)
+            self.seen.add(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.tracked(tag):
+            if not self.stack or self.stack[-1] != tag:
+                raise ValueError(f"Incomplete detail: unexpected closing {tag}")
+            self.stack.pop()
+
+    def validate(self, raw: str) -> None:
+        self.feed(raw)
+        self.close()
+        if self.stack or not {"html", "body", "main", "article", "aside"} <= self.seen:
+            raise ValueError("Incomplete detail: missing or unclosed course/document structure")
 
 
 def parse_listing(raw: str, number: int, page_size: int = 12) -> ListingPage:
@@ -81,8 +117,17 @@ def parse_listing(raw: str, number: int, page_size: int = 12) -> ListingPage:
 
 
 def parse_detail(raw: str, entry: ListingEntry) -> Offering:
+    DetailStructure().validate(raw)
     soup = BeautifulSoup(raw, "html.parser")
     main = soup.select_one("main") or soup
+    advertised = {
+        str(tag["data-tabcordion-toggler"]) for tag in main.select("[data-tabcordion-toggler]")
+    }
+    available = {
+        str(tag["data-accordion-content"]) for tag in main.select("[data-accordion-content]")
+    }
+    if "tab-1" not in advertised or not advertised <= available:
+        raise ValueError("Incomplete detail: missing advertised course section")
     fields = {}
     for row in main.select("tr"):
         cells = row.find_all("td", recursive=False)

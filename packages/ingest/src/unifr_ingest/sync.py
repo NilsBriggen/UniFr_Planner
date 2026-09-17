@@ -59,6 +59,11 @@ def validate(
             errors.append(f"Missing required fields: {off.source_id}")
         if not off.meetings:
             errors.append(f"Missing meeting state: {off.source_id}")
+        for meeting in off.meetings:
+            if not meeting.unresolved and (meeting.starts_at is None or meeting.ends_at is None):
+                errors.append(
+                    f"Invalid meeting state {off.source_id}: missing time must be unresolved"
+                )
         if off.ects is None:
             warnings.append(f"ECTS unpublished: {off.source_id}")
     if previous and previous.offerings:
