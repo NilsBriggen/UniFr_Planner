@@ -129,6 +129,41 @@ function MeetingList({
                 {t.recurrence}: {meeting.recurrence}
               </p>
             )}
+            {meeting.excluded_dates?.length ||
+            meeting.additional_dates?.length ||
+            meeting.recurrence_id ? (
+              <>
+                <p>{t.sourceExceptions}</p>
+                <dl className="source-exceptions">
+                  {(
+                    [
+                      [t.excludedDates, meeting.excluded_dates ?? []],
+                      [t.additionalDates, meeting.additional_dates ?? []],
+                      [
+                        t.replacedOccurrence,
+                        meeting.recurrence_id ? [meeting.recurrence_id] : [],
+                      ],
+                    ] as const
+                  ).map(
+                    ([label, values]) =>
+                      values.length > 0 && (
+                        <div key={label}>
+                          <dt>{label}</dt>
+                          <dd>
+                            <ul>
+                              {values.map((value, ordinal) => (
+                                <li key={ordinal}>
+                                  <time dateTime={value}>{value}</time>
+                                </li>
+                              ))}
+                            </ul>
+                          </dd>
+                        </div>
+                      ),
+                  )}
+                </dl>
+              </>
+            ) : null}
           </li>
         ))}
       </ul>

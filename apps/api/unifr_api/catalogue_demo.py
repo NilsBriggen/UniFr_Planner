@@ -18,8 +18,32 @@ from unifr_ingest.models import (
     Offering,
     SyncReport,
 )
+from unifr_ingest.parsers import parse_calendar
 from .catalogue import SqlCatalogueRepository
 from .database import metadata
+
+# Synthetic source data: the EXDATE mirrors calendar-edge.ics; additions and an
+# override exercise source metadata without expanding any recurrence.
+EXCEPTION_CALENDAR = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//UniFr Planner development example//EN
+BEGIN:VEVENT
+UID:development-recurrence
+DTSTART;TZID=Europe/Zurich:20260914T101500
+DTEND;TZID=Europe/Zurich:20260914T120000
+RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=MO,WE
+EXDATE;TZID=Europe/Zurich:20260916T101500
+RDATE;VALUE=DATE:20260918
+RDATE;TZID=Europe/Zurich:20260923T101500
+END:VEVENT
+BEGIN:VEVENT
+UID:development-recurrence
+RECURRENCE-ID;TZID=Europe/Zurich:20260928T101500
+DTSTART;TZID=Europe/Zurich:20260929T141500
+DTEND;TZID=Europe/Zurich:20260929T160000
+END:VEVENT
+END:VCALENDAR
+"""
 
 
 def seed(repository: SqlCatalogueRepository, *, rejected: bool = False) -> None:
@@ -42,7 +66,7 @@ def seed(repository: SqlCatalogueRepository, *, rejected: bool = False) -> None:
             if index == 3
             else {"en": f"Example course {index:02}"}
         )
-        sessions = (
+        sessions: tuple[Meeting, ...] = (
             (Meeting(unresolved=True, note="Meeting times unpublished"),)
             if index == 3
             else (
@@ -53,6 +77,8 @@ def seed(repository: SqlCatalogueRepository, *, rejected: bool = False) -> None:
                 ),
             )
         )
+        if index == 4:
+            sessions = parse_calendar(EXCEPTION_CALENDAR)
         values.append(
             Offering(
                 source_id=source_id,

@@ -113,6 +113,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** CatalogueError */
+    CatalogueError: {
+      /** Detail */
+      detail: string;
+    };
     /** CatalogueStatus */
     CatalogueStatus: {
       /**
@@ -375,6 +380,15 @@ export interface operations {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
+      /** @description Catalogue unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueError"];
+        };
+      };
     };
   };
   catalogueCourse: {
@@ -397,6 +411,15 @@ export interface operations {
           "application/json": components["schemas"]["CourseDetail"];
         };
       };
+      /** @description Course not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueError"];
+        };
+      };
       /** @description Validation Error */
       422: {
         headers: {
@@ -404,6 +427,15 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Catalogue unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueError"];
         };
       };
     };
@@ -424,6 +456,15 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["CatalogueTerms"];
+        };
+      };
+      /** @description Catalogue unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueError"];
         };
       };
     };

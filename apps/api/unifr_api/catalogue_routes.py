@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -18,6 +19,10 @@ from .catalogue_read import (
 from .config import Settings
 
 router = APIRouter(prefix="/api/v1")
+
+
+class CatalogueError(BaseModel):
+    detail: str
 
 
 def reader() -> Iterator[CatalogueReadService | None]:
@@ -51,12 +56,23 @@ def status(service: Reader) -> CatalogueStatus:
     return service.status if service else CatalogueStatus(reason="database_unavailable")
 
 
-@router.get("/catalogue/courses", operation_id="catalogueCourses")
+@router.get(
+    "/catalogue/courses",
+    operation_id="catalogueCourses",
+    responses={503: {"model": CatalogueError, "description": "Catalogue unavailable"}},
+)
 def courses(service: Reader, filters: Annotated[CatalogueFilters, Query()]) -> CoursePage:
     return available(service).course_list(filters)
 
 
-@router.get("/catalogue/courses/{course_code}", operation_id="catalogueCourse")
+@router.get(
+    "/catalogue/courses/{course_code}",
+    operation_id="catalogueCourse",
+    responses={
+        503: {"model": CatalogueError, "description": "Catalogue unavailable"},
+        404: {"model": CatalogueError, "description": "Course not found"},
+    },
+)
 def course(course_code: str, service: Reader) -> CourseDetail:
     found = available(service).course(course_code)
     if found is None:
@@ -64,6 +80,10 @@ def course(course_code: str, service: Reader) -> CourseDetail:
     return found
 
 
-@router.get("/catalogue/terms", operation_id="catalogueTerms")
+@router.get(
+    "/catalogue/terms",
+    operation_id="catalogueTerms",
+    responses={503: {"model": CatalogueError, "description": "Catalogue unavailable"}},
+)
 def terms(service: Reader) -> CatalogueTerms:
     return available(service).terms()

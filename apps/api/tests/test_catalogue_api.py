@@ -256,3 +256,22 @@ def test_time_filter_does_not_round_away_seconds(catalogue):
         "/api/v1/catalogue/courses?available_day=0&available_from=12:00&available_until=13:00"
     )
     assert response.json()["total"] == 0
+
+
+@pytest.mark.parametrize(
+    "path, status_code",
+    [
+        ("/api/v1/catalogue/courses", "503"),
+        ("/api/v1/catalogue/terms", "503"),
+        ("/api/v1/catalogue/courses/{course_code}", "503"),
+        ("/api/v1/catalogue/courses/{course_code}", "404"),
+    ],
+)
+def test_openapi_declares_catalogue_error_response_bodies(path, status_code):
+    contract = app.openapi()
+    responses = contract["paths"][path]["get"]["responses"]
+    assert status_code in responses, f"Undocumented {status_code} response for {path}"
+    schema = responses[status_code]["content"]["application/json"]["schema"]
+    model = contract["components"]["schemas"][schema["$ref"].rsplit("/", 1)[1]]
+    assert model["properties"]["detail"]["type"] == "string"
+    assert "detail" in model["required"]

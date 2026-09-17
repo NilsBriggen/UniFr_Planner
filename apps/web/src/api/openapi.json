@@ -230,6 +230,16 @@
               }
             }
           },
+          "503": {
+            "description": "Catalogue unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueError"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -269,6 +279,26 @@
               }
             }
           },
+          "503": {
+            "description": "Catalogue unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Course not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueError"
+                }
+              }
+            }
+          },
           "422": {
             "description": "Validation Error",
             "content": {
@@ -293,6 +323,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CatalogueTerms"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Catalogue unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueError"
                 }
               }
             }
@@ -348,6 +388,17 @@
   },
   "components": {
     "schemas": {
+      "CatalogueError": {
+        "properties": {
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": ["detail"],
+        "title": "CatalogueError"
+      },
       "CatalogueStatus": {
         "properties": {
           "availability": {

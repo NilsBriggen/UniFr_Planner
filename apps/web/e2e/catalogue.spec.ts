@@ -52,6 +52,83 @@ const locales = [
   },
 ];
 
+const exceptions = [
+  {
+    name: "Deutsch",
+    excluded: "Ausgenommene Termine laut Quelle",
+    added: "Zusätzliche Termine laut Quelle",
+    override: "Ersetzter Termin laut Quelle",
+    note: "Quellenausnahmen · Wiederholungen werden nicht aufgelöst.",
+    preview: "Stundenplan ansehen",
+    unresolved: "Termine ungeklärt",
+  },
+  {
+    name: "Français",
+    excluded: "Dates exclues selon la source",
+    added: "Dates supplémentaires selon la source",
+    override: "Occurrence remplacée selon la source",
+    note: "Exceptions de la source · les récurrences ne sont pas développées.",
+    preview: "Voir les horaires",
+    unresolved: "Horaires non résolus",
+  },
+  {
+    name: "English",
+    excluded: "Excluded dates from source",
+    added: "Additional dates from source",
+    override: "Replaced occurrence from source",
+    note: "Source exceptions · recurrences are not expanded.",
+    preview: "Preview schedule",
+    unresolved: "Meeting times unresolved",
+  },
+];
+
+for (const locale of exceptions) {
+  test(`source recurrence exceptions remain visible in detail and preview in ${locale.name}`, async ({
+    page,
+  }) => {
+    await page.goto("/catalogue/DEMO-004");
+    await page.getByRole("button", { name: locale.name, exact: true }).click();
+    const detail = page.locator(".course-detail");
+    for (const label of [locale.excluded, locale.added, locale.override])
+      await expect(detail.getByText(label, { exact: true })).toBeVisible();
+    for (const value of [
+      "2026-09-16T10:15:00+02:00",
+      "2026-09-18",
+      "2026-09-23T10:15:00+02:00",
+      "2026-09-28T10:15:00+02:00",
+    ])
+      await expect(detail.getByText(value, { exact: true })).toBeVisible();
+    await expect(
+      detail.getByText(locale.note, { exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      detail.getByText(locale.unresolved, { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: locale.preview }).click();
+    const dialog = page.getByRole("dialog");
+    for (const label of [locale.excluded, locale.added, locale.override])
+      await expect(dialog.getByText(label, { exact: true })).toBeVisible();
+    for (const value of [
+      "2026-09-16T10:15:00+02:00",
+      "2026-09-18",
+      "2026-09-23T10:15:00+02:00",
+      "2026-09-28T10:15:00+02:00",
+    ])
+      await expect(dialog.getByText(value, { exact: true })).toBeVisible();
+    await expect(
+      dialog.getByText(locale.unresolved, { exact: true }),
+    ).toBeVisible();
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    await page.keyboard.press("Escape");
+  });
+}
+
 for (const locale of locales) {
   test(`catalogue DB search, chips, detail, overlay and Axe in ${locale.name}`, async ({
     page,

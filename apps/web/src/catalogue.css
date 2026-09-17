@@ -191,6 +191,23 @@
   display: block;
   color: var(--color-muted);
 }
+.source-exceptions {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.source-exceptions dt {
+  font-weight: bold;
+}
+.source-exceptions dd {
+  margin: 4px 0 16px;
+}
+.source-exceptions ul {
+  padding-left: 20px;
+}
+.source-exceptions li {
+  border: 0;
+  padding: 2px 0;
+}
 .timezone {
   font-size: 0.75rem;
   color: var(--color-muted);
