@@ -1,0 +1,13 @@
+import createClient from "openapi-fetch";
+import type { components, paths } from "./schema";
+
+export const api = createClient<paths>();
+export type Course = components["schemas"]["CourseDetail"];
+export type Offering = components["schemas"]["PublicOffering"];
+export type Meeting = components["schemas"]["Meeting"];
+export type CatalogueStatus = components["schemas"]["CatalogueStatus"];
+export type CoursePage = components["schemas"]["CoursePage"];
+export type Terms = components["schemas"]["CatalogueTerms"];
+export type Filters = NonNullable<
+  paths["/api/v1/catalogue/courses"]["get"]["parameters"]["query"]
+>;

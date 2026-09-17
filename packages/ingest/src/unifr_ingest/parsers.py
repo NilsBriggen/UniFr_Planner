@@ -195,6 +195,9 @@ def parse_detail(raw: str, entry: ListingEntry) -> Offering:
         terms=entry.terms,
         ects=float(ects_match[1].replace(",", ".")) if ects_match else None,
         languages=entry.languages,
+        levels=tuple(
+            value.strip() for value in fields.get("Level", "").split(",") if value.strip()
+        ),
         lecturer=fields.get("Teachers", entry.lecturer),
         faculty_domain=entry.faculty_domain,
         schedule_summary=entry.schedule_summary,

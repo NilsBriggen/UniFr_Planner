@@ -71,6 +71,8 @@ class Offering(Record):
     terms: tuple[str, ...]
     ects: float | None
     languages: tuple[str, ...]
+    # Older snapshots remain readable; absent metadata is unknown, never inferred.
+    levels: tuple[str, ...] = ()
     lecturer: str
     faculty_domain: str
     schedule_summary: str

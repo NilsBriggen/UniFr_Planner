@@ -1,0 +1,287 @@
+import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+const locales = [
+  {
+    name: "Deutsch",
+    search: "Kurse suchen",
+    submit: "Suchen",
+    filter: "Filter",
+    term: "Semester",
+    preview: "Stundenplan ansehen",
+    close: "Schliessen",
+    stale: "Veraltet",
+    unresolved: "Termine ungeklärt",
+    back: "Zurück zum Katalog",
+    source: "Offizielle Kursseite",
+    remove: "Entfernen",
+    next: "Weiter",
+    title: "Algebra",
+  },
+  {
+    name: "Français",
+    search: "Rechercher des cours",
+    submit: "Rechercher",
+    filter: "Filtres",
+    term: "Semestre",
+    preview: "Voir les horaires",
+    close: "Fermer",
+    stale: "Ancien",
+    unresolved: "Horaires non résolus",
+    back: "Retour au catalogue",
+    source: "Page officielle du cours",
+    remove: "Supprimer",
+    next: "Suivant",
+    title: "Algèbre",
+  },
+  {
+    name: "English",
+    search: "Search courses",
+    submit: "Search",
+    filter: "Filters",
+    term: "Semester",
+    preview: "Preview schedule",
+    close: "Close",
+    stale: "Stale",
+    unresolved: "Meeting times unresolved",
+    back: "Back to catalogue",
+    source: "Official course page",
+    remove: "Remove",
+    next: "Next",
+    title: "Algebra",
+  },
+];
+
+for (const locale of locales) {
+  test(`catalogue DB search, chips, detail, overlay and Axe in ${locale.name}`, async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/catalogue");
+    await page.getByRole("button", { name: locale.name, exact: true }).click();
+    await expect(page.getByText(locale.stale, { exact: false })).toBeVisible();
+    await page.getByRole("button", { name: locale.next, exact: true }).click();
+    await expect(page.getByText("DEMO-024", { exact: false })).toBeVisible();
+    await page.getByLabel(locale.search, { exact: true }).fill("Algebra");
+    await page
+      .getByRole("button", { name: locale.submit, exact: true })
+      .click();
+    await expect(
+      page.getByRole("link", { name: new RegExp(locale.title) }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("button", {
+        name: new RegExp(locale.remove + ".*Algebra"),
+      }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { name: locale.filter, exact: true })
+      .click();
+    await page
+      .getByRole("combobox", { name: locale.term, exact: true })
+      .selectOption("AS-2026");
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    await page.screenshot({
+      path: testInfo.outputPath("catalogue-filters.png"),
+      fullPage: true,
+    });
+    await page
+      .getByRole("button", { name: locale.submit, exact: true })
+      .click();
+    await page.getByRole("link", { name: new RegExp(locale.title) }).click();
+    await expect(
+      page.getByRole("link", { name: locale.source }),
+    ).toHaveAttribute(
+      "href",
+      /https:\/\/www\.unifr\.ch\/timetable\/en\/course\.html\?show=/,
+    );
+    await page.getByRole("button", { name: locale.preview }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByRole("dialog")).toContainText("Europe/Zurich");
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    const previewPath = testInfo.outputPath("schedule-preview.png");
+    await page.screenshot({ path: previewPath });
+    await testInfo.attach("schedule-preview", {
+      path: previewPath,
+      contentType: "image/png",
+    });
+    await page.getByRole("button", { name: locale.close, exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: locale.preview }),
+    ).toBeFocused();
+    await page.getByRole("link", { name: locale.back }).click();
+    await expect(page.getByLabel(locale.search, { exact: true })).toHaveValue(
+      "Algebra",
+    );
+    await page
+      .getByRole("button", { name: new RegExp(locale.remove + ".*Algebra") })
+      .click();
+    await page.getByRole("link", { name: /DEMO-003/ }).click();
+    await expect(
+      page.getByText(locale.unresolved, { exact: true }).first(),
+    ).toBeVisible();
+    await page.getByRole("button", { name: locale.preview }).click();
+    await expect(
+      page.getByRole("dialog").getByText(locale.unresolved, { exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    const unresolvedPath = testInfo.outputPath("unresolved-course.png");
+    await page.screenshot({ path: unresolvedPath, fullPage: true });
+    await testInfo.attach("unresolved-course", {
+      path: unresolvedPath,
+      contentType: "image/png",
+    });
+  });
+}
+
+test("keyboard-only search and modal traps focus and restores it", async ({
+  page,
+}) => {
+  await page.goto("/catalogue");
+  await expect(page.getByLabel("Kurse suchen", { exact: true })).toBeVisible();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Tab");
+  await expect(page.getByLabel("Kurse suchen", { exact: true })).toBeFocused();
+  await page.keyboard.type("Algebra");
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("button", { name: /Entfernen.*Algebra/ }),
+  ).toBeVisible();
+  for (
+    let i = 0;
+    i < 12 &&
+    !(await page
+      .getByRole("link", { name: /DEMO-001/ })
+      .evaluate((el) => el === document.activeElement));
+    i++
+  )
+    await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: /DEMO-001/ })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+  for (
+    let i = 0;
+    i < 12 &&
+    !(await page
+      .getByRole("button", { name: "Stundenplan ansehen" })
+      .evaluate((el) => el === document.activeElement));
+    i++
+  )
+    await page.keyboard.press("Tab");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Schliessen" })).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("button", { name: "Schliessen" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "Stundenplan ansehen" }),
+  ).toBeFocused();
+  for (const control of await page
+    .locator(
+      "main button:visible, main input:visible, main select:visible, main a:visible",
+    )
+    .all()) {
+    const box = await control.boundingBox();
+    expect(box!.height).toBeGreaterThanOrEqual(44);
+    expect(box!.width).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test("invalid filter window keeps values editable and valid availability excludes unresolved courses", async ({
+  page,
+}) => {
+  await page.goto(
+    "/catalogue?faculty=Science&available_day=0&available_from=14:00&available_until=12:00",
+  );
+  await page.getByRole("button", { name: "English", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Check your filter values and availability window.",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("combobox", { name: "Faculty / domain", exact: true }),
+  ).toHaveValue("Science");
+  await expect(
+    page.getByRole("combobox", { name: "Available weekday", exact: true }),
+  ).toHaveValue("0");
+  await page.getByLabel("Available from", { exact: true }).fill("12:00");
+  await page.getByLabel("Available until", { exact: true }).fill("13:00");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByRole("link", { name: /DEMO-001/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /DEMO-003/ })).toHaveCount(0);
+  await page
+    .getByLabel("Search courses", { exact: true })
+    .fill("no such course");
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "No matching courses" }),
+  ).toBeVisible();
+});
+
+test("real rejected database renders unavailable, never empty catalogue", async ({
+  page,
+}) => {
+  await page.route("**/api/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+    const response = await route.fetch({
+      url: `http://127.0.0.1:8002${url.pathname}${url.search}`,
+    });
+    await route.fulfill({ response });
+  });
+  for (const [name, unavailable, rejected] of [
+    [
+      "Deutsch",
+      "Kein aktueller Kurskatalog verfügbar",
+      "Synchronisierung abgelehnt",
+    ],
+    [
+      "Français",
+      "Aucun catalogue actuel disponible",
+      "Synchronisation refusée",
+    ],
+    ["English", "No current catalogue available", "Sync rejected"],
+  ]) {
+    await page.goto("/catalogue");
+    await page.getByRole("button", { name, exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: unavailable }),
+    ).toBeVisible();
+    await expect(page.getByText(rejected, { exact: false })).toBeVisible();
+    await expect(
+      page.getByRole("list", { name: /courses|Kurse|cours/ }),
+    ).toHaveCount(0);
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+  }
+});

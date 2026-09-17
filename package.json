@@ -10,6 +10,7 @@
   },
   "packageManager": "npm@11.6.0",
   "scripts": {
+    "api:generate": "PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python scripts/generate_openapi.py && openapi-typescript apps/web/src/api/openapi.json -o apps/web/src/api/schema.d.ts && prettier --write apps/web/src/api",
     "dev": "npm run dev --workspace @unifr/web",
     "build": "npm run build --workspace @unifr/web",
     "test": "npm run test --workspace @unifr/web",

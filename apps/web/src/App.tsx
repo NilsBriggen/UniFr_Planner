@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import { Button, StatusNotice } from "./components";
 import { messages, type Language, type Messages } from "./i18n";
+import Catalogue from "./Catalogue";
 
 const languages = [
   { code: "de", name: "Deutsch" },
@@ -216,7 +217,11 @@ export default function App() {
               <Route path="/semester/:term" element={<Semester t={t} />} />
               <Route
                 path="/catalogue"
-                element={<EmptyPage title={t.catalogue} t={t} />}
+                element={<Catalogue language={language} />}
+              />
+              <Route
+                path="/catalogue/:course_code"
+                element={<Catalogue language={language} />}
               />
               <Route
                 path="/requirements"

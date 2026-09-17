@@ -2,8 +2,10 @@ from fastapi import FastAPI, HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 
 from unifr_api.database import check_database
+from unifr_api.catalogue_routes import router as catalogue_router
 
 app = FastAPI(title="UniFr Planner API", version="0.1.0")
+app.include_router(catalogue_router)
 
 
 @app.get("/api/health")
