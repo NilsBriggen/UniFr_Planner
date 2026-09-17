@@ -14,6 +14,9 @@ import { Button, StatusNotice } from "./components";
 import { catalogueMessages, type CatalogueMessages } from "./catalogue-i18n";
 import { messages, type Language } from "./i18n";
 import "./catalogue.css";
+import { usePlans } from "./planner/context";
+import { activeScenario, addCourse, fromOffering } from "./planner/domain";
+import { plannerMessages } from "./planner/messages";
 
 const source = "https://www.unifr.ch/timetable/en/";
 const filterKeys = [
@@ -245,12 +248,17 @@ function Detail({
   course,
   language,
   query,
+  status,
 }: {
   course: Course;
   language: Language;
   query: string;
+  status: CatalogueStatus;
 }) {
   const t = catalogueMessages[language];
+  const p = plannerMessages[language];
+  const plans = usePlans();
+  const [saveError, setSaveError] = useState(false);
   const title = localizedTitle(course, language);
   return (
     <>
@@ -277,6 +285,43 @@ function Detail({
             ))}
           </dl>
           <div className="actions">
+            {plans.plan ? (
+              <Button
+                disabled={
+                  plans.busy ||
+                  !plans.ready ||
+                  activeScenario(plans.plan).courses.some(
+                    (c) => c.code === course.code,
+                  )
+                }
+                onClick={() => {
+                  try {
+                    const next = addCourse(
+                      plans.plan!,
+                      fromOffering(
+                        offering,
+                        crypto.randomUUID(),
+                        status.snapshot_id ?? "unknown",
+                        status.development_fixture,
+                      ),
+                    );
+                    void plans.save(next).then((ok) => setSaveError(!ok));
+                  } catch {
+                    setSaveError(true);
+                  }
+                }}
+              >
+                {activeScenario(plans.plan).courses.some(
+                  (c) => c.code === course.code,
+                )
+                  ? p.added
+                  : p.add}
+              </Button>
+            ) : (
+              <Link className="text-link" to="/setup">
+                {p.needPlan}
+              </Link>
+            )}
             {offering.source_url.startsWith(source) && (
               <a className="text-link" href={offering.source_url}>
                 {t.source} ↗
@@ -293,6 +338,7 @@ function Detail({
               language={language}
             />
           </div>
+          {saveError && <p role="alert">{p.actionError}</p>}
           <h3 className="schedule-heading">{t.schedule}</h3>
           {offering.schedule_summary && <p>{offering.schedule_summary}</p>}
           {offering.recurrence_summary && <p>{offering.recurrence_summary}</p>}
@@ -716,7 +762,12 @@ export default function Catalogue({ language }: { language: Language }) {
         </StatusNotice>
       )}
       {state.course && (
-        <Detail course={state.course} language={language} query={queryString} />
+        <Detail
+          course={state.course}
+          language={language}
+          query={queryString}
+          status={state.status!}
+        />
       )}
       {state.terms && (
         <Search

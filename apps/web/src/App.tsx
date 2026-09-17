@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import {
   Link,
   NavLink,
@@ -10,6 +10,9 @@ import {
 import { Button, StatusNotice } from "./components";
 import { messages, type Language, type Messages } from "./i18n";
 import Catalogue from "./Catalogue";
+import { PlanProvider, usePlans } from "./planner/context";
+import { PlanBoard, Setup } from "./planner/Planner";
+const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
 
 const languages = [
   { code: "de", name: "Deutsch" },
@@ -126,7 +129,8 @@ function Semester({ t }: { t: Messages }) {
     </section>
   );
 }
-export default function App() {
+function AppShell() {
+  const plans = usePlans();
   const [language, setLanguage] = useState<Language>(() => {
     try {
       const value = localStorage.getItem("unifr.language");
@@ -165,8 +169,17 @@ export default function App() {
         <div className="header-tools">
           <label className="plan-switcher">
             <span>{t.planLabel}</span>
-            <select disabled value="empty">
-              <option value="empty">{t.noPlan}</option>
+            <select
+              disabled={!plans.ready || plans.busy || !plans.plans.length}
+              value={plans.plan?.id ?? "empty"}
+              onChange={(e) => void plans.select(e.target.value)}
+            >
+              {!plans.plans.length && <option value="empty">{t.noPlan}</option>}
+              {plans.plans.map((plan) => (
+                <option value={plan.id} key={plan.id}>
+                  {plan.name}
+                </option>
+              ))}
             </select>
           </label>
           <span className="guest-status">{t.guest}</span>
@@ -188,7 +201,14 @@ export default function App() {
       <div className="layout">
         <nav className="navigation" aria-label={t.nav}>
           {navigation.map(({ path, key, icon }) => (
-            <NavLink key={key} to={path}>
+            <NavLink
+              key={key}
+              to={
+                key === "semester" && plans.plan
+                  ? `/semester/${plans.plan.semesters[0]}`
+                  : path
+              }
+            >
               <span className="nav-icon" aria-hidden="true">
                 {icon}
               </span>
@@ -206,15 +226,23 @@ export default function App() {
           <main id="main" tabIndex={-1}>
             <Routes>
               <Route path="/" element={<Home t={t} />} />
+              <Route path="/setup" element={<Setup language={language} />} />
+              <Route path="/plan" element={<PlanBoard language={language} />} />
               <Route
-                path="/setup"
-                element={<EmptyPage title={t.setup} t={t} />}
+                path="/semester/:term"
+                element={
+                  plans.plan ? (
+                    <Suspense fallback={<Semester t={t} />}>
+                      <SemesterCalendar
+                        key={location.pathname}
+                        language={language}
+                      />
+                    </Suspense>
+                  ) : (
+                    <Semester t={t} />
+                  )
+                }
               />
-              <Route
-                path="/plan"
-                element={<EmptyPage title={t.plan} t={t} />}
-              />
-              <Route path="/semester/:term" element={<Semester t={t} />} />
               <Route
                 path="/catalogue"
                 element={<Catalogue language={language} />}
@@ -252,5 +280,12 @@ export default function App() {
         </div>
       </div>
     </>
+  );
+}
+export default function App() {
+  return (
+    <PlanProvider>
+      <AppShell />
+    </PlanProvider>
   );
 }
