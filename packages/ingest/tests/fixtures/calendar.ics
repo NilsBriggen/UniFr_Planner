@@ -1,0 +1,102 @@
+
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//unifr.ch//
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VTIMEZONE
+TZID:America/New_York
+BEGIN:STANDARD
+DTSTART:19701025T060000
+TZOFFSETTO:-0500
+TZOFFSETFROM:-0400
+RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU
+END:STANDARD
+BEGIN:DAYLIGHT
+DTSTART:19700426T070000
+TZOFFSETTO:-0400
+TZOFFSETFROM:-0500
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU
+END:DAYLIGHT
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:AS-2026-135192-0
+DTSTART:20260917T111500Z
+DTEND:20260917T150000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 0
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+BEGIN:VEVENT
+UID:AS-2026-135192-1
+DTSTART:20261008T111500Z
+DTEND:20261008T150000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 1
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+BEGIN:VEVENT
+UID:AS-2026-135192-2
+DTSTART:20261015T111500Z
+DTEND:20261015T150000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 2
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+BEGIN:VEVENT
+UID:AS-2026-135192-3
+DTSTART:20261029T121500Z
+DTEND:20261029T160000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 3
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+BEGIN:VEVENT
+UID:AS-2026-135192-4
+DTSTART:20261112T121500Z
+DTEND:20261112T160000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 4
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+BEGIN:VEVENT
+UID:AS-2026-135192-5
+DTSTART:20261126T121500Z
+DTEND:20261126T160000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 5
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+BEGIN:VEVENT
+UID:AS-2026-135192-6
+DTSTART:20261204T141500Z
+DTEND:20261204T160000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 6
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+BEGIN:VEVENT
+UID:AS-2026-135192-7
+DTSTART:20261211T121500Z
+DTEND:20261211T160000Z
+STATUS:
+SUMMARY: Seminar / Kunstgeschichte der Moderne und Gegenwart:Art et écologie Begleitung der Ausstellung von Guillaume Dénervaud in der Kunsthalle Friart - 7
+DESCRIPTION:enseignants: Delz Anja\n Url timetable: ?show=135192\nType:Cours
+LOCATION:  MIS 04 Room 4120
+ORGANIZER;CN=Delz Anja:mailto:noreply@unifr.ch
+END:VEVENT
+END:VCALENDAR

@@ -2,7 +2,7 @@ from alembic import context
 from sqlalchemy import create_engine
 
 from unifr_api.config import Settings
-from unifr_api.database import metadata
+from unifr_api.catalogue import metadata
 
 url = Settings().database_url
 if context.is_offline_mode():

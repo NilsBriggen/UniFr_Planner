@@ -1,0 +1,79 @@
+"""Opt-in integration controls; each run uses a new disposable PostgreSQL schema."""
+
+import os
+from pathlib import Path
+from uuid import uuid4
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.schema import CreateSchema, DropSchema
+
+from unifr_api.catalogue import SqlCatalogueRepository, metadata
+from unifr_ingest.parsers import parse_listing
+from unifr_ingest.sync import sync
+
+
+@pytest.fixture
+def postgres_repo():
+    url = os.environ.get("UNIFR_TEST_DATABASE_URL")
+    if not url:
+        pytest.skip("Set UNIFR_TEST_DATABASE_URL for real PostgreSQL lock/transaction tests")
+    admin = create_engine(url)
+    schema = "ingest_test_" + uuid4().hex
+    with admin.begin() as conn:
+        conn.execute(CreateSchema(schema))
+    engine = create_engine(url, connect_args={"options": f"-csearch_path={schema}"})
+    metadata.create_all(engine)
+    try:
+        yield SqlCatalogueRepository(engine)
+    finally:
+        engine.dispose()
+        with admin.begin() as conn:
+            conn.execute(DropSchema(schema, cascade=True))
+        admin.dispose()
+
+
+def test_postgres_advisory_lock_excludes_second_connection_and_releases(postgres_repo):
+    second = SqlCatalogueRepository(postgres_repo.engine)
+    with postgres_repo.lock():
+        with pytest.raises(RuntimeError, match="advisory lock"):
+            with second.lock():
+                pytest.fail("Second connection acquired held advisory lock")
+    with second.lock():
+        assert second.locked
+
+
+def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo):
+    fixtures = Path("packages/ingest/tests/fixtures")
+
+    class FixtureSource:
+        broken = False
+
+        def listing(self, number):
+            page = parse_listing((fixtures / "listing.html").read_text(), number)
+            return page.model_copy(update={"reported_count": 1, "entries": (page.entries[1],)})
+
+        def detail(self, entry):
+            return (
+                "<html>deliberately broken</html>"
+                if self.broken
+                else (fixtures / "detail.html").read_text()
+            )
+
+    from datetime import timedelta
+
+    source = FixtureSource()
+    first = sync(source, postgres_repo)
+    assert first.published
+    assert len(postgres_repo.search("écologie")) == 1
+    before = postgres_repo.current().snapshot_id
+    source.broken = True
+    rejected = sync(source, postgres_repo, detail_ttl=timedelta(0))
+    after = postgres_repo.current().snapshot_id
+    assert not rejected.published
+    assert rejected.outcome == "rejected_validation"
+    assert before == after == first.snapshot_id
+    assert rejected.snapshot_id != first.snapshot_id
+    print(
+        f"positive={first.snapshot_id} rejected={rejected.snapshot_id} before={before} after={after}"
+    )

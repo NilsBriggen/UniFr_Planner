@@ -1,0 +1,9 @@
+services:
+  catalogue-sync:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    environment:
+      UNIFR_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-unifr}:${POSTGRES_PASSWORD:-unifr_dev}@db:5432/${POSTGRES_DB:-unifr}
+    command: ["python", "-m", "unifr_api.catalogue_sync"]
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
