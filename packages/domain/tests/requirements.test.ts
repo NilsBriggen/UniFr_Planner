@@ -52,6 +52,145 @@ const evaluate = (
 it("exports a pure requirements evaluator", () =>
   expect(typeof engine.evaluateRequirements).toBe("function"));
 describe("allocation and progress", () => {
+  it("keeps reuse status and deficits independent of sibling presentation order", () => {
+    const result = evaluate(
+      all({ ...pool("reuse", ["A"]), allowReuse: true }, pool("first", ["A"])),
+      [course("A", 6, "planned")],
+    );
+    expect(result).toMatchObject({
+      status: "covered",
+      planned: 6,
+      remaining: 0,
+      remainingToEarn: 6,
+    });
+    expect(result.children.map((c) => c.node.id)).toEqual(["reuse", "first"]);
+  });
+  it.each([
+    ["A", "Z", false],
+    ["A", "Z", true],
+    ["Z", "A", false],
+    ["Z", "A", true],
+  ] as const)(
+    "prioritises substitution %s to %s independent of input reversal %s",
+    (original, replacement, reverse) => {
+      const root: RequirementNode = {
+        ...base,
+        id: "required",
+        kind: "course",
+        codes: [original],
+        minCredits: 6,
+      };
+      const records = [course(original), course(replacement)];
+      const result = evaluate(root, reverse ? records.reverse() : records, {
+        overrides: [
+          {
+            kind: "substitution",
+            courseId: replacement,
+            nodeId: "required",
+            reason: "Approval",
+          },
+        ],
+      });
+      expect(result).toMatchObject({
+        earned: 6,
+        remaining: 0,
+        status: "complete",
+      });
+      expect(result.allocations.map((a) => a.courseId)).toEqual([replacement]);
+    },
+  );
+  it("uses only explicit combined substitution evidence for a course", () => {
+    const root: RequirementNode = {
+      ...base,
+      id: "required",
+      kind: "course",
+      codes: ["A"],
+      minCredits: 6,
+    };
+    const overrides = ["X", "Y"].map((courseId) => ({
+      kind: "substitution",
+      courseId,
+      nodeId: "required",
+      reason: "Two explicitly approved components",
+    }));
+    const result = evaluate(
+      root,
+      [course("A"), course("X", 3), course("Y", 3)],
+      { overrides },
+    );
+    expect(result.earned).toBe(6);
+    expect(result.allocations.map((a) => a.courseId)).toEqual(["X", "Y"]);
+  });
+  it.each([false, true])(
+    "selects a sufficient equivalent without accumulating attempts, reverse=%s",
+    (reverse) => {
+      const root: RequirementNode = {
+        ...base,
+        id: "required",
+        kind: "course",
+        codes: ["A", "Z"],
+        minCredits: 6,
+      };
+      const records = [course("A", 3), course("Z", 6)];
+      const result = evaluate(root, reverse ? records.reverse() : records);
+      expect(result).toMatchObject({ earned: 6, status: "complete" });
+      expect(result.allocations.map((a) => a.courseId)).toEqual(["Z"]);
+    },
+  );
+  it("reserves the sufficient equivalent before an earlier elective pool", () => {
+    const root = all(pool("electives", ["A", "Z"], 3), {
+      ...base,
+      id: "required",
+      kind: "course",
+      codes: ["A", "Z"],
+      minCredits: 6,
+    });
+    expect(evaluate(root, [course("A", 3), course("Z", 6)])).toMatchObject({
+      earned: 9,
+      status: "complete",
+    });
+  });
+  it.each(["planned", "current", "completed"] as const)(
+    "counts reused %s credit only once in both remaining views",
+    (status) => {
+      const result = evaluate(
+        all(pool("first", ["A"]), {
+          ...pool("reuse", ["A"]),
+          allowReuse: true,
+        }),
+        [course("A", 6, status)],
+      );
+      expect(result.remaining).toBe(0);
+      expect(result.remainingToEarn).toBe(status === "completed" ? 0 : 6);
+      expect(result.status).toBe(
+        status === "planned"
+          ? "covered"
+          : status === "current"
+            ? "in_progress"
+            : "complete",
+      );
+    },
+  );
+  it("shares an outstanding credit demand only when reuse and eligible codes overlap", () => {
+    const reused = all(pool("first", ["A"]), {
+      ...pool("reuse", ["A"]),
+      allowReuse: true,
+    });
+    expect(evaluate(reused, []).remaining).toBe(6);
+    expect(
+      evaluate(
+        all(pool("first", ["A"]), {
+          ...pool("reuse", ["B"]),
+          allowReuse: true,
+        }),
+        [],
+      ).remaining,
+    ).toBe(12);
+    expect(
+      evaluate({ ...reused, minCredits: 12 }, [course("A", 6, "planned")])
+        .remainingToEarn,
+    ).toBe(12);
+  });
   it("never combines two under-credit equivalent attempts into one required course", () => {
     const root: RequirementNode = {
       ...base,

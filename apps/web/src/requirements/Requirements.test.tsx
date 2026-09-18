@@ -6,6 +6,43 @@ import { IDBFactory } from "fake-indexeddb";
 import App from "../App";
 import { PlanStore } from "../planner/storage";
 import { createPlan } from "../planner/domain";
+import { bindProgramme } from "./adapter";
+
+it("can clear stale checklist-only evidence and restore evaluation", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const plan = bindProgramme(
+    createPlan({
+      id: "stale",
+      scenarioId: "s",
+      name: "Checklist recovery",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    { code: "CS-120", version: "2026.1", cohort: 2026 },
+  );
+  plan.scenarios[0].requirementEvidence = {
+    overrides: [],
+    completedChecklist: ["removed-duty"],
+  };
+  await new PlanStore(indexedDB).save(plan);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  await screen.findByRole("alert");
+  await userEvent.click(
+    screen.getByRole("button", { name: "Clear requirement evidence" }),
+  );
+  await screen.findByRole("list", { name: "Study requirements" });
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  expect(
+    (await new PlanStore(indexedDB).load()).plans[0].scenarios[0]
+      .requirementEvidence,
+  ).toEqual({ overrides: [], completedChecklist: [] });
+});
 
 beforeEach(() => vi.stubGlobal("indexedDB", new IDBFactory()));
 afterEach(() => vi.unstubAllGlobals());

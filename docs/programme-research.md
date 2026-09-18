@@ -124,6 +124,18 @@ available for recovery. Native lists, labels, details/summary and form controls
 provide accessible hierarchy and keyboard interaction without a partially
 implemented ARIA tree widget.
 
+For a single course/project requirement, explicit evidence replaces automatic
+matching altogether. Multiple records count together only when each is an
+explicit personal allocation/substitution to that requirement; ordinary
+equivalent attempts are never combined. Automatic matching prefers an eligible
+record that satisfies the credit bounds before an insufficient equivalent, and
+uses the same choice for compulsory-course reservation. Pool overrides are
+allocated first, with automatic eligible records filling only the unmet demand.
+Remaining-credit aggregation shares obligations only where a requirement
+explicitly permits reuse and the evidence identity or future eligible codes
+overlap. A separate parent's own minimum-credit floor is still enforced. Imported
+stale checklist evidence can be cleared even when no overrides were recorded.
+
 ## Cross-faculty expansion backlog
 
 This is a **backlog**, not a list of verified programmes. The order follows

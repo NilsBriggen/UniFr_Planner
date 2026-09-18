@@ -383,21 +383,26 @@ function PlanRequirements({
           ))}
         </ul>
       )}
-      {failed && evidence.overrides.length > 0 && (
-        <Button
-          disabled={busy}
-          onClick={() =>
-            void commit(() =>
-              updateScenario(plan, (s) => ({
-                ...s,
-                requirementEvidence: { overrides: [], completedChecklist: [] },
-              })),
-            )
-          }
-        >
-          {t.reset}
-        </Button>
-      )}
+      {failed &&
+        (evidence.overrides.length > 0 ||
+          evidence.completedChecklist.length > 0) && (
+          <Button
+            disabled={busy}
+            onClick={() =>
+              void commit(() =>
+                updateScenario(plan, (s) => ({
+                  ...s,
+                  requirementEvidence: {
+                    overrides: [],
+                    completedChecklist: [],
+                  },
+                })),
+              )
+            }
+          >
+            {t.reset}
+          </Button>
+        )}
     </>
   );
 }

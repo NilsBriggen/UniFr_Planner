@@ -5,6 +5,61 @@ import { requirementMessages } from "../src/requirements/messages";
 import { plannerMessages } from "../src/planner/messages";
 
 for (const language of ["de", "fr", "en"] as const)
+  test(`requirements ${language}: recover imported stale checklist without overrides`, async ({
+    page,
+  }) => {
+    const t = requirementMessages[language],
+      p = plannerMessages[language];
+    await page.addInitScript(
+      (lang) => localStorage.setItem("unifr.language", lang),
+      language,
+    );
+    const plan = createPlan({
+      id: "stale-checklist",
+      scenarioId: "main",
+      name: "Checklist recovery",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    });
+    plan.requirements = {
+      cohort: 2026,
+      templates: [{ code: "CS-120", version: "2026.1" }],
+    };
+    plan.scenarios[0].requirementEvidence = {
+      overrides: [],
+      completedChecklist: ["removed-duty"],
+    };
+    await page.goto("/plan");
+    await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(plan));
+    await page.getByRole("button", { name: p.preview, exact: true }).click();
+    await page
+      .getByRole("button", { name: p.confirmImport, exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: plan.name, exact: true }),
+    ).toBeVisible();
+    await page.goto("/requirements");
+    await expect(page.getByRole("alert")).toHaveText(t.error);
+    const reset = page.getByRole("button", { name: t.reset, exact: true });
+    await reset.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("list", { name: t.title })).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByRole("list", { name: t.title })).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveCount(0);
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+  });
+
+for (const language of ["de", "fr", "en"] as const)
   test(`requirements ${language}: allocations, source evidence, reload, keyboard and Axe`, async ({
     page,
   }, info) => {

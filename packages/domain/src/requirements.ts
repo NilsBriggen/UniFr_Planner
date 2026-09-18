@@ -209,6 +209,30 @@ export function evaluateRequirements(
       statusOrder[a.status] - statusOrder[b.status] ||
       a.code.localeCompare(b.code, "en"),
   );
+  function candidates(node: RequirementNode): CourseRecord[] {
+    if (!("codes" in node)) return [];
+    const personal = new Set(
+      overrides.filter((o) => o.nodeId === node.id).map((o) => o.courseId),
+    );
+    const single = node.kind === "course" || node.kind === "project";
+    const sufficient = (c: CourseRecord) =>
+      c.ects !== null &&
+      c.ects >= (node.minCredits ?? 0) &&
+      (node.maxCredits === undefined || c.ects <= node.maxCredits);
+    return courses
+      .filter(
+        (c) =>
+          c.status !== "unscheduled" &&
+          (single && personal.size > 0
+            ? personal.has(c.id)
+            : node.codes.includes(c.code) || personal.has(c.id)),
+      )
+      .sort(
+        (a, b) =>
+          Number(personal.has(b.id)) - Number(personal.has(a.id)) ||
+          (single ? Number(sufficient(b)) - Number(sufficient(a)) : 0),
+      );
+  }
   // Reserve narrow compulsory leaves globally, so an earlier broad pool cannot steal them.
   function reserve(
     subtree: RequirementNode,
@@ -217,10 +241,8 @@ export function evaluateRequirements(
     const reserved = new Map(parent);
     function walk(n: RequirementNode) {
       if (n.kind === "one_of") return;
-      if (n.kind === "course" || n.kind === "project") {
-        const c = courses.find(
-          (c) => n.codes.includes(c.code) && !reserved.has(c.id),
-        );
+      if ((n.kind === "course" || n.kind === "project") && !n.allowReuse) {
+        const c = candidates(n).find((c) => !reserved.has(c.id));
         if (c) reserved.set(c.id, n.id);
       } else if ("children" in n) n.children.forEach(walk);
     }
@@ -234,6 +256,69 @@ export function evaluateRequirements(
         .filter((a) => a.status === status)
         .reduce((s, a) => s + (a.credits ?? 0), 0),
     );
+  type Demand = { amount: number; codes: string[]; reusable: boolean };
+  type RemainingField = "remaining" | "remainingToEarn";
+  // Credit obligations that explicitly allow reuse may share the same outstanding
+  // evidence. Keep allocated record identities separate from hypothetical credits.
+  function combineDemands(demands: Demand[]): number {
+    const buckets = demands.filter((d) => !d.reusable).map((d) => ({ ...d }));
+    for (const demand of demands.filter((d) => d.reusable)) {
+      let remaining = demand.amount;
+      for (const bucket of [...buckets]) {
+        if (remaining <= 0) break;
+        const intersection = bucket.codes.filter((code) =>
+          demand.codes.includes(code),
+        );
+        if (!intersection.length) continue;
+        const shared = Math.min(bucket.amount, remaining);
+        if (shared < bucket.amount)
+          buckets.push({ ...bucket, amount: round(bucket.amount - shared) });
+        bucket.amount = shared;
+        bucket.codes = intersection;
+        remaining = round(remaining - shared);
+      }
+      if (remaining > 0) buckets.push({ ...demand, amount: remaining });
+    }
+    return round(buckets.reduce((sum, d) => sum + d.amount, 0));
+  }
+  function demandsFor(
+    result: RequirementResult,
+    field: RemainingField,
+  ): Demand[] {
+    if (result.children.length) {
+      const demands = result.children.flatMap((c) => demandsFor(c, field));
+      const extra = round(result[field] - combineDemands(demands));
+      return extra > 0
+        ? [...demands, { amount: extra, codes: [], reusable: false }]
+        : demands;
+    }
+    let remaining = result[field];
+    const demands: Demand[] = [];
+    if (field === "remainingToEarn") {
+      for (const allocation of result.allocations.filter(
+        (a) => a.status !== "completed",
+      )) {
+        const amount = Math.min(remaining, allocation.credits ?? 0);
+        if (amount > 0)
+          demands.push({
+            amount,
+            codes: [`record:${allocation.courseId}`],
+            reusable: !!result.node.allowReuse,
+          });
+        remaining = round(remaining - amount);
+      }
+    }
+    if (remaining > 0)
+      demands.push({
+        amount: remaining,
+        codes:
+          "codes" in result.node
+            ? result.node.codes.map((code) => `code:${code}`)
+            : [],
+        reusable: !!result.node.allowReuse,
+      });
+    return demands;
+  }
   function visit(
     node: RequirementNode,
     used: Set<string>,
@@ -282,7 +367,7 @@ export function evaluateRequirements(
       allocations = [...unique.values()];
     } else if ("codes" in node) {
       let credits = 0;
-      for (const c of courses) {
+      for (const c of candidates(node)) {
         const override = overrides.find((o) => o.courseId === c.id);
         if (c.status === "unscheduled" || (used.has(c.id) && !node.allowReuse))
           continue;
@@ -315,7 +400,9 @@ export function evaluateRequirements(
           ...(override ? { override } : {}),
         });
         credits = round(credits + (c.ects ?? 0));
-        used.add(c.id);
+        // A reusable requirement never claims exclusive ownership, even when
+        // it appears before the ordinary sibling that will also use the record.
+        if (!node.allowReuse) used.add(c.id);
       }
     }
     const earned = totals(allocations, "completed"),
@@ -370,12 +457,14 @@ export function evaluateRequirements(
       planned,
       remaining: Math.max(
         round(min - total),
-        children.reduce((s, c) => s + c.remaining, 0),
+        combineDemands(children.flatMap((c) => demandsFor(c, "remaining"))),
         0,
       ),
       remainingToEarn: Math.max(
         round(min - earned),
-        children.reduce((s, c) => s + c.remainingToEarn, 0),
+        combineDemands(
+          children.flatMap((c) => demandsFor(c, "remainingToEarn")),
+        ),
         0,
       ),
       remainingCourses: Math.max(minCount - allocations.length, 0),
