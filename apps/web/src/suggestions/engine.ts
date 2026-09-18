@@ -45,6 +45,7 @@ export type Rejection =
   | "prerequisite"
   | "prerequisiteUnknown"
   | "sourceMissing"
+  | "sourceConflict"
   | "newConflict"
   | "overrideChange"
   | "requirementError"
@@ -58,6 +59,7 @@ export type Suggestion = {
   rank: Rank;
   outranksBy: number | null;
   advanced: RequirementResult[];
+  impacts: { before: RequirementResult; after: RequirementResult }[];
   requirementsAfter: RequirementResult | null;
   ectsDelta: number | null;
   conflictsBefore: Conflict[];
@@ -84,6 +86,22 @@ const total = (plan: Plan) =>
   activeScenario(plan)
     .courses.filter((c) => c.status !== "unscheduled")
     .reduce((n, c) => n + (c.ects ?? 0), 0);
+const allocated = (r: RequirementResult) => r.earned + r.inProgress + r.planned;
+const excess = (r: RequirementResult) =>
+  Math.max(0, allocated(r) - (r.node.maxCredits ?? Infinity));
+// Ignore object insertion order, but preserve ordered source arrays (meetings).
+const canonical = (value: unknown): unknown =>
+  Array.isArray(value)
+    ? value.map(canonical)
+    : value && typeof value === "object"
+      ? Object.fromEntries(
+          Object.entries(value)
+            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+            .map(([key, value]) => [key, canonical(value)]),
+        )
+      : value;
+const sourceKey = (item: CatalogueCandidate, term: string) =>
+  JSON.stringify([item.course.code, item.course.offering?.source_id, term]);
 
 /** Lexicographic order, never a weighted blend: lower-priority preferences
  * cannot outweigh even one point at an earlier criterion. */
@@ -166,11 +184,19 @@ export function generateSuggestions(input: {
     rejected: [],
     availability: "noData",
   };
+  // The supplied evaluation carries its selected alternatives. Recomputing
+  // allocations must not silently substitute an automatically preferred branch.
+  const choices = Object.fromEntries(
+    (input.requirements ? flatten(input.requirements) : [])
+      .filter((r) => r.node.kind === "one_of" && r.selectedChildId)
+      .map((r) => [r.node.id, r.selectedChildId!]),
+  );
+  const requirementOptions = { ...scenario.requirementEvidence, choices };
   const baseline = input.requirements
     ? evaluateRequirements(
         input.requirements.node,
         scenario.courses,
-        scenario.requirementEvidence,
+        requirementOptions,
       )
     : null;
   const beforeRules = baseline ? flatten(baseline) : [];
@@ -179,6 +205,25 @@ export function generateSuggestions(input: {
     beforeCalendar.conflicts.filter((c) => c.kind === "hard").map(key),
   );
   const base = JSON.stringify(plan);
+  // Inspect every record before candidate deduplication. A shared identity with
+  // different evidence is ambiguous, including permissive/restrictive variants.
+  const sourceVersions = new Map<string, Set<string>>();
+  for (const item of catalogue) {
+    const fingerprint = JSON.stringify(
+      canonical({
+        ...item,
+        prerequisites: item.prerequisites && [...item.prerequisites].sort(),
+        languages: [...item.languages].sort(),
+        equivalentTo: [...item.equivalentTo].sort(),
+      }),
+    );
+    for (const term of item.course.offering?.terms.map(canonicalTerm) ?? []) {
+      const key = sourceKey(item, term);
+      const versions = sourceVersions.get(key) ?? new Set<string>();
+      versions.add(fingerprint);
+      sourceVersions.set(key, versions);
+    }
+  }
   const seen = new Set<string>();
   for (const before of scenario.courses.filter(
     (c) => c.status !== "completed",
@@ -223,6 +268,10 @@ export function generateSuggestions(input: {
           result.rejected.push({ id, reason, detail });
         if (before.pinned) {
           reject("pinned", before.code);
+          continue;
+        }
+        if ((sourceVersions.get(sourceKey(item, term))?.size ?? 0) > 1) {
+          reject("sourceConflict", source.code);
           continue;
         }
         if (
@@ -286,7 +335,7 @@ export function generateSuggestions(input: {
             ? evaluateRequirements(
                 baseline.node,
                 activeScenario(next).courses,
-                scenario.requirementEvidence,
+                requirementOptions,
               )
             : null;
         } catch {
@@ -301,6 +350,17 @@ export function generateSuggestions(input: {
             (r.remaining < old.remaining ||
               r.remainingCourses < old.remainingCourses)
           );
+        });
+        const impacts = afterRules.flatMap((after) => {
+          const before = beforeRules.find((r) => r.node.id === after.node.id);
+          return before &&
+            (before.remaining !== after.remaining ||
+              before.remainingCourses !== after.remainingCourses ||
+              allocated(before) !== allocated(after) ||
+              before.status !== after.status ||
+              excess(before) !== excess(after))
+            ? [{ before, after }]
+            : [];
         });
         const uncertainty: Uncertainty[] = [];
         if (calendar.unresolved.length) uncertainty.push("calendar");
@@ -326,6 +386,7 @@ export function generateSuggestions(input: {
               !r ||
               r.remaining > old.remaining ||
               r.remainingCourses > old.remainingCourses ||
+              excess(r) > excess(old) ||
               statusRank[r.status] < statusRank[old.status]
             );
           })
@@ -388,6 +449,7 @@ export function generateSuggestions(input: {
           ],
           outranksBy: null,
           advanced,
+          impacts,
           requirementsAfter,
           ectsDelta:
             before.ects === null || after.ects === null

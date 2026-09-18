@@ -118,12 +118,43 @@ function Comparison({
           : `${suggestion.ectsDelta > 0 ? "+" : ""}${suggestion.ectsDelta}`}{" "}
         · <strong>{t.resolved}:</strong> {suggestion.rank[0]}
       </p>
-      <h3>{t.advanced}</h3>
-      {suggestion.advanced.length ? (
-        <ul>
-          {suggestion.advanced.map((r) => (
-            <li key={r.node.id}>
-              {r.node.title[language]} · {r.remaining} ECTS
+      <h3>{t.impacts}</h3>
+      {suggestion.impacts.length ? (
+        <ul aria-label={t.impacts}>
+          {suggestion.impacts.map(({ before, after }) => (
+            <li key={after.node.id}>
+              <strong>{after.node.title[language]}</strong>
+              <p>
+                {t.remainingCredits}: {before.remaining} → {after.remaining}
+                <br />
+                {t.missingCourses}: {before.remainingCourses} →{" "}
+                {after.remainingCourses}
+                <br />
+                {t.allocatedCredits}:{" "}
+                {before.earned + before.inProgress + before.planned} →{" "}
+                {after.earned + after.inProgress + after.planned}
+                {after.node.maxCredits !== undefined && (
+                  <>
+                    <br />
+                    {t.overMaximum}:{" "}
+                    {Math.max(
+                      0,
+                      before.earned +
+                        before.inProgress +
+                        before.planned -
+                        after.node.maxCredits,
+                    )}{" "}
+                    →{" "}
+                    {Math.max(
+                      0,
+                      after.earned +
+                        after.inProgress +
+                        after.planned -
+                        after.node.maxCredits,
+                    )}
+                  </>
+                )}
+              </p>
             </li>
           ))}
         </ul>

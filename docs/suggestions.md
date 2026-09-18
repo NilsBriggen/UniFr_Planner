@@ -8,6 +8,10 @@ Open **Suggestions** from the degree plan. The current live catalogue is unavail
 
 Each candidate replaces exactly one non-completed selection. Its identity is retained, while the proposed code, offering, ECTS and semester are shown for comparison. Other scenarios, programme bindings, unavailable periods and personal evidence remain intact. Pins cannot move. Prerequisites must be self-reported completed in an earlier term (or completed with no term). The offering's declared terms must include a semester in the plan. No new dated hard overlap is allowed, even if an old overlap disappears; checks span semester boundaries. A course replacement cannot reinterpret an existing personal override for another course.
 
+Selected `one_of` branches in the supplied requirements result are preserved when reevaluating both the baseline and candidates. Individual credit-maximum violations are compared even when the aggregate rule status already needs clarification. Conflicting catalogue records sharing a course/offering/term identity are excluded before ranking, independently of source order, with an explicit conflicting-evidence reason.
+
+Affected requirements are named in the selected language and show before/after remaining ECTS, missing-course count, allocated credits and any excess above the credit maximum. These quantities explain both advancement and loss of coverage; generic uncertainty acknowledgment does not replace this comparison.
+
 Calendars use Task 4 recurrence/date expansion. Unknown or unsupported meetings, missing in-term occurrences, and unknown credits remain explicit uncertainty. A proposed calendar containing unresolved data never earns a proven clash-repair score. Requirement regressions and source/override uncertainty are prominently shown before applying. Unknown times remain reviewable conditional alternatives, not certified clash-free schedules.
 
 ## Ranking

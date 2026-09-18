@@ -23,6 +23,68 @@ const savedPlans = (page: Page) =>
   });
 
 for (const language of ["de", "fr", "en"] as const) {
+  test(`suggestions ${language}: exact requirement impacts remain reviewable and reversible`, async ({
+    page,
+  }, info) => {
+    const t = suggestionMessages[language],
+      p = plannerMessages[language];
+    const plan = createExample("impact", "Requirement impact");
+    plan.scenarios[0].courses[0].ects = 4;
+    plan.scenarios.push({
+      ...structuredClone(plan.scenarios[0]),
+      id: "other",
+      name: "Preserved scenario",
+    });
+    await page.addInitScript(
+      (lang) => localStorage.setItem("unifr.language", lang),
+      language,
+    );
+    await page.goto("/plan");
+    await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(plan));
+    await page.getByRole("button", { name: p.preview, exact: true }).click();
+    await page
+      .getByRole("button", { name: p.confirmImport, exact: true })
+      .click();
+    await page.getByRole("link", { name: t.nav, exact: true }).click();
+    const original = await savedPlans(page);
+    await page
+      .getByRole("list", { name: t.nav, exact: true })
+      .getByRole("button")
+      .first()
+      .click();
+    const comparison = page.getByRole("region", { name: t.comparison });
+    const impacts = comparison.getByRole("list", { name: t.impacts });
+    await expect(impacts).toContainText(
+      plan.scenarios[0].courses[0].titles[language],
+    );
+    await expect(impacts).toContainText(`${t.remainingCredits}: 2 → 0`);
+    await expect(impacts).toContainText(`${t.missingCourses}: 0 → 0`);
+    await expect(impacts).toContainText(`${t.allocatedCredits}: 4 → 6`);
+    expect(await savedPlans(page)).toEqual(original);
+    expect(
+      (
+        await new AxeBuilder({ page })
+          .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+          .analyze()
+      ).violations,
+    ).toEqual([]);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await comparison.screenshot({
+      path: info.outputPath("requirement-impact.png"),
+    });
+    await comparison.getByRole("checkbox", { name: t.confirm }).check();
+    await comparison
+      .getByRole("button", { name: t.apply, exact: true })
+      .click();
+    await expect(page.getByText(t.applied, { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: t.undo, exact: true }).click();
+    await expect(page.getByText(t.undone, { exact: true })).toBeVisible();
+    expect(await savedPlans(page)).toEqual(original);
+  });
   test(`suggestions ${language}: dated comparison, uncertainty, apply, reload undo and Axe`, async ({
     page,
   }, info) => {

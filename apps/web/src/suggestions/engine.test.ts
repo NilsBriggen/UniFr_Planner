@@ -100,6 +100,92 @@ function setup() {
 }
 
 describe("candidate generation and hard constraints", () => {
+  it("preserves the supplied one_of choice even when automatic evaluation would prefer another branch", () => {
+    const input = setup();
+    const root: RequirementNode = {
+      ...input.requirements.node,
+      id: "choice",
+      kind: "one_of",
+      children: [
+        input.requirements.node,
+        {
+          ...input.requirements.node,
+          id: "chosen",
+          kind: "course",
+          codes: ["NOT-YET"],
+        },
+      ],
+    };
+    input.requirements = evaluateRequirements(
+      root,
+      activeScenario(input.plan).courses,
+      { choices: { choice: "chosen" } },
+    );
+    expect(input.requirements.selectedChildId).toBe("chosen");
+    const suggestion = generateSuggestions(input).suggestions[0];
+    expect(suggestion.requirementsAfter?.selectedChildId).toBe("chosen");
+    expect(suggestion.requirementsAfter?.children[0].remaining).toBe(6);
+    expect(suggestion.advanced).toEqual([]);
+  });
+  it("warns about a new maxCredits violation even when the rule already needs clarification", () => {
+    const input = setup();
+    input.requirements = evaluateRequirements(
+      {
+        ...input.requirements.node,
+        kind: "credit_pool",
+        codes: ["A"],
+        minCredits: 6,
+        maxCredits: 6,
+        reviewStatus: "draft",
+      },
+      activeScenario(input.plan).courses,
+    );
+    input.catalogue[0].course.ects = 8;
+    const suggestion = generateSuggestions(input).suggestions[0];
+    expect(suggestion.requirementsAfter?.status).toBe("needs_clarification");
+    expect(suggestion.uncertainty).toContain("requirementLoss");
+    expect(suggestion.impacts[0].before.planned).toBe(6);
+    expect(suggestion.impacts[0].after.planned).toBe(8);
+  });
+  it("rejects conflicting same-identity source records independently of input order", () => {
+    const input = setup();
+    const conflicting = structuredClone(input.catalogue[0]);
+    conflicting.prerequisites = ["UNMET"];
+    for (const pair of [
+      [input.catalogue[0], conflicting],
+      [conflicting, input.catalogue[0]],
+    ]) {
+      const result = generateSuggestions({ ...input, catalogue: pair });
+      expect(result.suggestions).toEqual([]);
+      expect(result.rejected).toEqual([
+        {
+          id: JSON.stringify(["A", "A", "A-alternative", "AS-2026"]),
+          reason: "sourceConflict",
+          detail: "A",
+        },
+      ]);
+      expect(result.availability).toBe("noSafe");
+    }
+    conflicting.prerequisites = [];
+    conflicting.evidence = "";
+    expect(
+      generateSuggestions({
+        ...input,
+        catalogue: [input.catalogue[0], conflicting],
+      }),
+    ).toEqual(
+      generateSuggestions({
+        ...input,
+        catalogue: [conflicting, input.catalogue[0]],
+      }),
+    );
+    expect(
+      generateSuggestions({
+        ...input,
+        catalogue: [input.catalogue[0], conflicting],
+      }).rejected[0].reason,
+    ).toBe("sourceConflict");
+  });
   it("repairs a dated real clash by changing only its offering, deterministically and without mutation", () => {
     const input = setup(),
       before = JSON.stringify(input);

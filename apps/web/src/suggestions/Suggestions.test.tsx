@@ -5,12 +5,50 @@ import { IDBFactory } from "fake-indexeddb";
 import { MemoryRouter } from "react-router-dom";
 import App from "../App";
 import { PlanStore } from "../planner/storage";
+import { createExample } from "./seed";
+import { suggestionMessages } from "./messages";
 
 beforeEach(() => {
   vi.stubGlobal("indexedDB", new IDBFactory());
   localStorage.setItem("unifr.language", "en");
 });
 afterEach(() => vi.unstubAllGlobals());
+for (const [language, remaining, courses] of [
+  ["en", "Remaining ECTS", "Missing courses"],
+  ["de", "Fehlende ECTS", "Fehlende Kurse"],
+  ["fr", "ECTS restants", "Cours manquants"],
+] as const)
+  it(`shows localized affected requirements and exact before/after quantities in ${language}`, async () => {
+    localStorage.setItem("unifr.language", language);
+    const plan = createExample("impact", "Impact");
+    plan.scenarios[0].courses[0].ects = 4;
+    await new PlanStore(indexedDB).save(plan);
+    render(
+      <MemoryRouter initialEntries={["/suggestions"]}>
+        <App />
+      </MemoryRouter>,
+    );
+    const t = suggestionMessages[language];
+    await userEvent.click(
+      (
+        await screen.findAllByRole("button", { name: new RegExp(t.compare) })
+      )[0],
+    );
+    const comparison = screen.getByRole("region", { name: t.comparison });
+    const changes = within(comparison).getByRole("list", {
+      name: {
+        en: "Requirement changes",
+        de: "Änderungen an Anforderungen",
+        fr: "Évolution des exigences",
+      }[language],
+    });
+    expect(changes).toHaveTextContent(
+      plan.scenarios[0].courses[0].titles[language],
+    );
+    expect(changes).toHaveTextContent(`${remaining}: 2 → 0`);
+    expect(changes).toHaveTextContent(`${courses}: 0 → 0`);
+    expect((await new PlanStore(indexedDB).load()).plans[0]).toEqual(plan);
+  });
 it("opens an explicit seeded example, compares without saving, applies and undoes after reload", async () => {
   const mount = () =>
     render(

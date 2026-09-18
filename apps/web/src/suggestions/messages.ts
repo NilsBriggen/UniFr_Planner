@@ -1,5 +1,10 @@
 export const suggestionMessages = {
   en: {
+    impacts: "Requirement changes",
+    remainingCredits: "Remaining ECTS",
+    missingCourses: "Missing courses",
+    allocatedCredits: "Allocated ECTS",
+    overMaximum: "ECTS over maximum",
     routes: {
       alternative: "Alternative offering",
       equivalent: "Equivalent course",
@@ -92,6 +97,8 @@ export const suggestionMessages = {
         "Fictional seeded offering and rule evidence, not a current university course.",
     },
     reasons: {
+      sourceConflict:
+        "Conflicting records for this offering; candidate excluded",
       pinned: "Pinned selection cannot move",
       prerequisite: "Required completed prerequisite missing",
       prerequisiteUnknown: "Prerequisites unknown; candidate excluded",
@@ -104,6 +111,11 @@ export const suggestionMessages = {
     },
   },
   de: {
+    impacts: "Änderungen an Anforderungen",
+    remainingCredits: "Fehlende ECTS",
+    missingCourses: "Fehlende Kurse",
+    allocatedCredits: "Zugeordnete ECTS",
+    overMaximum: "ECTS über dem Maximum",
     routes: {
       alternative: "Alternatives Angebot",
       equivalent: "Gleichwertiger Kurs",
@@ -198,6 +210,8 @@ export const suggestionMessages = {
         "Fiktives Kursangebot und Regeln aus Beispieldaten, kein aktueller Universitätskurs.",
     },
     reasons: {
+      sourceConflict:
+        "Widersprüchliche Nachweise für dieses Angebot; Kandidat ausgeschlossen",
       pinned: "Fixierte Auswahl darf nicht verschoben werden",
       prerequisite: "Erforderliche abgeschlossene Voraussetzung fehlt",
       prerequisiteUnknown: "Voraussetzungen unbekannt; Kandidat ausgeschlossen",
@@ -210,6 +224,11 @@ export const suggestionMessages = {
     },
   },
   fr: {
+    impacts: "Évolution des exigences",
+    remainingCredits: "ECTS restants",
+    missingCourses: "Cours manquants",
+    allocatedCredits: "ECTS affectés",
+    overMaximum: "ECTS au-delà du maximum",
     routes: {
       alternative: "Autre offre",
       equivalent: "Cours équivalent",
@@ -303,6 +322,8 @@ export const suggestionMessages = {
         "Offre et règles fictives issues d’exemples, pas un cours universitaire actuel.",
     },
     reasons: {
+      sourceConflict:
+        "Données contradictoires pour cette offre ; candidat exclu",
       pinned: "Un cours fixé ne peut pas être déplacé",
       prerequisite: "Prérequis validé manquant",
       prerequisiteUnknown: "Prérequis inconnus ; candidat exclu",
