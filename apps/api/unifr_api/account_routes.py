@@ -3,7 +3,7 @@
 from collections.abc import Iterator
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Header, Request, Response
 from fastapi.security import APIKeyCookie
 from sqlalchemy import create_engine
 
@@ -18,6 +18,7 @@ from .account_models import (
     PlanList,
     PlanWrite,
     Recovery,
+    RecoverySnapshot,
     WriteResult,
 )
 from .account_repository import AccountRepository
@@ -28,16 +29,27 @@ COOKIE = "__Host-unifr_session"
 router = APIRouter(
     prefix="/api/v1/account",
     tags=["account"],
-    responses={code: {"model": PrivateError} for code in (400, 401, 403, 404, 413, 422, 429)},
+    responses={code: {"model": PrivateError} for code in (400, 401, 403, 404, 409, 413, 422, 429)},
 )
 cookie_auth = APIKeyCookie(name=COOKIE, scheme_name="PrivateSession", auto_error=False)
 private = [Depends(cookie_auth)]
 
 
-def repository() -> Iterator[AccountRepository]:
+def repository(
+    request: Request,
+    expected_owner: Annotated[str | None, Header(alias="X-Unifr-Account")] = None,
+) -> Iterator[AccountRepository]:
+    # These explicit credential operations deliberately select a new account;
+    # the precondition protects actions on an already displayed private account.
+    if request.url.path in {
+        "/api/v1/account/register",
+        "/api/v1/account/login",
+        "/api/v1/account/recover",
+    }:
+        expected_owner = None
     engine = create_engine(Settings().database_url)
     try:
-        yield AccountRepository(engine)
+        yield AccountRepository(engine, expected_owner=expected_owner)
     finally:
         engine.dispose()
 
@@ -77,7 +89,7 @@ def register(body: Credentials, request: Request, response: Response, repo: Repo
     value, recovery = repo.register(body.username, body.password.get_secret_value())
     repo.logout(secret(request))
     session_cookie(response, value)
-    return Created(username=body.username, recoveryCode=recovery)
+    return Created(**repo.account_identity(value).model_dump(), recoveryCode=recovery)
 
 
 @router.post("/login", response_model=Identity)
@@ -85,7 +97,7 @@ def login(body: Credentials, request: Request, response: Response, repo: Repo) -
     limit(repo, request, body.username)
     value = repo.login(body.username, body.password.get_secret_value(), secret(request))
     session_cookie(response, value)
-    return Identity(username=body.username)
+    return repo.account_identity(value)
 
 
 @router.post("/recover", response_model=Created)
@@ -95,12 +107,12 @@ def recover(body: Recovery, request: Request, response: Response, repo: Repo) ->
         body.username, body.recoveryCode.get_secret_value(), body.password.get_secret_value()
     )
     session_cookie(response, value)
-    return Created(username=body.username, recoveryCode=replacement)
+    return Created(**repo.account_identity(value).model_dump(), recoveryCode=replacement)
 
 
 @router.get("/session", response_model=Identity, dependencies=private)
 def identity(request: Request, repo: Repo) -> Identity:
-    return Identity(username=repo.identity(secret(request)))
+    return repo.account_identity(secret(request))
 
 
 @router.post("/logout", status_code=204)
@@ -111,7 +123,7 @@ def logout(request: Request, response: Response, repo: Repo) -> None:
 
 @router.get("/plans", response_model=PlanList, dependencies=private)
 def list_plans(request: Request, repo: Repo) -> PlanList:
-    return PlanList(plans=repo.list_plans(secret(request)))
+    return repo.plan_listing(secret(request))
 
 
 @router.post("/plans/import", response_model=PlanList, status_code=201, dependencies=private)
@@ -122,7 +134,7 @@ def import_plans(body: GuestImport, request: Request, repo: Repo) -> PlanList:
 @router.put(
     "/plans/{identifier}",
     response_model=WriteResult,
-    responses={409: {"model": WriteResult}},
+    responses={409: {"model": WriteResult | PrivateError}},
     dependencies=private,
 )
 def write_plan(
@@ -138,6 +150,14 @@ def write_plan(
 def export(request: Request, response: Response, repo: Repo) -> AccountArchive:
     response.headers["Content-Disposition"] = 'attachment; filename="unifr-account-v1.json"'
     return repo.export(secret(request))
+
+
+@router.get("/plans/{identifier}/recovery", response_model=RecoverySnapshot, dependencies=private)
+def recover_snapshot(
+    identifier: str, request: Request, response: Response, repo: Repo
+) -> RecoverySnapshot:
+    response.headers["Content-Disposition"] = 'attachment; filename="unifr-plan-recovery-v1.json"'
+    return repo.recover_snapshot(secret(request), identifier)
 
 
 @router.delete("", status_code=204, dependencies=private)

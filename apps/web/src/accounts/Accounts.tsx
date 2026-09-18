@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import createClient from "openapi-fetch";
 import type { components, paths } from "../api/schema";
 import type { Language } from "../i18n";
@@ -9,11 +9,13 @@ import { accountMessages } from "./messages";
 import "./accounts.css";
 
 type Cloud = components["schemas"]["SavedPlan"];
+type Identity = components["schemas"]["Identity"];
 type Link = { id: string; revision: number };
-const client = () =>
+const client = (owner?: string) =>
   createClient<paths>({
     baseUrl: window.location.origin,
     fetch: (request) => fetch(request),
+    headers: owner ? { "X-Unifr-Account": owner } : undefined,
   });
 class Failure extends Error {
   constructor(readonly status: number) {
@@ -49,17 +51,74 @@ function remember(username: string, localId: string, plan: Cloud) {
 export default function Accounts({ language }: { language: Language }) {
   const t = accountMessages[language],
     local = usePlans();
-  const [username, setUsername] = useState<string | null>(null);
+  const [identity, setIdentity] = useState<Identity | null>(null);
+  const identityRef = useRef<Identity | null>(null);
+  const username = identity?.username ?? null;
   const [cloud, setCloud] = useState<Cloud[]>([]);
+  const [unreadableIds, setUnreadableIds] = useState<string[]>([]);
   const [mode, setMode] = useState<"login" | "register" | "recover">("login");
   const [recovery, setRecovery] = useState("");
   const [notice, setNotice] = useState<
-    "error" | "limited" | "done" | "conflict" | "copied" | "importing" | null
+    | "error"
+    | "limited"
+    | "done"
+    | "conflict"
+    | "copied"
+    | "importing"
+    | "identityChanged"
+    | null
   >(null);
   const [busy, setBusy] = useState(false),
     [deleting, setDeleting] = useState(false);
   const [checking, setChecking] = useState(true);
   const lock = useRef(false);
+  const applyIdentity = useCallback((next: Identity | null) => {
+    if (identityRef.current?.accountId !== next?.accountId) {
+      setCloud([]);
+      setUnreadableIds([]);
+      setRecovery("");
+      setDeleting(false);
+    }
+    // A registration response also contains the one-time recovery code. Keep
+    // only public identity fields here so acknowledgement clears the secret.
+    const current = next
+      ? { accountId: next.accountId, username: next.username }
+      : null;
+    identityRef.current = current;
+    setIdentity(current);
+  }, []);
+  const loadPlans = useCallback(async (owner: string) => {
+    const result = required(await client(owner).GET("/api/v1/account/plans"));
+    const valid: Cloud[] = [],
+      unreadable = [...(result.unreadableIds ?? [])];
+    for (const plan of result.plans) {
+      try {
+        parsePlan(JSON.stringify(plan.snapshot));
+        valid.push(plan);
+      } catch {
+        unreadable.push(plan.id);
+      }
+    }
+    if (identityRef.current?.accountId === owner) {
+      setCloud(valid);
+      setUnreadableIds([...new Set(unreadable)]);
+    }
+  }, []);
+  const revalidate = useCallback(
+    async (expected: string | null) => {
+      const result = await client().GET("/api/v1/account/session");
+      const next = result.response.status === 401 ? null : required(result);
+      if (next && !next.accountId) throw new Failure(401);
+      const changed = (next?.accountId ?? null) !== expected;
+      applyIdentity(next);
+      if (changed) {
+        setNotice("identityChanged");
+        if (next) await loadPlans(next.accountId);
+      }
+      return !changed;
+    },
+    [applyIdentity, loadPlans],
+  );
   useEffect(() => {
     let active = true;
     void client()
@@ -67,9 +126,8 @@ export default function Accounts({ language }: { language: Language }) {
       .then(async (result) => {
         if (!active) return;
         if (result.data) {
-          setUsername(result.data.username);
-          const list = required(await client().GET("/api/v1/account/plans"));
-          if (active) setCloud(list.plans);
+          applyIdentity(result.data);
+          await loadPlans(result.data.accountId);
         } else if (result.response.status !== 401) setNotice("error");
       })
       .catch(() => {
@@ -81,15 +139,45 @@ export default function Accounts({ language }: { language: Language }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [applyIdentity, loadPlans]);
+  useEffect(() => {
+    const check = () => {
+      if (lock.current || document.visibilityState === "hidden") return;
+      lock.current = true;
+      setChecking(true);
+      void revalidate(identityRef.current?.accountId ?? null)
+        .catch(() => setNotice("error"))
+        .finally(() => {
+          lock.current = false;
+          setChecking(false);
+        });
+    };
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [revalidate]);
   async function run(action: () => Promise<void>) {
     if (lock.current) return;
     lock.current = true;
     setBusy(true);
     setNotice(null);
     try {
+      if (!(await revalidate(identity?.accountId ?? null))) return;
       await action();
     } catch (error) {
+      if (
+        error instanceof Failure &&
+        (error.status === 409 || error.status === 401)
+      ) {
+        try {
+          if (!(await revalidate(identity?.accountId ?? null))) return;
+        } catch {
+          /* Keep the action failed if identity cannot be checked. */
+        }
+      }
       setNotice(
         error instanceof Failure && error.status === 429 ? "limited" : "error",
       );
@@ -99,10 +187,7 @@ export default function Accounts({ language }: { language: Language }) {
     }
   }
   async function refresh() {
-    const result = required(await client().GET("/api/v1/account/plans"));
-    // Reject malformed server snapshots before offering any local copies.
-    result.plans.forEach((p) => parsePlan(JSON.stringify(p.snapshot)));
-    setCloud(result.plans);
+    if (identity) await loadPlans(identity.accountId);
   }
   async function authenticate(form: HTMLFormElement) {
     const fields = new FormData(form);
@@ -124,13 +209,13 @@ export default function Accounts({ language }: { language: Language }) {
           ? required(await client().POST("/api/v1/account/register", { body }))
           : required(await client().POST("/api/v1/account/login", { body }));
     form.reset();
-    setUsername(result.username);
+    applyIdentity(result);
     setRecovery("recoveryCode" in result ? String(result.recoveryCode) : "");
     setCloud([]);
     try {
       if (local.plans.length) {
         const copies = required(
-          await client().POST("/api/v1/account/plans/import", {
+          await client(result.accountId).POST("/api/v1/account/plans/import", {
             body: { plans: local.plans },
           }),
         );
@@ -138,31 +223,34 @@ export default function Accounts({ language }: { language: Language }) {
           remember(result.username, local.plans[index].id, plan),
         );
       }
-      await refresh();
+      await loadPlans(result.accountId);
       setNotice("done");
     } catch {
-      setNotice("importing");
+      if (await revalidate(result.accountId)) setNotice("importing");
     }
   }
   async function synchronize() {
-    if (!username || !local.plan) return;
+    if (!identity || !username || !local.plan) return;
     const link = linksFor(username)[local.plan.id];
     if (!link) {
       const result = required(
-        await client().POST("/api/v1/account/plans/import", {
+        await client(identity.accountId).POST("/api/v1/account/plans/import", {
           body: { plans: [local.plan] },
         }),
       );
       remember(username, local.plan.id, result.plans[0]);
       setNotice("done");
     } else {
-      const result = await client().PUT("/api/v1/account/plans/{identifier}", {
-        params: { path: { identifier: link.id } },
-        body: {
-          revision: link.revision,
-          snapshot: { ...local.plan, id: link.id },
+      const result = await client(identity.accountId).PUT(
+        "/api/v1/account/plans/{identifier}",
+        {
+          params: { path: { identifier: link.id } },
+          body: {
+            revision: link.revision,
+            snapshot: { ...local.plan, id: link.id },
+          },
         },
-      });
+      );
       if (result.response.status === 409) {
         const conflict = result.error;
         if (!conflict || !("conflict" in conflict) || !conflict.conflict)
@@ -177,25 +265,32 @@ export default function Accounts({ language }: { language: Language }) {
     await refresh();
   }
   async function signout() {
-    const result = await client().POST("/api/v1/account/logout");
+    const result = await client(identity?.accountId).POST(
+      "/api/v1/account/logout",
+    );
     if (!result.response.ok) throw new Failure(result.response.status);
-    setUsername(null);
+    applyIdentity(null);
     setCloud([]);
     setRecovery("");
     setDeleting(false);
   }
   async function exportAccount() {
-    const archive = required(await client().GET("/api/v1/account/export"));
+    const archive = required(
+      await client(identity?.accountId).GET("/api/v1/account/export"),
+    );
     if (archive.schemaVersion !== 1) throw new Error("Invalid archive");
     archive.plans.forEach((p) => parsePlan(JSON.stringify(p.snapshot)));
+    downloadJson(archive, "unifr-account-v1.json");
+  }
+  function downloadJson(value: unknown, filename: string) {
     const url = URL.createObjectURL(
-      new Blob([JSON.stringify(archive, null, 2)], {
+      new Blob([JSON.stringify(value, null, 2)], {
         type: "application/json",
       }),
     );
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "unifr-account-v1.json";
+    anchor.download = filename;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -207,7 +302,10 @@ export default function Accounts({ language }: { language: Language }) {
       {notice && (
         <p
           role={
-            notice === "error" || notice === "limited" || notice === "importing"
+            notice === "error" ||
+            notice === "limited" ||
+            notice === "importing" ||
+            notice === "identityChanged"
               ? "alert"
               : "status"
           }
@@ -296,7 +394,12 @@ export default function Accounts({ language }: { language: Language }) {
               <h2>{t.recovery}</h2>
               <p>{t.once}</p>
               <code>{recovery}</code>
-              <Button onClick={() => setRecovery("")}>{t.saved}</Button>
+              <Button
+                disabled={busy || checking}
+                onClick={() => void run(async () => setRecovery(""))}
+              >
+                {t.saved}
+              </Button>
             </div>
           )}
           <div className="actions">
@@ -317,6 +420,34 @@ export default function Accounts({ language }: { language: Language }) {
             </Button>
           </div>
           <h2>{t.cloud}</h2>
+          {unreadableIds.length > 0 && (
+            <div role="alert" className="notice account-recovery">
+              <p>{t.unreadable}</p>
+              <ul>
+                {unreadableIds.map((id) => (
+                  <li key={id}>
+                    <code>{id}</code>{" "}
+                    <Button
+                      disabled={busy || checking}
+                      onClick={() =>
+                        void run(async () => {
+                          const data = required(
+                            await client(identity?.accountId).GET(
+                              "/api/v1/account/plans/{identifier}/recovery",
+                              { params: { path: { identifier: id } } },
+                            ),
+                          );
+                          downloadJson(data, "unifr-plan-recovery-v1.json");
+                        })
+                      }
+                    >
+                      {t.recoverData}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {!cloud.length && <p>{t.empty}</p>}
           <ul className="account-plans">
             {cloud.map((plan) => (
@@ -349,7 +480,10 @@ export default function Accounts({ language }: { language: Language }) {
             ))}
           </ul>
           {!deleting ? (
-            <Button disabled={busy} onClick={() => setDeleting(true)}>
+            <Button
+              disabled={busy || checking}
+              onClick={() => void run(async () => setDeleting(true))}
+            >
               {t.remove}
             </Button>
           ) : (
@@ -359,13 +493,16 @@ export default function Accounts({ language }: { language: Language }) {
                 const form = event.currentTarget;
                 const password = String(new FormData(form).get("password"));
                 void run(async () => {
-                  const result = await client().DELETE("/api/v1/account", {
-                    body: { password },
-                  });
+                  const result = await client(identity?.accountId).DELETE(
+                    "/api/v1/account",
+                    {
+                      body: { password },
+                    },
+                  );
                   if (!result.response.ok)
                     throw new Failure(result.response.status);
                   form.reset();
-                  setUsername(null);
+                  applyIdentity(null);
                   setCloud([]);
                   setRecovery("");
                   setDeleting(false);

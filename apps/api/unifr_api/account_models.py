@@ -3,7 +3,7 @@
 import json
 import copy
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Annotated, Any, Literal, Self
 from collections.abc import Iterator
@@ -17,7 +17,9 @@ _schema = json.loads(Path(__file__).with_name("guest-plan.schema.json").read_tex
 def _js_pattern(
     validator: Any, pattern: str, instance: Any, schema: Any
 ) -> Iterator[ValidationError]:
-    if isinstance(instance, str) and not re.search(pattern, instance, flags=re.ASCII):
+    # All generated guest patterns are whole-string constraints. Python `$`
+    # otherwise accepts a final newline that the browser rejects.
+    if isinstance(instance, str) and not re.fullmatch(pattern, instance, flags=re.ASCII):
         yield ValidationError("Invalid string pattern")
 
 
@@ -37,7 +39,7 @@ _JS_SPACE = "\u0009\u000a\u000b\u000c\u000d\u0020\u00a0\u1680\u2000\u2001\u2002\
 
 
 def validate_plan(value: dict[str, Any]) -> dict[str, Any]:
-    if len(json.dumps(value, ensure_ascii=False, indent=2).encode()) > 5_000_000:
+    if len(json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False).encode()) > 5_000_000:
         raise ValueError("Invalid plan")
     if not _validator.is_valid(value):
         raise ValueError("Invalid plan")
@@ -85,7 +87,12 @@ def validate_plan(value: dict[str, Any]) -> dict[str, Any]:
         for period in scenario["unavailable"]:
             identifier(period["id"])
             trim(period, "label")
-            if datetime.fromisoformat(period["end"]) <= datetime.fromisoformat(period["start"]):
+            epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+            start_ms = (datetime.fromisoformat(period["start"]) - epoch) // timedelta(
+                milliseconds=1
+            )
+            end_ms = (datetime.fromisoformat(period["end"]) - epoch) // timedelta(milliseconds=1)
+            if end_ms <= start_ms:
                 raise ValueError("Invalid busy period")
         if "requirementEvidence" in scenario:
             evidence = scenario["requirementEvidence"]
@@ -133,6 +140,7 @@ class Recovery(Credentials):
 
 class Identity(Contract):
     username: str
+    accountId: str
 
 
 class Created(Identity):
@@ -163,6 +171,15 @@ class PlanWrite(Contract):
 
 class PlanList(Contract):
     plans: list[SavedPlan]
+    unreadableIds: list[str] = Field(default_factory=list)
+
+
+class RecoverySnapshot(Contract):
+    schemaVersion: Literal[1] = 1
+    kind: Literal["unvalidated-plan-recovery"] = "unvalidated-plan-recovery"
+    id: str
+    revision: int
+    snapshotJson: str
 
 
 class GuestImport(Contract):

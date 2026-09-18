@@ -1,5 +1,10 @@
 import type { Language } from "../i18n";
 const en = {
+  identityChanged:
+    "The account changed in another tab. The displayed account has been refreshed. Review it before repeating your action.",
+  unreadable:
+    "Some saved plans could not be opened. Other plans remain available. Download the original recovery data before repairing an affected plan; it will not be imported automatically.",
+  recoverData: "Download recovery data",
   title: "Optional account",
   intro:
     "Plan without an account, or keep private copies across devices. No email is needed. Use a separate password, never your MyUnifr password.",
@@ -45,6 +50,11 @@ type Copy = { [K in keyof typeof en]: string };
 export const accountMessages: Record<Language, Copy> = {
   en,
   de: {
+    identityChanged:
+      "Das Konto wurde in einem anderen Tab geändert. Das angezeigte Konto wurde aktualisiert. Prüfe es, bevor du die Aktion wiederholst.",
+    unreadable:
+      "Einige gespeicherte Pläne konnten nicht geöffnet werden. Andere Pläne bleiben verfügbar. Lade vor einer Reparatur die ursprünglichen Wiederherstellungsdaten herunter; sie werden nicht automatisch importiert.",
+    recoverData: "Wiederherstellungsdaten herunterladen",
     title: "Optionales Konto",
     intro:
       "Plane ohne Konto oder speichere private Kopien auf mehreren Geräten. Keine E-Mail nötig. Verwende ein eigenes Passwort, niemals dein MyUnifr-Passwort.",
@@ -87,6 +97,11 @@ export const accountMessages: Record<Language, Copy> = {
       "Angemeldet, aber lokale Pläne konnten nicht kopiert werden. Sie sind sicher. Versuche es über Aktuellen Plan synchronisieren erneut.",
   },
   fr: {
+    identityChanged:
+      "Le compte a changé dans un autre onglet. Le compte affiché a été actualisé. Vérifiez-le avant de répéter votre action.",
+    unreadable:
+      "Certains plans enregistrés n’ont pas pu être ouverts. Les autres restent accessibles. Téléchargez les données originales de récupération avant toute réparation ; elles ne seront pas importées automatiquement.",
+    recoverData: "Télécharger les données de récupération",
     title: "Compte facultatif",
     intro:
       "Planifiez sans compte ou conservez des copies privées sur plusieurs appareils. Aucun e-mail requis. Utilisez un mot de passe distinct, jamais celui de MyUnifr.",

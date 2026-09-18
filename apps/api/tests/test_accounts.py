@@ -1,6 +1,8 @@
 """Account boundary tests through real HTTP and SQL (no auth mocks)."""
 
 import copy
+import json
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -67,7 +69,7 @@ def test_argon2_session_logout_and_no_secret_redisclosure(client):
     cookie = client.cookies.get("__Host-unifr_session")
     assert cookie and len(cookie) >= 32
     current = client.get("/api/v1/account/session")
-    assert current.json() == {"username": "alice"}
+    assert current.json() == {"username": "alice", "accountId": created["accountId"]}
     assert "no-store" in current.headers["cache-control"]
     engine = create_engine(client.db_url)
     with engine.connect() as conn:
@@ -191,7 +193,7 @@ def test_guest_import_two_devices_conflicts_isolation_export_and_delete(client):
     # A separate device's cookie jar; preserve Alice's active session.
     client.cookies.clear()
     register(client, "bob")
-    assert client.get("/api/v1/account/plans").json() == {"plans": []}
+    assert client.get("/api/v1/account/plans").json() == {"plans": [], "unreadableIds": []}
     assert client.put(path, json={"revision": 2, "snapshot": changed}).status_code == 404
     bob_cookie = client.cookies.get("__Host-unifr_session")
     client.cookies.clear()
@@ -208,7 +210,7 @@ def test_guest_import_two_devices_conflicts_isolation_export_and_delete(client):
     assert client.get("/api/v1/account/session").status_code == 401
     client.cookies.clear()
     client.cookies.set("__Host-unifr_session", bob_cookie)
-    assert client.get("/api/v1/account/session").json() == {"username": "bob"}
+    assert client.get("/api/v1/account/session").json()["username"] == "bob"
     with create_engine(client.db_url).connect() as conn:
         assert conn.execute(text("select count(*) from account_plan")).scalar_one() == 0
         assert conn.execute(text("select count(*) from account_user")).scalar_one() == 1
@@ -258,4 +260,115 @@ def test_plan_validation_rejects_guest_schema_violations(client, damage):
         ]
     result = client.post("/api/v1/account/plans/import", json={"plans": [value]})
     assert result.status_code == 422
-    assert client.get("/api/v1/account/plans").json() == {"plans": []}
+    assert client.get("/api/v1/account/plans").json() == {"plans": [], "unreadableIds": []}
+
+
+PARITY = json.loads((Path(__file__).parent / "fixtures/account-plan-parity.json").read_text())
+
+
+@pytest.mark.parametrize(
+    "case", [c for c in PARITY["cases"] if not c["valid"]], ids=lambda case: case["name"]
+)
+def test_rejects_new_invalid_snapshots_without_persistence(client, case):
+    register(client)
+    response = client.post(
+        "/api/v1/account/plans/import", json={"plans": [{**PARITY["base"], **case["patch"]}]}
+    )
+    assert response.status_code == 422
+    with create_engine(client.db_url).connect() as conn:
+        assert conn.execute(text("select count(*) from account_plan")).scalar_one() == 0
+
+
+@pytest.mark.parametrize(
+    "case", [c for c in PARITY["cases"] if not c["valid"]], ids=lambda case: case["name"]
+)
+def test_historical_invalid_plan_is_recoverable_without_blocking_valid_plans(client, case):
+    from sqlalchemy import update, select
+    from unifr_api.account_repository import plans
+
+    register(client)
+    imported = client.post("/api/v1/account/plans/import", json={"plans": [plan(), plan()]}).json()[
+        "plans"
+    ]
+    good, bad = imported
+    damaged = {**bad["snapshot"], **case["patch"]}
+    with create_engine(client.db_url).begin() as conn:
+        conn.execute(update(plans).where(plans.c.id == bad["id"]).values(snapshot=damaged))
+    result = client.get("/api/v1/account/plans")
+    assert result.status_code == 200
+    assert result.json()["plans"] == [good]
+    assert result.json()["unreadableIds"] == [bad["id"]]
+    archive = client.get("/api/v1/account/export")
+    assert archive.status_code == 200
+    assert archive.json()["plans"] == [good]
+    assert archive.json()["unreadableIds"] == [bad["id"]]
+    recovery_path = f"/api/v1/account/plans/{bad['id']}/recovery"
+    recovery = client.get(recovery_path)
+    assert recovery.status_code == 200
+    assert recovery.json()["kind"] == "unvalidated-plan-recovery"
+    assert json.loads(recovery.json()["snapshotJson"]) == damaged
+    # Neither a poisoned row nor a repair attempt can lock out normal planning.
+    assert (
+        client.put(
+            f"/api/v1/account/plans/{good['id']}",
+            json={"revision": 1, "snapshot": good["snapshot"]},
+        ).status_code
+        == 200
+    )
+    assert client.post("/api/v1/account/plans/import", json={"plans": [plan()]}).status_code == 201
+    assert (
+        client.put(
+            f"/api/v1/account/plans/{bad['id']}", json={"revision": 1, "snapshot": bad["snapshot"]}
+        ).status_code
+        == 409
+    )
+    with create_engine(client.db_url).connect() as conn:
+        assert (
+            conn.execute(select(plans.c.snapshot).where(plans.c.id == bad["id"])).scalar_one()
+            == damaged
+        )
+    client.cookies.clear()
+    register(client, "bob")
+    assert client.get(recovery_path).status_code == 404
+
+
+def test_account_identity_binding_blocks_cookie_switch_between_check_and_action(client):
+    register(client)
+    alice = client.get("/api/v1/account/session").json()
+    assert alice["accountId"]
+    client.cookies.clear()
+    register(client, "bob")
+    bob = client.get("/api/v1/account/session").json()
+    stale = {"X-Unifr-Account": alice["accountId"]}
+    for method, path, body in (
+        ("GET", "/api/v1/account/plans", None),
+        ("GET", "/api/v1/account/export", None),
+        ("POST", "/api/v1/account/plans/import", {"plans": [plan()]}),
+        ("DELETE", "/api/v1/account", {"password": PASSWORD}),
+        ("POST", "/api/v1/account/logout", None),
+    ):
+        result = client.request(method, path, headers=stale, json=body)
+        assert result.status_code == 409, (method, path, result.text)
+        assert result.json() == {"detail": "Account changed; refresh identity"}
+    assert client.get("/api/v1/account/session").json() == bob
+    assert client.get("/api/v1/account/plans").json()["plans"] == []
+    assert (
+        client.post(
+            "/api/v1/account/plans/import",
+            headers={"X-Unifr-Account": bob["accountId"]},
+            json={"plans": [plan()]},
+        ).status_code
+        == 201
+    )
+
+
+def test_explicit_sign_in_does_not_apply_previous_private_account_precondition(client):
+    alice = register(client)
+    result = client.post(
+        "/api/v1/account/register",
+        headers={"X-Unifr-Account": alice["accountId"]},
+        json={"username": "bob", "password": PASSWORD},
+    )
+    assert result.status_code == 201
+    assert result.json()["accountId"] != alice["accountId"]
+    assert client.get("/api/v1/account/session").json()["username"] == "bob"

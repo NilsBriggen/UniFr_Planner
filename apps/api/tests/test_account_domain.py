@@ -1,4 +1,6 @@
 import pytest
+import json
+from pathlib import Path
 
 from unifr_api.account_models import validate_plan
 from unifr_api.account_security import (
@@ -9,6 +11,24 @@ from unifr_api.account_security import (
     verify_password,
 )
 from test_accounts import PASSWORD, plan
+
+PARITY = json.loads((Path(__file__).parent / "fixtures/account-plan-parity.json").read_text())
+
+
+@pytest.mark.parametrize("case", PARITY["cases"], ids=lambda case: case["name"])
+def test_shared_server_browser_behavioral_parity(case):
+    snapshot = {**PARITY["base"], **case["patch"]}
+    if case["valid"]:
+        assert validate_plan(snapshot) == snapshot
+    else:
+        with pytest.raises(ValueError):
+            validate_plan(snapshot)
+
+
+@pytest.mark.parametrize("number", [float("nan"), float("inf"), -float("inf")])
+def test_domain_rejects_non_finite_json_numbers_before_persistence(number):
+    with pytest.raises(ValueError):
+        validate_plan({**plan(), "targetEcts": number})
 
 
 def test_argon2id_salts_and_unknown_hash_negative_control():

@@ -225,6 +225,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/account/plans/{identifier}/recovery": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Recover Snapshot */
+    get: operations["recover_snapshot_api_v1_account_plans__identifier__recovery_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/account": {
     parameters: {
       query?: never;
@@ -287,8 +304,12 @@ export interface components {
     AccountArchive: {
       /** Plans */
       plans: components["schemas"]["SavedPlan"][];
+      /** Unreadableids */
+      unreadableIds?: string[];
       /** Username */
       username: string;
+      /** Accountid */
+      accountId: string;
       /**
        * Schemaversion
        * @default 1
@@ -382,6 +403,8 @@ export interface components {
     Created: {
       /** Username */
       username: string;
+      /** Accountid */
+      accountId: string;
       /** Recoverycode */
       recoveryCode: string;
     };
@@ -411,6 +434,8 @@ export interface components {
     Identity: {
       /** Username */
       username: string;
+      /** Accountid */
+      accountId: string;
     };
     /** Meeting */
     Meeting: {
@@ -467,6 +492,8 @@ export interface components {
     PlanList: {
       /** Plans */
       plans: components["schemas"]["SavedPlan"][];
+      /** Unreadableids */
+      unreadableIds?: string[];
     };
     /** PlanWrite */
     PlanWrite: {
@@ -557,6 +584,27 @@ export interface components {
        * Format: password
        */
       recoveryCode: string;
+    };
+    /** RecoverySnapshot */
+    RecoverySnapshot: {
+      /**
+       * Schemaversion
+       * @default 1
+       * @constant
+       */
+      schemaVersion: 1;
+      /**
+       * Kind
+       * @default unvalidated-plan-recovery
+       * @constant
+       */
+      kind: "unvalidated-plan-recovery";
+      /** Id */
+      id: string;
+      /** Revision */
+      revision: number;
+      /** Snapshotjson */
+      snapshotJson: string;
     };
     /** SavedPlan */
     SavedPlan: {
@@ -746,7 +794,9 @@ export interface operations {
   register_api_v1_account_register_post: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -801,6 +851,15 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -833,7 +892,9 @@ export interface operations {
   login_api_v1_account_login_post: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -888,6 +949,15 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -920,7 +990,9 @@ export interface operations {
   recover_api_v1_account_recover_post: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -975,6 +1047,15 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -1007,7 +1088,9 @@ export interface operations {
   identity_api_v1_account_session_get: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1058,6 +1141,15 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -1090,7 +1182,9 @@ export interface operations {
   logout_api_v1_account_logout_post: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1139,6 +1233,15 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -1171,7 +1274,9 @@ export interface operations {
   list_plans_api_v1_account_plans_get: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1222,6 +1327,15 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -1254,7 +1368,9 @@ export interface operations {
   import_plans_api_v1_account_plans_import_post: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1309,6 +1425,15 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -1341,7 +1466,9 @@ export interface operations {
   write_plan_api_v1_account_plans__identifier__put: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path: {
         identifier: string;
       };
@@ -1404,7 +1531,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["WriteResult"];
+          "application/json":
+            | components["schemas"]["WriteResult"]
+            | components["schemas"]["PrivateError"];
         };
       };
       /** @description Content Too Large */
@@ -1439,7 +1568,9 @@ export interface operations {
   export_api_v1_account_export_get: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1490,6 +1621,111 @@ export interface operations {
           "application/json": components["schemas"]["PrivateError"];
         };
       };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+    };
+  };
+  recover_snapshot_api_v1_account_plans__identifier__recovery_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
+      path: {
+        identifier: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RecoverySnapshot"];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
       /** @description Content Too Large */
       413: {
         headers: {
@@ -1522,7 +1758,9 @@ export interface operations {
   delete_account_api_v1_account_delete: {
     parameters: {
       query?: never;
-      header?: never;
+      header?: {
+        "X-Unifr-Account"?: string | null;
+      };
       path?: never;
       cookie?: never;
     };
@@ -1568,6 +1806,15 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PrivateError"];
+        };
+      };
+      /** @description Conflict */
+      409: {
         headers: {
           [name: string]: unknown;
         };

@@ -5,6 +5,85 @@ import { accountMessages } from "../src/accounts/messages";
 import { plannerMessages } from "../src/planner/messages";
 import { createPlan } from "../src/planner/domain";
 
+test("same-browser account switch revalidates the stale tab on its next account action", async ({
+  page,
+  context,
+}) => {
+  const t = accountMessages.en,
+    p = plannerMessages.en;
+  const alice = `a_${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`;
+  const bob = `b_${crypto.randomUUID().replaceAll("-", "").slice(0, 20)}`;
+  const password = "a separate private password 123";
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
+  await page.goto("/settings");
+  await page.getByRole("button", { name: t.register, exact: true }).click();
+  await page.getByLabel(t.username, { exact: true }).fill(alice);
+  await page.getByLabel(t.password, { exact: true }).fill(password);
+  await page.getByRole("button", { name: t.submit }).click();
+  await page.getByRole("button", { name: t.saved }).click();
+  // Create a new local plan after signing in: this tab has no cloud mapping.
+  await page.goto("/plan");
+  const guest = createPlan({
+    id: "local-switch",
+    scenarioId: "s",
+    name: "Unsynced local degree",
+    programme: "CS",
+    startTerm: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(guest));
+  await page.getByRole("button", { name: p.preview, exact: true }).click();
+  await page
+    .getByRole("button", { name: p.confirmImport, exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: guest.name, exact: true }),
+  ).toBeVisible();
+  await page.goto("/settings");
+  await expect(page.getByText(alice, { exact: true })).toBeVisible();
+  const other = await context.newPage();
+  await other.goto("/settings");
+  await expect(other.getByText(alice, { exact: true })).toBeVisible();
+  await other.getByRole("button", { name: t.logout }).click();
+  await other.getByRole("button", { name: t.register, exact: true }).click();
+  await other.getByLabel(t.username, { exact: true }).fill(bob);
+  await other.getByLabel(t.password, { exact: true }).fill(password);
+  await other.getByRole("button", { name: t.submit }).click();
+  await expect(other.locator(".account-plans li")).toHaveCount(1);
+  await other.getByRole("button", { name: t.saved }).click();
+  const before = await other.evaluate(async () =>
+    (await fetch("/api/v1/account/plans")).json(),
+  );
+  await page.bringToFront();
+  // Headless Chromium does not always dispatch a native window-focus event.
+  // The visible refresh action must independently enforce the same preflight.
+  await page.getByRole("button", { name: t.refresh }).click();
+  await expect(page.getByText(bob, { exact: true })).toBeVisible();
+  await expect(page.getByText(alice, { exact: true })).toHaveCount(0);
+  await expect(page.locator(".account-plans li")).toHaveCount(1);
+  const after = await page.evaluate(async () =>
+    (await fetch("/api/v1/account/plans")).json(),
+  );
+  expect(after).toEqual(before);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  const owner = await page.evaluate(async () =>
+    (await fetch("/api/v1/account/session")).json(),
+  );
+  const exported = page.waitForRequest((request) =>
+    request.url().endsWith("/api/v1/account/export"),
+  );
+  const downloaded = page.waitForEvent("download");
+  await page.getByRole("button", { name: t.exported }).click();
+  expect((await exported).headers()["x-unifr-account"]).toBe(owner.accountId);
+  const archive = JSON.parse(
+    await readFile((await (await downloaded).path())!, "utf8"),
+  );
+  expect(archive.username).toBe(bob);
+  expect(archive.plans).toHaveLength(1);
+  await other.close();
+});
+
 for (const language of ["de", "fr", "en"] as const) {
   test(`private account, two-device conflict, recovery and deletion ${language}`, async ({
     page,

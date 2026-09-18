@@ -15,6 +15,7 @@ from sqlalchemy.schema import CreateSchema, DropSchema
 from unifr_api.account_repository import AccountRepository
 from unifr_api.account_security import AccountError
 from test_accounts import PASSWORD, plan
+from test_account_domain import PARITY
 
 
 @pytest.fixture
@@ -111,3 +112,39 @@ def test_cross_account_export_and_deletion_foreign_key_isolation(repo):
     assert repo.export(bob).plans == [bob_plan]
     with pytest.raises(AccountError):
         repo.export(alice)
+
+
+@pytest.mark.parametrize(
+    "case", [c for c in PARITY["cases"] if not c["valid"]], ids=lambda case: case["name"]
+)
+def test_historical_invalid_snapshot_does_not_poison_postgres_account(repo, case):
+    import json
+    from sqlalchemy import update
+    from unifr_api.account_repository import plans
+
+    alice, _ = repo.register("alice", PASSWORD)
+    good, bad = repo.import_plans(alice, [plan(), plan()])
+    damaged = {**bad.snapshot, **case["patch"]}
+    with repo.engine.begin() as conn:
+        conn.execute(update(plans).where(plans.c.id == bad.id).values(snapshot=damaged))
+    listing = repo.plan_listing(alice)
+    assert listing.plans == [good]
+    assert listing.unreadableIds == [bad.id]
+    assert json.loads(repo.recover_snapshot(alice, bad.id).snapshotJson) == damaged
+    assert repo.export(alice).plans == [good]
+    assert repo.write_plan(alice, good.id, 1, good.snapshot).plan.revision == 2
+    assert len(repo.import_plans(alice, [plan()])) == 1
+    bob, _ = repo.register("bob", PASSWORD)
+    with pytest.raises(AccountError) as denied:
+        repo.recover_snapshot(bob, bad.id)
+    assert denied.value.status == 404
+
+
+def test_stale_account_binding_fails_inside_postgres_owner_transaction(repo):
+    alice, _ = repo.register("alice", PASSWORD)
+    bob, _ = repo.register("bob", PASSWORD)
+    bound = AccountRepository(repo.engine, expected_owner=repo.account_identity(alice).accountId)
+    with pytest.raises(AccountError) as denied:
+        bound.import_plans(bob, [plan()])
+    assert denied.value.status == 409
+    assert repo.list_plans(bob) == []

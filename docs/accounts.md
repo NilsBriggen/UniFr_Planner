@@ -10,6 +10,10 @@ Each server revision covers the complete schema-v1 plan, all scenarios, courses,
 
 Account export is a validated schema-v1 JSON archive with username, export timestamp, and revisioned plan snapshots. Password/session/recovery hashes are excluded. Individual snapshots are compatible with guest JSON import. Account deletion requires the current password, deletes that account's server plans and sessions, and leaves local device copies and other accounts intact.
 
+Accounts now report `unreadableIds` separately from validated plans. Historical malformed records stay untouched, continue counting toward quotas, and cannot block valid listing, export, import, or writes. Settings warns about each unreadable record and offers an owner-scoped **Download recovery data** action. This separate versioned envelope is explicitly marked `unvalidated-plan-recovery` and contains the original snapshot JSON as text; it must be repaired and validated manually before guest import. It is never silently treated as a valid plan. The normal account archive contains only validated plans plus the unreadable identifiers, so a partial export is explicit. Attempting to overwrite an unreadable record returns 409, preserving the original recovery data.
+
+The account identity includes a stable `accountId`. Settings rechecks the actual session before every account action and when a tab regains focus/visibility. A changed account clears stale server plans, recovery-code display and deletion confirmation, refreshes the identity, and aborts the pending action. Private browser requests include `X-Unifr-Account` with the displayed account ID; the server compares it under the owner lock. A cookie switch between the session check and a write/export/delete/logout therefore returns 409 without performing the action as the new account. The header is an optional request precondition for existing API clients, not an authorization credential; all requests still require a valid secure session.
+
 ## Security and deployment
 
 - Passwords exclusively use Argon2id, 64 MiB, three iterations, parallelism four, with individual random salts. Recovery is one 256-bit random code, SHA-256 hashed at rest, returned once on registration/recovery. Recovery consumes the old code, generates a replacement, resets the password, and revokes every existing session atomically. Lost passwords and lost codes cannot be recovered by email.
@@ -24,5 +28,7 @@ Account export is a validated schema-v1 JSON archive with username, export times
 ## Contract and verification
 
 `node --experimental-strip-types scripts/generate_plan_schema.mjs` regenerates the structural server schema from the guest Zod schema. Cross-field invariants and JavaScript/Python regex/trim differences are checked in `account_models.py`; the browser parity test detects schema drift. `npm run api:generate` regenerates OpenAPI and the typed client.
+
+Shared server/browser behavioral fixtures cover final-newline anchoring and sub-millisecond busy periods, including positive controls crossing a millisecond. Busy-period comparison uses browser millisecond precision, and domain validation rejects every non-finite JSON number before persistence. Tightening these checks requires no migration; invalid historical rows remain individually recoverable as described above.
 
 `UNIFR_TEST_DATABASE_URL=... .venv/bin/pytest` enables disposable-schema PostgreSQL migration and simultaneous-write/recovery/rate-limit controls. `npm run test:e2e -- accounts.spec.ts --workers=1` runs DE/FR/EN desktop/phone account flows with Axe and real browser cookies against disposable demo databases. Browser artifacts contain only synthetic test credentials; never use real accounts in these tests.

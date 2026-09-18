@@ -1,6 +1,7 @@
 """SQL persistence, serialized account mutations and atomic optimistic writes."""
 
 import hmac
+import json
 import time
 from datetime import datetime, timezone
 from typing import Any
@@ -24,7 +25,14 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import IntegrityError
 
 from .database import metadata
-from .account_models import AccountArchive, SavedPlan, WriteResult
+from .account_models import (
+    AccountArchive,
+    Identity,
+    PlanList,
+    RecoverySnapshot,
+    SavedPlan,
+    WriteResult,
+)
 from .account_security import (
     AccountError,
     SESSION_SECONDS,
@@ -89,8 +97,9 @@ def saved(row: Any) -> SavedPlan:
 
 
 class AccountRepository:
-    def __init__(self, engine: Engine):
+    def __init__(self, engine: Engine, *, expected_owner: str | None = None):
         self.engine = engine
+        self.expected_owner = expected_owner
 
     def rate_limit(self, address: str, username: str) -> None:
         """Persistent atomic counters shared across workers; failed auth commits its budget."""
@@ -207,37 +216,67 @@ class AccountRepository:
         ).scalar_one_or_none()
         if row is None or valid != row.id:
             raise AccountError(401, "Authentication required")
+        if self.expected_owner is not None and self.expected_owner != row.id:
+            raise AccountError(409, "Account changed; refresh identity")
         return row
 
     def identity(self, secret: str | None) -> str:
+        return self.account_identity(secret).username
+
+    def account_identity(self, secret: str | None) -> Identity:
         with self.engine.begin() as conn:
-            return str(self._owner(conn, secret).username)
+            owner = self._owner(conn, secret)
+            return Identity(username=owner.username, accountId=owner.id)
 
     def logout(self, secret: str | None) -> None:
         with self.engine.begin() as conn:
+            if self.expected_owner is not None:
+                self._owner(conn, secret)
             if secret:
                 conn.execute(delete(sessions).where(sessions.c.token_hash == digest(secret)))
 
-    def _plans(self, conn: Connection, owner: str) -> list[SavedPlan]:
-        return [
-            saved(row)
-            for row in conn.execute(
-                select(plans).where(plans.c.user_id == owner).order_by(plans.c.id)
-            )
-        ]
+    def _plans(self, conn: Connection, owner: str) -> PlanList:
+        result = PlanList(plans=[])
+        for row in conn.execute(select(plans).where(plans.c.user_id == owner).order_by(plans.c.id)):
+            try:
+                result.plans.append(saved(row))
+            except ValueError:
+                # Retain historical malformed data, with explicit recovery access.
+                result.unreadableIds.append(row.id)
+        return result
 
     def list_plans(self, secret: str | None) -> list[SavedPlan]:
+        return self.plan_listing(secret).plans
+
+    def plan_listing(self, secret: str | None) -> PlanList:
         with self.engine.begin() as conn:
             return self._plans(conn, self._owner(conn, secret).id)
 
-    def _capacity(self, conn: Connection, owner: str, additions: list[SavedPlan]) -> None:
-        import json
+    def recover_snapshot(self, secret: str | None, identifier: str) -> RecoverySnapshot:
+        with self.engine.begin() as conn:
+            owner = self._owner(conn, secret).id
+            row = conn.execute(
+                select(plans).where(plans.c.id == identifier, plans.c.user_id == owner)
+            ).first()
+            if row is None:
+                raise AccountError(404, "Plan not found")
+            return RecoverySnapshot(
+                id=row.id,
+                revision=row.revision,
+                snapshotJson=json.dumps(row.snapshot, ensure_ascii=True, indent=2),
+            )
 
-        existing = self._plans(conn, owner)
+    def _capacity(self, conn: Connection, owner: str, additions: list[SavedPlan]) -> None:
+        # Malformed records still occupy storage, but must not poison valid writes.
+        existing = list(
+            conn.execute(select(plans.c.snapshot).where(plans.c.user_id == owner)).scalars()
+        )
         if (
             len(existing) + len(additions) > 100
             or len(
-                json.dumps([p.snapshot for p in existing + additions], ensure_ascii=False).encode()
+                json.dumps(existing + [p.snapshot for p in additions], ensure_ascii=False).encode(
+                    errors="surrogatepass"
+                )
             )
             > 20_000_000
         ):
@@ -273,7 +312,11 @@ class AccountRepository:
             ).first()
             if row is None:
                 raise AccountError(404, "Plan not found")
-            current, conflict = revised_plan(saved(row), revision, snapshot)
+            try:
+                previous = saved(row)
+            except ValueError as error:
+                raise AccountError(409, "Plan unreadable; download recovery data") from error
+            current, conflict = revised_plan(previous, revision, snapshot)
             if conflict:
                 self._capacity(conn, owner, [conflict])
                 self._insert_plan(conn, owner, conflict)
@@ -295,7 +338,8 @@ class AccountRepository:
             owner = self._owner(conn, secret)
             return AccountArchive(
                 username=owner.username,
-                plans=self._plans(conn, owner.id),
+                accountId=owner.id,
+                **self._plans(conn, owner.id).model_dump(),
                 exportedAt=datetime.now(timezone.utc).isoformat(),
             )
 

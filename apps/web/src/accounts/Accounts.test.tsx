@@ -26,30 +26,35 @@ it("offers optional accounts without replacing local plans; hides recovery after
   });
   await new PlanStore(indexedDB).save(local);
   const requests: string[] = [];
+  let signedIn = false;
   vi.stubGlobal(
     "fetch",
     vi.fn(async (request: Request) => {
       requests.push(request.url);
       const path = new URL(request.url).pathname;
+      if (path.endsWith("/register")) signedIn = true;
       const body = path.endsWith("/register")
         ? {
             username: "alice",
+            accountId: "account-a",
             recoveryCode: "one-time-recovery-code-keep-this-safe",
           }
-        : path.endsWith("/import")
-          ? {
-              plans: [
-                {
-                  id: "cloud",
-                  revision: 1,
-                  snapshot: { ...local, id: "cloud" },
-                  conflictOf: null,
-                },
-              ],
-            }
-          : { plans: [] };
+        : path.endsWith("/session")
+          ? { username: "alice", accountId: "account-a" }
+          : path.endsWith("/import")
+            ? {
+                plans: [
+                  {
+                    id: "cloud",
+                    revision: 1,
+                    snapshot: { ...local, id: "cloud" },
+                    conflictOf: null,
+                  },
+                ],
+              }
+            : { plans: [] };
       return new Response(JSON.stringify(body), {
-        status: path.endsWith("/session") ? 401 : 200,
+        status: path.endsWith("/session") && !signedIn ? 401 : 200,
         headers: { "Content-Type": "application/json" },
       });
     }),
@@ -79,6 +84,7 @@ it("offers optional accounts without replacing local plans; hides recovery after
     screen.queryByText("one-time-recovery-code-keep-this-safe"),
   ).not.toBeInTheDocument();
   expect(JSON.stringify(sessionStorage)).not.toContain("one-time-recovery");
+  expect(screen.getByText("alice", { exact: true })).toBeVisible();
 });
 
 it.each([
@@ -98,4 +104,120 @@ it.each([
   );
   expect(await screen.findByRole("heading", { name: heading })).toBeVisible();
   expect(screen.getByLabelText(username)).toBeVisible();
+});
+
+it("revalidates shared-cookie identity and aborts stale actions before showing the new account", async () => {
+  const local = createPlan({
+    id: "local",
+    scenarioId: "s",
+    name: "Local degree",
+    programme: "CS",
+    startTerm: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  await new PlanStore(indexedDB).save(local);
+  let identity = { username: "alice", accountId: "account-a" };
+  const mutations: { user: string; owner: string | null }[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) => {
+      const path = new URL(request.url).pathname;
+      if (request.method !== "GET")
+        mutations.push({
+          user: identity.username,
+          owner: request.headers.get("X-Unifr-Account"),
+        });
+      const body = path.endsWith("/session")
+        ? identity
+        : {
+            plans: [
+              {
+                id: identity.accountId,
+                revision: 1,
+                snapshot: {
+                  ...local,
+                  id: identity.accountId,
+                  name: `${identity.username} cloud`,
+                },
+                conflictOf: null,
+              },
+            ],
+          };
+      return new Response(JSON.stringify(body), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }),
+  );
+  render(
+    <MemoryRouter initialEntries={["/settings"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const user = userEvent.setup();
+  await screen.findByRole("heading", { name: "alice cloud" });
+  identity = { username: "bob", accountId: "account-b" };
+  await user.click(screen.getByRole("button", { name: "Sync current plan" }));
+  expect(mutations).toEqual([]);
+  expect(await screen.findByText("bob", { exact: true })).toBeVisible();
+  expect(
+    screen.queryByRole("heading", { name: "alice cloud" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("alert")).toHaveTextContent("account changed");
+  await user.click(screen.getByRole("button", { name: "Sync current plan" }));
+  await waitFor(() =>
+    expect(mutations).toEqual([{ user: "bob", owner: "account-b" }]),
+  );
+});
+
+it("shows valid plans and a recovery download when one saved server plan is unreadable", async () => {
+  const valid = createPlan({
+    id: "valid",
+    scenarioId: "s",
+    name: "Readable degree",
+    programme: "CS",
+    startTerm: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async (request: Request) =>
+        new Response(
+          JSON.stringify(
+            new URL(request.url).pathname.endsWith("/session")
+              ? { username: "alice", accountId: "a" }
+              : {
+                  plans: [
+                    {
+                      id: "valid",
+                      revision: 1,
+                      snapshot: valid,
+                      conflictOf: null,
+                    },
+                  ],
+                  unreadableIds: ["damaged"],
+                },
+          ),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    ),
+  );
+  render(
+    <MemoryRouter initialEntries={["/settings"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(
+    await screen.findByRole("heading", { name: "Readable degree" }),
+  ).toBeVisible();
+  expect(screen.getByRole("alert")).toHaveTextContent("could not be opened");
+  expect(
+    screen.getByRole("button", { name: "Download recovery data" }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Copy to this device" }),
+  ).toBeEnabled();
 });

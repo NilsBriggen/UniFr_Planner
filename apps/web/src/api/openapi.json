@@ -345,15 +345,33 @@
         "tags": ["account"],
         "summary": "Register",
         "operationId": "register_api_v1_account_register_post",
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Credentials"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -367,74 +385,84 @@
             }
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
         }
       }
@@ -444,15 +472,33 @@
         "tags": ["account"],
         "summary": "Login",
         "operationId": "login_api_v1_account_login_post",
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Credentials"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -466,74 +512,84 @@
             }
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
         }
       }
@@ -543,15 +599,33 @@
         "tags": ["account"],
         "summary": "Recover",
         "operationId": "recover_api_v1_account_recover_post",
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Recovery"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -565,74 +639,84 @@
             }
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
         }
       }
@@ -642,6 +726,29 @@
         "tags": ["account"],
         "summary": "Identity",
         "operationId": "identity_api_v1_account_session_get",
+        "security": [
+          {
+            "PrivateSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -654,81 +761,86 @@
             }
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
-        },
-        "security": [
-          {
-            "PrivateSession": []
-          }
-        ]
+        }
       }
     },
     "/api/v1/account/logout": {
@@ -736,79 +848,107 @@
         "tags": ["account"],
         "summary": "Logout",
         "operationId": "logout_api_v1_account_logout_post",
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "Successful Response"
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
         }
       }
@@ -818,6 +958,29 @@
         "tags": ["account"],
         "summary": "List Plans",
         "operationId": "list_plans_api_v1_account_plans_get",
+        "security": [
+          {
+            "PrivateSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -830,81 +993,86 @@
             }
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
-        },
-        "security": [
-          {
-            "PrivateSession": []
-          }
-        ]
+        }
       }
     },
     "/api/v1/account/plans/import": {
@@ -912,15 +1080,38 @@
         "tags": ["account"],
         "summary": "Import Plans",
         "operationId": "import_plans_api_v1_account_plans_import_post",
+        "security": [
+          {
+            "PrivateSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GuestImport"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -934,81 +1125,86 @@
             }
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
-        },
-        "security": [
-          {
-            "PrivateSession": []
-          }
-        ]
+        }
       }
     },
     "/api/v1/account/plans/{identifier}": {
@@ -1029,6 +1225,22 @@
             "schema": {
               "type": "string",
               "title": "Identifier"
+            }
+          },
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
             }
           }
         ],
@@ -1093,6 +1305,24 @@
             },
             "description": "Not Found"
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/WriteResult"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PrivateError"
+                    }
+                  ],
+                  "title": "Response 409 Write Plan Api V1 Account Plans  Identifier  Put"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
           "413": {
             "content": {
               "application/json": {
@@ -1122,16 +1352,6 @@
               }
             },
             "description": "Too Many Requests"
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WriteResult"
-                }
-              }
-            },
-            "description": "Conflict"
           }
         }
       }
@@ -1141,6 +1361,29 @@
         "tags": ["account"],
         "summary": "Export",
         "operationId": "export_api_v1_account_export_get",
+        "security": [
+          {
+            "PrivateSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1153,81 +1396,217 @@
             }
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
-        },
+        }
+      }
+    },
+    "/api/v1/account/plans/{identifier}/recovery": {
+      "get": {
+        "tags": ["account"],
+        "summary": "Recover Snapshot",
+        "operationId": "recover_snapshot_api_v1_account_plans__identifier__recovery_get",
         "security": [
           {
             "PrivateSession": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Identifier"
+            }
+          },
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoverySnapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          }
+        }
       }
     },
     "/api/v1/account": {
@@ -1235,96 +1614,124 @@
         "tags": ["account"],
         "summary": "Delete Account",
         "operationId": "delete_account_api_v1_account_delete",
+        "security": [
+          {
+            "PrivateSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "X-Unifr-Account",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Unifr-Account"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Password"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "204": {
             "description": "Successful Response"
           },
           "400": {
-            "description": "Bad Request",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Bad Request"
           },
           "401": {
-            "description": "Unauthorized",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Forbidden"
           },
           "404": {
-            "description": "Not Found",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrivateError"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "413": {
-            "description": "Content Too Large",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Content Too Large"
           },
           "422": {
-            "description": "Unprocessable Content",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Unprocessable Content"
           },
           "429": {
-            "description": "Too Many Requests",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PrivateError"
                 }
               }
-            }
+            },
+            "description": "Too Many Requests"
           }
-        },
-        "security": [
-          {
-            "PrivateSession": []
-          }
-        ]
+        }
       }
     },
     "/api/health": {
@@ -1384,9 +1791,20 @@
             "type": "array",
             "title": "Plans"
           },
+          "unreadableIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unreadableids"
+          },
           "username": {
             "type": "string",
             "title": "Username"
+          },
+          "accountId": {
+            "type": "string",
+            "title": "Accountid"
           },
           "schemaVersion": {
             "type": "integer",
@@ -1401,7 +1819,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["plans", "username", "exportedAt"],
+        "required": ["plans", "username", "accountId", "exportedAt"],
         "title": "AccountArchive"
       },
       "CatalogueError": {
@@ -1622,6 +2040,10 @@
             "type": "string",
             "title": "Username"
           },
+          "accountId": {
+            "type": "string",
+            "title": "Accountid"
+          },
           "recoveryCode": {
             "type": "string",
             "title": "Recoverycode"
@@ -1629,7 +2051,7 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["username", "recoveryCode"],
+        "required": ["username", "accountId", "recoveryCode"],
         "title": "Created"
       },
       "Credentials": {
@@ -1689,11 +2111,15 @@
           "username": {
             "type": "string",
             "title": "Username"
+          },
+          "accountId": {
+            "type": "string",
+            "title": "Accountid"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": ["username"],
+        "required": ["username", "accountId"],
         "title": "Identity"
       },
       "Meeting": {
@@ -1819,6 +2245,13 @@
             },
             "type": "array",
             "title": "Plans"
+          },
+          "unreadableIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Unreadableids"
           }
         },
         "additionalProperties": false,
@@ -2067,6 +2500,38 @@
         "type": "object",
         "required": ["password", "username", "recoveryCode"],
         "title": "Recovery"
+      },
+      "RecoverySnapshot": {
+        "properties": {
+          "schemaVersion": {
+            "type": "integer",
+            "const": 1,
+            "title": "Schemaversion",
+            "default": 1
+          },
+          "kind": {
+            "type": "string",
+            "const": "unvalidated-plan-recovery",
+            "title": "Kind",
+            "default": "unvalidated-plan-recovery"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "revision": {
+            "type": "integer",
+            "title": "Revision"
+          },
+          "snapshotJson": {
+            "type": "string",
+            "title": "Snapshotjson"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": ["id", "revision", "snapshotJson"],
+        "title": "RecoverySnapshot"
       },
       "SavedPlan": {
         "properties": {

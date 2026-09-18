@@ -1,0 +1,23 @@
+{
+  "base": {
+    "schemaVersion": 1,
+    "id": "parity-plan",
+    "name": "Parity degree",
+    "programme": "CS",
+    "targetEcts": 180,
+    "semesters": ["AS-2026"],
+    "activeScenarioId": "s",
+    "scenarios": [{"id": "s", "name": "Main", "courses": [], "unavailable": [], "travelMinutes": 0}]
+  },
+  "cases": [
+    {"name": "valid baseline", "valid": true, "patch": {}},
+    {"name": "semester trailing newline", "valid": false, "patch": {"semesters": ["AS-2026\n"]}},
+    {"name": "semester trailing CRLF", "valid": false, "patch": {"semesters": ["AS-2026\r\n"]}},
+    {"name": "busy period below browser millisecond", "valid": false, "patch": {
+      "scenarios": [{"id": "s", "name": "Main", "courses": [], "travelMinutes": 0, "unavailable": [{"id": "b", "label": "Busy", "start": "2026-09-18T10:00:00.000000Z", "end": "2026-09-18T10:00:00.000001Z"}]}]
+    }},
+    {"name": "busy period crosses a browser millisecond", "valid": true, "patch": {
+      "scenarios": [{"id": "s", "name": "Main", "courses": [], "travelMinutes": 0, "unavailable": [{"id": "b", "label": "Busy", "start": "2026-09-18T10:00:00.000999Z", "end": "2026-09-18T10:00:00.001000Z"}]}]
+    }}
+  ]
+}
