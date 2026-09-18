@@ -71,7 +71,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await page.evaluate(
       () =>
         new Promise<void>((resolve, reject) => {
-          const open = indexedDB.open("unifr-planner", 2);
+          const open = indexedDB.open("unifr-planner");
           open.onerror = () => reject(open.error);
           open.onsuccess = () => {
             const db = open.result;

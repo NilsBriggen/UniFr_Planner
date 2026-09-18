@@ -13,6 +13,7 @@ import Catalogue from "./Catalogue";
 import { PlanProvider, usePlans } from "./planner/context";
 import { PlanBoard, Setup } from "./planner/Planner";
 import Requirements from "./requirements/Requirements";
+import Suggestions from "./suggestions/Suggestions";
 const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
 
 const languages = [
@@ -255,6 +256,10 @@ function AppShell() {
               <Route
                 path="/requirements"
                 element={<Requirements language={language} />}
+              />
+              <Route
+                path="/suggestions"
+                element={<Suggestions language={language} />}
               />
               <Route
                 path="/settings"

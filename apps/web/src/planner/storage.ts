@@ -1,4 +1,5 @@
 import { parsePlan, planSchema, type Plan } from "./domain";
+import type { Revision } from "../suggestions/engine";
 
 const request = <T>(value: IDBRequest<T>) =>
   new Promise<T>((resolve, reject) => {
@@ -18,12 +19,14 @@ export class PlanStore {
   constructor(private readonly factory: IDBFactory) {}
   private open(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-      const open = this.factory.open("unifr-planner", 2);
+      const open = this.factory.open("unifr-planner", 3);
       open.onupgradeneeded = () => {
         if (!open.result.objectStoreNames.contains("plans"))
           open.result.createObjectStore("plans", { keyPath: "id" });
         if (!open.result.objectStoreNames.contains("preferences"))
           open.result.createObjectStore("preferences");
+        if (!open.result.objectStoreNames.contains("revisions"))
+          open.result.createObjectStore("revisions");
       };
       open.onsuccess = () => {
         open.result.onversionchange = () => open.result.close();
@@ -60,22 +63,84 @@ export class PlanStore {
       db.close();
     }
   }
+  async saveRevision(revision: Revision): Promise<void> {
+    await this.commitRevision(revision, false);
+  }
+  async undoRevision(revision: Revision): Promise<void> {
+    await this.commitRevision(revision, true);
+  }
+  private async commitRevision(value: Revision, undo: boolean): Promise<void> {
+    const revision: Revision = {
+      before: parsePlan(JSON.stringify(planSchema.parse(value.before))),
+      after: parsePlan(JSON.stringify(planSchema.parse(value.after))),
+      suggestionId: value.suggestionId,
+    };
+    if (revision.before.id !== revision.after.id)
+      throw new Error("invalid revision");
+    const expected = undo ? revision.after : revision.before;
+    const next = undo ? revision.before : revision.after;
+    const db = await this.open();
+    try {
+      const tx = db.transaction(
+        ["plans", "preferences", "revisions"],
+        "readwrite",
+      );
+      const done = complete(tx);
+      try {
+        const saved = await request(tx.objectStore("plans").get(expected.id));
+        if (JSON.stringify(saved) !== JSON.stringify(expected))
+          throw new Error("stale revision");
+        tx.objectStore("plans").put(next);
+        tx.objectStore("preferences").put(next.id, "activeId");
+        if (undo) tx.objectStore("revisions").delete(next.id);
+        else tx.objectStore("revisions").put(revision, next.id);
+        await done;
+      } catch (error) {
+        try {
+          tx.abort();
+        } catch {
+          /* Already completed/aborted. */
+        }
+        await done.catch(() => {});
+        throw error;
+      }
+    } finally {
+      db.close();
+    }
+  }
   async load(): Promise<{
     plans: Plan[];
     activeId: string | null;
     unreadableIds?: string[];
+    revisions?: Revision[];
   }> {
     const db = await this.open();
     try {
-      const tx = db.transaction(["plans", "preferences"], "readonly");
+      const tx = db.transaction(
+        ["plans", "preferences", "revisions"],
+        "readonly",
+      );
       const done = complete(tx);
-      const [rows, activeId] = await Promise.all([
+      const [rows, activeId, revisionRows] = await Promise.all([
         request(tx.objectStore("plans").getAll()),
         request(tx.objectStore("preferences").get("activeId")),
+        request(tx.objectStore("revisions").getAll()),
       ]);
       await done;
       const plans: Plan[] = [];
       const unreadableIds: string[] = [];
+      const revisions: Revision[] = [];
+      for (const [index, row] of revisionRows.entries()) {
+        try {
+          const before = parsePlan(JSON.stringify(row.before));
+          const after = parsePlan(JSON.stringify(row.after));
+          if (before.id !== after.id || typeof row.suggestionId !== "string")
+            throw new Error("invalid revision");
+          revisions.push({ before, after, suggestionId: row.suggestionId });
+        } catch {
+          unreadableIds.push(`revision-${index + 1}`);
+        }
+      }
       for (const [index, row] of rows.entries()) {
         try {
           plans.push(parsePlan(JSON.stringify(row)));
@@ -87,6 +152,7 @@ export class PlanStore {
       }
       return {
         plans,
+        ...(revisions.length ? { revisions } : {}),
         ...(unreadableIds.length ? { unreadableIds } : {}),
         activeId: plans.some((p) => p.id === activeId)
           ? activeId

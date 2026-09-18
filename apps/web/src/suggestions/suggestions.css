@@ -1,0 +1,137 @@
+.suggestions-page {
+  max-width: 1100px;
+}
+.suggestions-page .actions {
+  margin-block: 1.5rem;
+  flex-wrap: wrap;
+}
+.suggestion-list {
+  list-style: none;
+  padding: 0;
+  margin-block: 1.5rem;
+}
+.suggestion-list > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--color-line);
+  padding-block: 1.3rem;
+}
+.suggestion-list h3 {
+  margin-block: 0.35rem;
+}
+.suggestion-list p {
+  margin-block: 0.5rem;
+}
+.suggestion-list .button {
+  flex-shrink: 0;
+}
+.suggestion-comparison {
+  border: 2px solid var(--color-blue);
+  padding: 1.5rem;
+  margin-block: 2rem;
+  scroll-margin-top: 1rem;
+}
+.suggestion-comparison-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.suggestion-comparison h2 {
+  margin-top: 0;
+}
+.suggestion-change {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.suggestion-selection {
+  background: var(--color-canvas);
+  border: 1px solid var(--color-line);
+  padding: 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.suggestion-selection dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+}
+.suggestion-selection dd {
+  margin: 0;
+}
+.suggestion-conflicts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+}
+.suggestion-conflicts dd {
+  margin: 0.3rem 0 0;
+  font-weight: 600;
+}
+.suggestion-warnings {
+  border-left: 3px solid var(--color-blue);
+  padding-left: 1.5rem;
+}
+.suggestion-warnings li,
+.suggestion-scores li {
+  margin-block: 0.5rem;
+}
+.suggestion-confirm {
+  display: flex;
+  align-items: start;
+  gap: 0.75rem;
+  margin-block: 1.5rem;
+  cursor: pointer;
+}
+.suggestion-confirm input,
+.suggestion-options input {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+.suggestion-preferences summary,
+.suggestion-rejections summary {
+  cursor: pointer;
+  padding-block: 1rem;
+  min-height: 44px;
+}
+.suggestion-preferences fieldset {
+  border: 1px solid var(--color-line);
+  margin-block: 1rem;
+}
+.suggestion-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.suggestion-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+.suggestion-feedback {
+  border-left: 3px solid var(--color-blue);
+  padding: 1rem;
+}
+.suggestion-rejections li {
+  margin-block: 0.6rem;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 650px) {
+  .suggestion-change {
+    grid-template-columns: 1fr;
+  }
+  .suggestion-list > li,
+  .suggestion-comparison-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .suggestion-comparison {
+    padding: 1rem;
+  }
+}

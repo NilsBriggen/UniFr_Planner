@@ -19,6 +19,7 @@ import {
 import { usePlans } from "./context";
 import { plannerMessages, type PlannerMessages } from "./messages";
 import "./planner.css";
+import { suggestionMessages } from "../suggestions/messages";
 
 export function Download({
   text,
@@ -412,6 +413,9 @@ export function PlanBoard({ language }: { language: Language }) {
     <section className="page planner-page">
       <p className="eyebrow">{plan?.programme ?? "UniFr Planner"}</p>
       <h1>{messages[language].plan}</h1>
+      <Link className="text-link" to="/suggestions">
+        {suggestionMessages[language].nav}
+      </Link>
       <SaveStatus language={language} />
       <div className="actions no-print">
         <Link className="button" to="/setup">
