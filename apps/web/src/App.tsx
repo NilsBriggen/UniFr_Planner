@@ -14,6 +14,7 @@ import { PlanProvider, usePlans } from "./planner/context";
 import { PlanBoard, Setup } from "./planner/Planner";
 import Requirements from "./requirements/Requirements";
 import Suggestions from "./suggestions/Suggestions";
+import Accounts from "./accounts/Accounts";
 const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
 
 const languages = [
@@ -263,9 +264,7 @@ function AppShell() {
               />
               <Route
                 path="/settings"
-                element={
-                  <EmptyPage title={t.settings} body={t.settingsBody} t={t} />
-                }
+                element={<Accounts language={language} />}
               />
               <Route
                 path="/admin"

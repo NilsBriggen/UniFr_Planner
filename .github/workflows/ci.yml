@@ -41,6 +41,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       UNIFR_DATABASE_URL: postgresql+psycopg://unifr:unifr_test@localhost:5432/unifr
+      UNIFR_TEST_DATABASE_URL: postgresql+psycopg://unifr:unifr_test@localhost:5432/unifr
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6

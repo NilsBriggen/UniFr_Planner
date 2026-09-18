@@ -26,7 +26,7 @@ describe("application shell", () => {
         name: "Universität Freiburg / Université de Fribourg",
       }),
     ).toHaveAttribute("src", "/unifr-logo.png");
-    expect(screen.getByText("Gast · ohne Konto")).toBeVisible();
+    expect(screen.getByText("Pläne auf diesem Gerät")).toBeVisible();
     expect(
       screen.getByRole("link", { name: "Planung starten" }),
     ).toHaveAttribute("href", "/setup");
@@ -68,7 +68,7 @@ describe("application shell", () => {
     ["/semester/HS-2026", "Semesterübersicht"],
     ["/catalogue", "Kurskatalog"],
     ["/requirements", "Studienanforderungen"],
-    ["/settings", "Einstellungen"],
+    ["/settings", "Optionales Konto"],
     ["/admin", "Administration"],
     ["/missing", "Seite nicht gefunden"],
   ])("renders a directly opened route %s", (path, title) => {
