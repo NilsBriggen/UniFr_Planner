@@ -17,5 +17,11 @@
       "node"
     ]
   },
-  "include": ["src", "e2e", "*.ts"]
+  "include": [
+    "src",
+    "e2e",
+    "*.ts",
+    "../../packages/domain/src/*.ts",
+    "../../packages/domain/tests/*.test.ts"
+  ]
 }

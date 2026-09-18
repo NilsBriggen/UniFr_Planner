@@ -96,7 +96,10 @@ there is no cross-tab merging or conflict-resolution protocol in this version.
 Completed/current/planned/unscheduled ECTS remain separate. Unknown ECTS are
 counted and never treated as known zero. Workload is an estimate of 25–30 hours
 per known current/planned ECTS, not a degree-recognition decision. Programme and
-target credits are personal labels; requirements evaluation is future scope.
+target credits are personal labels. The requirements page can now bind explicit
+programme revisions and retain personal allocation evidence per scenario; see
+[programme research](programme-research.md) for supported sources and unresolved
+rules. Existing plans remain unbound until the user selects a programme.
 
 ## Calendar rules and export
 

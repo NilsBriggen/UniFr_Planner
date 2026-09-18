@@ -42,12 +42,26 @@ export const selectionSchema = z.strictObject({
 const busySchema = z
   .strictObject({ id, label: text, start: instant, end: instant })
   .refine((x) => Date.parse(x.end) > Date.parse(x.start));
+const requirementEvidenceSchema = z.strictObject({
+  overrides: z
+    .array(
+      z.strictObject({
+        kind: z.enum(["allocation", "substitution"]),
+        courseId: id,
+        nodeId: z.string().min(1).max(300),
+        reason: z.string().trim().min(1).max(2000),
+      }),
+    )
+    .max(500),
+  completedChecklist: z.array(z.string().min(1).max(300)).max(100),
+});
 const scenarioSchema = z.strictObject({
   id,
   name: text,
   courses: z.array(selectionSchema).max(500),
   unavailable: z.array(busySchema).max(500),
   travelMinutes: z.number().int().min(0).max(180),
+  requirementEvidence: requirementEvidenceSchema.optional(),
 });
 export const planSchema = z
   .strictObject({
@@ -59,6 +73,15 @@ export const planSchema = z
     semesters: z.array(term).min(1).max(24),
     activeScenarioId: id,
     scenarios: z.array(scenarioSchema).min(1).max(20),
+    requirements: z
+      .strictObject({
+        cohort: z.number().int().min(2000).max(2100),
+        templates: z
+          .array(z.strictObject({ code: text, version: text }))
+          .min(1)
+          .max(3),
+      })
+      .optional(),
   })
   .superRefine((plan, ctx) => {
     const invalid = (message: string) =>
@@ -68,7 +91,20 @@ export const planSchema = z
       invalid("duplicate identifier");
     if (!plan.scenarios.some((s) => s.id === plan.activeScenarioId))
       invalid("missing active scenario");
+    if (
+      plan.requirements &&
+      !unique(plan.requirements.templates.map((t) => t.code))
+    )
+      invalid("duplicate programme");
     for (const scenario of plan.scenarios) {
+      if (
+        scenario.requirementEvidence &&
+        (!unique(
+          scenario.requirementEvidence.overrides.map((o) => o.courseId),
+        ) ||
+          !unique(scenario.requirementEvidence.completedChecklist))
+      )
+        invalid("duplicate requirement evidence");
       if (
         !unique(scenario.courses.map((c) => c.id)) ||
         !unique(scenario.courses.map((c) => c.code)) ||

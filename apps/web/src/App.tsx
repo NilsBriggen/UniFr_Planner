@@ -12,6 +12,7 @@ import { messages, type Language, type Messages } from "./i18n";
 import Catalogue from "./Catalogue";
 import { PlanProvider, usePlans } from "./planner/context";
 import { PlanBoard, Setup } from "./planner/Planner";
+import Requirements from "./requirements/Requirements";
 const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
 
 const languages = [
@@ -253,7 +254,7 @@ function AppShell() {
               />
               <Route
                 path="/requirements"
-                element={<EmptyPage title={t.requirements} t={t} />}
+                element={<Requirements language={language} />}
               />
               <Route
                 path="/settings"

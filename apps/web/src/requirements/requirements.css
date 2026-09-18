@@ -1,0 +1,72 @@
+.requirement-tree,
+.requirement-tree ul {
+  list-style: none;
+  padding-inline-start: 1rem;
+}
+.requirement-tree {
+  padding-inline-start: 0;
+}
+.requirement-node {
+  border-inline-start: 2px solid var(--border, #d2d7dc);
+  padding: 0.6rem 0 0.6rem 1rem;
+  margin-block: 0.8rem;
+  overflow-wrap: anywhere;
+}
+.requirement-title {
+  display: list-item;
+  line-height: 1.8;
+}
+.requirement-status {
+  font-size: 0.8rem;
+  border: 1px solid currentColor;
+  border-radius: 0.3rem;
+  padding: 0.2rem 0.4rem;
+}
+.requirement-status.complete {
+  color: #17603c;
+}
+.requirement-status.needs_clarification {
+  color: #835007;
+}
+.requirement-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+  font-size: 0.85rem;
+}
+.requirement-progress dt {
+  font-weight: 500;
+}
+.requirement-progress dd {
+  margin: 0.2rem 0 0;
+  font-weight: 700;
+}
+.requirement-node summary {
+  cursor: pointer;
+  padding-block: 0.6rem;
+}
+.requirement-duty {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin-block: 1rem;
+}
+.requirement-duty input {
+  width: auto;
+}
+.requirement-scenario {
+  display: block;
+  margin-block: 1rem;
+}
+.requirements-page select {
+  max-width: 100%;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .requirement-node {
+    padding-inline-start: 0.5rem;
+  }
+  .requirement-tree ul {
+    padding-inline-start: 0.4rem;
+  }
+}
