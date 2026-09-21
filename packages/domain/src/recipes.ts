@@ -262,6 +262,12 @@ function validateRequirements(
   for (const n of nodes) {
     review(n.reviewStatus);
     check(
+      !("children" in n) ||
+        n.children.length > 0 ||
+        n.reviewStatus !== "verified",
+      `Verified empty requirement group: ${n.id}`,
+    );
+    check(
       [
         "all_of",
         "one_of",
@@ -394,6 +400,10 @@ export function assertRecipeRegistry(registry: RecipeRegistry): void {
           semester(v.applicableFrom) <= semester(v.applicableTo),
           "Invalid applicability range",
         );
+      check(
+        v.requirements || (v.reviewStatus !== "verified" && v.gaps.length > 0),
+        `Missing requirements need unresolved review and gaps: ${p.id}/${v.id}`,
+      );
       validateCatalogueRefs(
         v.requirements,
         v.poolSelectors ?? {},

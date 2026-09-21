@@ -273,7 +273,11 @@ describe("recipe composer", () => {
     ]) {
       const r = registry(),
         p = r.programmes[0];
-      if (kind === "requirements") delete p.variants[0].requirements;
+      if (kind === "requirements") {
+        delete p.variants[0].requirements;
+        p.variants[0].reviewStatus = "needs_clarification";
+        p.variants[0].gaps = ["Curriculum missing"];
+      }
       if (kind === "sources") p.sourceIds = [];
       if (kind === "dates") {
         delete p.variants[0].applicableFrom;
@@ -657,6 +661,8 @@ describe("fail-closed boundaries", () => {
       s = selection();
     s.components.push(extra);
     delete r.programmes[2].variants[0].requirements;
+    r.programmes[2].variants[0].reviewStatus = "needs_clarification";
+    r.programmes[2].variants[0].gaps = ["Supplement curriculum missing"];
     const result = composeDegree(r, s);
     expect(result.status).toBe("needs_clarification");
     expect(
@@ -668,5 +674,26 @@ describe("fail-closed boundaries", () => {
     expect(evaluateRequirements(result.additionalRoot!, []).status).toBe(
       "needs_clarification",
     );
+  });
+});
+
+describe("publication completeness", () => {
+  it("rejects verified variants without requirement evidence", () => {
+    const r = registry();
+    delete r.programmes[0].variants[0].requirements;
+    expect(() => assertRecipeRegistry(r)).toThrow(/verified|requirement/i);
+    r.programmes[0].variants[0].reviewStatus = "needs_clarification";
+    r.programmes[0].variants[0].gaps = ["Curriculum not transcribed"];
+    expect(() => assertRecipeRegistry(r)).not.toThrow();
+    expect(composeDegree(r, selection()).status).toBe("needs_clarification");
+  });
+  it("rejects verified empty requirement groups", () => {
+    const r = registry();
+    r.programmes[0].variants[0].requirements = {
+      ...pool(),
+      kind: "all_of",
+      children: [],
+    };
+    expect(() => assertRecipeRegistry(r)).toThrow(/empty|requirement/i);
   });
 });
