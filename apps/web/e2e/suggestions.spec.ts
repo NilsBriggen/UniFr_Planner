@@ -96,8 +96,12 @@ for (const language of ["de", "fr", "en"] as const) {
     await page.goto("/plan");
     await page.getByRole("link", { name: t.nav, exact: true }).click();
     await expect(page.getByRole("heading", { name: t.title })).toBeVisible();
-    await expect(page.getByText(t.availability, { exact: true })).toBeVisible();
+    await expect(page.getByText(t.noData, { exact: true })).toBeVisible();
+    await expect(page.getByText(t.noPlan, { exact: true })).toBeVisible();
+    await expect(page.getByText(t.demo, { exact: true })).toHaveCount(0);
+    expect(await savedPlans(page)).toEqual([]);
     await page.getByRole("button", { name: t.example, exact: true }).click();
+    await expect(page.getByText(t.demo, { exact: true })).toBeVisible();
     const list = page.getByRole("list", { name: t.nav, exact: true });
     await expect(list).toBeVisible();
     const original = await savedPlans(page);
