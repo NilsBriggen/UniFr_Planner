@@ -50,6 +50,9 @@ test("every faculty can save and reopen a sourced degree with visible review gap
   await page
     .getByRole("button", { name: p.confirmImport, exact: true })
     .click();
+  await expect(
+    page.getByRole("heading", { name: plan.name, exact: true }),
+  ).toBeVisible();
   await page.goto("/requirements");
   for (const [faculty, degree, programme, variant, structure] of cases) {
     await page.getByLabel(t.degree, { exact: true }).selectOption(degree);
@@ -63,6 +66,9 @@ test("every faculty can save and reopen a sourced degree with visible review gap
     await expect(
       page.getByRole("list", { name: "Study requirements", exact: true }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: t.save, exact: true }),
+    ).toBeEnabled();
     await page.reload();
     await expect(page.getByLabel(t.main, { exact: true })).toHaveValue(
       programme,
