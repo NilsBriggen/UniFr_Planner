@@ -36,7 +36,8 @@ npm run lint
 npm run format:check
 npm run build
 npx playwright install chromium
-npm run test:e2e
+npm run test:e2e -- --project=desktop
+npm run test:e2e -- --project=phone
 uv run pytest
 uv run ruff check apps/api packages
 uv run ruff format --check apps/api packages
@@ -46,7 +47,11 @@ uv run mypy
 On Node 26, run unit tests with `NODE_OPTIONS=--no-experimental-webstorage`
 because Node's experimental storage globals conflict with jsdom. CI uses Node 24.
 Browser visual baselines are Chromium/Linux screenshots; review intentional changes
-before `npm run test:e2e -- --update-snapshots`.
+before the corresponding device run with `--update-snapshots`.
+
+Run browser projects separately so each gets a fresh disposable account backend and
+authentication rate-limit budget. Set `E2E_PORT=4183` if port 4173 is occupied. Browser
+checks start their own servers and refuse to reuse a running deployment.
 
 For a production static image, build `apps/web/Dockerfile` target `production`.
 It serves SPA routes and proxies `/api/*` to an API service named `api`.

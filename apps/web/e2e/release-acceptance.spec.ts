@@ -258,9 +258,10 @@ test("connected release: CS/BI credits, conflict, pinned alternative, weekly pro
   await expect(changes).toHaveCount(0);
   overnight = true;
   const changedResponse = page.waitForResponse(
-    (res) =>
+    async (res) =>
       res.url().includes("/api/v1/catalogue/courses?") &&
-      res.request().method() === "GET",
+      res.request().method() === "GET" &&
+      (await res.json()).status?.snapshot_id === "release-overnight-fixture",
   );
   await page
     .getByRole("button", { name: "Check catalogue updates", exact: true })

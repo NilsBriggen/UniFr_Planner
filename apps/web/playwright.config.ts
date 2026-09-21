@@ -38,7 +38,7 @@ export default defineConfig({
     {
       command: `npm run dev -- --port ${port} --strictPort`,
       url: baseURL,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       env: { API_PROXY_TARGET: "http://127.0.0.1:8001" },
     },
   ],
