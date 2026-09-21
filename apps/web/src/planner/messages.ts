@@ -14,7 +14,7 @@ const en = {
   localHelp:
     "Your plans stay in this browser. Export a JSON backup to keep them safe when changing devices or clearing browser data.",
   programmeHelp:
-    "Give your plan a name and set its duration. After creating it, choose the applicable programme and cohort in Degree requirements.",
+    "Give your plan a name and set its duration. Next, add courses to a semester and open your weekly timetable. You can configure degree requirements afterwards.",
   saved: "Saved on this device",
   unreadable:
     "Some saved plans could not be opened. They remain on this device; other plans are available.",
@@ -44,6 +44,7 @@ const en = {
   completedHelp:
     "Record credits you have already earned. This does not certify recognition toward your degree.",
   add: "Add to plan",
+  addToSemester: "Add to semester",
   added: "In this scenario",
   needPlan: "Create a plan to add this course",
   fixture: "Development example · not a live offering",
@@ -54,7 +55,13 @@ const en = {
   pinned: "Pinned",
   pinHelp: "Unpin to change the semester or course status.",
   emptySemester: "No courses assigned yet.",
-  openCalendar: "Open calendar",
+  openCalendar: "View weekly timetable",
+  addCourses: "Add courses",
+  boardHelp:
+    "Choose a semester, add courses, then open its weekly timetable. Each course is saved in the semester you choose.",
+  planTools: "Plan settings and backups",
+  unscheduledHelp:
+    "Courses without a semester do not appear in the timetable. Assign them in your degree plan.",
   future: "No matching offering for this semester; dates unresolved.",
   exportJson: "Export plan JSON",
   import: "Import plan",
@@ -115,7 +122,7 @@ const de: PlannerMessages = {
   localHelp:
     "Deine Pläne bleiben in diesem Browser. Exportiere eine JSON-Sicherung vor einem Gerätewechsel oder dem Löschen von Browserdaten.",
   programmeHelp:
-    "Benenne deinen Plan und lege seine Dauer fest. Wähle danach unter Studienanforderungen den passenden Studiengang und Jahrgang aus.",
+    "Benenne deinen Plan und lege seine Dauer fest. Füge danach Kurse zu einem Semester hinzu und öffne deinen Wochenplan. Die Studienanforderungen kannst du später einrichten.",
   saved: "Auf diesem Gerät gespeichert",
   unreadable:
     "Einige gespeicherte Pläne konnten nicht geöffnet werden. Sie bleiben auf diesem Gerät; andere Pläne sind verfügbar.",
@@ -146,6 +153,7 @@ const de: PlannerMessages = {
   completedHelp:
     "Erfasse bereits erworbene Kreditpunkte. Dies bestätigt keine Anerkennung für deinen Abschluss.",
   add: "Zum Plan hinzufügen",
+  addToSemester: "Zum Semester hinzufügen",
   added: "In diesem Szenario",
   needPlan: "Plan erstellen, um diesen Kurs hinzuzufügen",
   fixture: "Entwicklungsbeispiel · kein Live-Angebot",
@@ -156,7 +164,13 @@ const de: PlannerMessages = {
   pinned: "Fixiert",
   pinHelp: "Hebe die Fixierung auf, um Semester oder Kursstatus zu ändern.",
   emptySemester: "Noch keine Kurse zugeordnet.",
-  openCalendar: "Kalender öffnen",
+  openCalendar: "Wochenplan öffnen",
+  addCourses: "Kurse hinzufügen",
+  boardHelp:
+    "Wähle ein Semester, füge Kurse hinzu und öffne den Wochenplan. Jeder Kurs wird im gewählten Semester gespeichert.",
+  planTools: "Planeinstellungen und Sicherungen",
+  unscheduledHelp:
+    "Kurse ohne Semester erscheinen nicht im Wochenplan. Weise sie im Studienplan einem Semester zu.",
   future: "Kein passendes Angebot für dieses Semester; Termine ungeklärt.",
   exportJson: "Plan als JSON exportieren",
   import: "Plan importieren",
@@ -216,7 +230,7 @@ const fr: PlannerMessages = {
   localHelp:
     "Vos plans restent dans ce navigateur. Exportez une sauvegarde JSON avant de changer d’appareil ou d’effacer les données du navigateur.",
   programmeHelp:
-    "Nommez votre plan et définissez sa durée. Choisissez ensuite le programme et la cohorte applicables dans Exigences du cursus.",
+    "Nommez votre plan et définissez sa durée. Ajoutez ensuite des cours à un semestre et ouvrez votre horaire hebdomadaire. Vous pourrez configurer les exigences du cursus plus tard.",
   saved: "Enregistré sur cet appareil",
   unreadable:
     "Certains plans enregistrés n’ont pas pu être ouverts. Ils restent sur cet appareil ; les autres plans sont disponibles.",
@@ -247,6 +261,7 @@ const fr: PlannerMessages = {
   completedHelp:
     "Indiquez les crédits déjà acquis. Cela ne certifie pas leur reconnaissance pour votre diplôme.",
   add: "Ajouter au plan",
+  addToSemester: "Ajouter au semestre",
   added: "Dans ce scénario",
   needPlan: "Créer un plan pour ajouter ce cours",
   fixture: "Exemple de développement · offre non réelle",
@@ -257,7 +272,13 @@ const fr: PlannerMessages = {
   pinned: "Fixé",
   pinHelp: "Libérez le cours pour changer de semestre ou de statut.",
   emptySemester: "Aucun cours affecté pour le moment.",
-  openCalendar: "Ouvrir le calendrier",
+  openCalendar: "Voir l’horaire hebdomadaire",
+  addCourses: "Ajouter des cours",
+  boardHelp:
+    "Choisissez un semestre, ajoutez des cours, puis ouvrez son horaire hebdomadaire. Chaque cours est enregistré dans le semestre choisi.",
+  planTools: "Paramètres et sauvegardes du plan",
+  unscheduledHelp:
+    "Les cours sans semestre ne figurent pas dans l’horaire. Attribuez-leur un semestre dans votre plan d’études.",
   future: "Aucune offre correspondante pour ce semestre ; dates non résolues.",
   exportJson: "Exporter le plan JSON",
   import: "Importer un plan",

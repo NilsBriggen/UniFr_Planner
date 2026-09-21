@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { Language } from "../i18n";
 import { messages } from "../i18n";
 import { Button } from "../components";
@@ -78,6 +78,7 @@ export function Setup({ language }: { language: Language }) {
   const t = plannerMessages[language];
   const { ready, busy, save } = usePlans();
   const navigate = useNavigate();
+  const [query] = useSearchParams();
   const [error, setError] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -92,8 +93,14 @@ export function Setup({ language }: { language: Language }) {
         semesterCount: Number(form.get("count")),
         targetEcts: Number(form.get("target")),
       });
-      if (await save(plan)) navigate("/plan");
-      else setError(true);
+      if (await save(plan)) {
+        const returnTo = query.get("returnTo");
+        navigate(
+          returnTo && /^\/catalogue(?:\/[^/?#]+)?(?:\?[^#]*)?$/.test(returnTo)
+            ? returnTo
+            : "/plan",
+        );
+      } else setError(true);
     } catch {
       setError(true);
     }
@@ -421,93 +428,98 @@ export function PlanBoard({ language }: { language: Language }) {
     void save(next).then((ok) => setError(!ok));
   };
   return (
-    <section className="page planner-page">
-      <p className="eyebrow">{plan?.programme ?? "UniFr Planner"}</p>
-      <h1>{messages[language].plan}</h1>
-      <Link className="text-link" to="/suggestions">
-        {suggestionMessages[language].nav}
-      </Link>
-      <SaveStatus language={language} />
-      <div className="actions no-print">
-        <Link className="button" to="/setup">
-          {t.newPlan}
-        </Link>
+    <section className="page planner-page degree-page">
+      <header className="workspace-heading">
+        <div>
+          <p className="eyebrow">{plan?.programme ?? "UniFr Planner"}</p>
+          <h1>{messages[language].plan}</h1>
+          <SaveStatus language={language} />
+        </div>
         {plan && (
-          <>
-            <Download
-              text={JSON.stringify(plan, null, 2)}
-              filename={`plan-${plan.id}.json`}
-              type="application/json"
-            >
-              {t.exportJson}
-            </Download>
-            <Button onClick={() => window.print()}>{t.print}</Button>
-            <Link className="text-link" to="/catalogue">
-              {messages[language].explore}
+          <div className="workspace-actions no-print">
+            <Link className="text-link" to={`/semester/${plan.semesters[0]}`}>
+              {t.openCalendar}
             </Link>
-          </>
+            <Link
+              className="button primary"
+              to={`/catalogue?term=${plan.semesters[0]}`}
+            >
+              {t.addCourses}
+            </Link>
+          </div>
         )}
-      </div>
+      </header>
+      {!plan && (
+        <div className="actions no-print">
+          <Link className="button primary" to="/setup">
+            {t.create}
+          </Link>
+          <Link className="text-link" to="/suggestions">
+            {suggestionMessages[language].nav}
+          </Link>
+        </div>
+      )}
       {plan && scenario && (
         <>
-          <h2 className="plan-title">{plan.name}</h2>
-          <p>
-            {t.target}: {plan.targetEcts} ECTS
-          </p>
-          <fieldset
-            className="planner-controls no-print"
-            disabled={!ready || busy}
-          >
-            <label>
-              {messages[language].planLabel}
-              <select
-                value={plan.id}
-                onChange={(e) => void select(e.target.value)}
-              >
-                {plans.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {t.scenario}
-              <select
-                aria-label={t.scenario}
-                value={plan.activeScenarioId}
-                onChange={(e) =>
-                  change({ ...plan, activeScenarioId: e.target.value })
-                }
-              >
-                {plan.scenarios.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.currentTarget;
-                const name = String(new FormData(form).get("scenario"));
-                try {
-                  change(duplicateScenario(plan, crypto.randomUUID(), name));
-                  form.reset();
-                } catch {
-                  setError(true);
-                }
-              }}
-            >
-              <label>
-                {t.newScenario}
-                <input name="scenario" required maxLength={200} />
-              </label>
-              <Button type="submit" disabled={plan.scenarios.length >= 20}>
-                {t.duplicate}
-              </Button>
-            </form>
+          <div className="plan-meta">
+            <h2 className="plan-title">{plan.name}</h2>
+            <p>
+              {t.target}: {plan.targetEcts} ECTS
+            </p>
+          </div>
+          <p className="planner-help">{t.boardHelp}</p>
+          <fieldset disabled={busy} className="board-fieldset">
+            <div className="semester-board">
+              {[...plan.semesters, null, "completed"].map((term) => {
+                const courses = scenario.courses.filter((c) =>
+                  term === "completed"
+                    ? c.status === "completed"
+                    : c.status !== "completed" && c.semester === term,
+                );
+                const label =
+                  term === "completed" ? t.completed : (term ?? t.unscheduled);
+                return (
+                  <section
+                    className="semester-column"
+                    key={term ?? "unassigned"}
+                    aria-label={label}
+                  >
+                    <div className="semester-heading">
+                      <h2>{label}</h2>
+                      {term && term !== "completed" && (
+                        <div className="semester-actions no-print">
+                          <Link
+                            className="button"
+                            to={`/catalogue?term=${term}`}
+                          >
+                            {t.addCourses}
+                          </Link>
+                          <Link className="text-link" to={`/semester/${term}`}>
+                            {t.openCalendar}
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                    <p>
+                      {courses.reduce((sum, c) => sum + (c.ects ?? 0), 0)} ECTS
+                      · {courses.length} {t.courseCount}
+                    </p>
+                    {courses.length === 0 && (
+                      <p className="planner-help">{t.emptySemester}</p>
+                    )}
+                    {courses.map((course) => (
+                      <CourseCard
+                        key={course.id}
+                        course={course}
+                        plan={plan}
+                        language={language}
+                        change={change}
+                      />
+                    ))}
+                  </section>
+                );
+              })}
+            </div>
           </fieldset>
           <Summary courses={scenario.courses} t={t} />
           <p className="planner-help">{t.workloadHelp}</p>
@@ -548,54 +560,87 @@ export function PlanBoard({ language }: { language: Language }) {
               </div>
             </section>
           )}
-          <fieldset disabled={busy} className="board-fieldset">
-            <div className="semester-board">
-              {["completed", null, ...plan.semesters].map((term) => {
-                const courses = scenario.courses.filter((c) =>
-                  term === "completed"
-                    ? c.status === "completed"
-                    : c.status !== "completed" && c.semester === term,
-                );
-                const label =
-                  term === "completed" ? t.completed : (term ?? t.unscheduled);
-                return (
-                  <section
-                    className="semester-column"
-                    key={term ?? "unassigned"}
-                    aria-label={label}
+          <section className="plan-tools no-print" aria-label={t.planTools}>
+            <h2>{t.planTools}</h2>
+            <Link className="text-link" to="/suggestions">
+              {suggestionMessages[language].nav}
+            </Link>
+            <div className="actions no-print">
+              <Link className="button" to="/setup">
+                {t.newPlan}
+              </Link>
+              {plan && (
+                <>
+                  <Download
+                    text={JSON.stringify(plan, null, 2)}
+                    filename={`plan-${plan.id}.json`}
+                    type="application/json"
                   >
-                    <div className="semester-heading">
-                      <h2>{label}</h2>
-                      {term && term !== "completed" && (
-                        <Link
-                          className="text-link no-print"
-                          to={`/semester/${term}`}
-                        >
-                          {t.openCalendar}
-                        </Link>
-                      )}
-                    </div>
-                    <p>
-                      {courses.reduce((sum, c) => sum + (c.ects ?? 0), 0)} ECTS
-                      · {courses.length} {t.courseCount}
-                    </p>
-                    {courses.length === 0 && (
-                      <p className="planner-help">{t.emptySemester}</p>
-                    )}
-                    {courses.map((course) => (
-                      <CourseCard
-                        key={course.id}
-                        course={course}
-                        plan={plan}
-                        language={language}
-                        change={change}
-                      />
-                    ))}
-                  </section>
-                );
-              })}
+                    {t.exportJson}
+                  </Download>
+                  <Button onClick={() => window.print()}>{t.print}</Button>
+                  <Link className="text-link" to="/catalogue">
+                    {messages[language].explore}
+                  </Link>
+                </>
+              )}
             </div>
-          </fieldset>
+            <fieldset
+              className="planner-controls no-print"
+              disabled={!ready || busy}
+            >
+              <label>
+                {messages[language].planLabel}
+                <select
+                  value={plan.id}
+                  onChange={(e) => void select(e.target.value)}
+                >
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t.scenario}
+                <select
+                  aria-label={t.scenario}
+                  value={plan.activeScenarioId}
+                  onChange={(e) =>
+                    change({ ...plan, activeScenarioId: e.target.value })
+                  }
+                >
+                  {plan.scenarios.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget;
+                  const name = String(new FormData(form).get("scenario"));
+                  try {
+                    change(duplicateScenario(plan, crypto.randomUUID(), name));
+                    form.reset();
+                  } catch {
+                    setError(true);
+                  }
+                }}
+              >
+                <label>
+                  {t.newScenario}
+                  <input name="scenario" required maxLength={200} />
+                </label>
+                <Button type="submit" disabled={plan.scenarios.length >= 20}>
+                  {t.duplicate}
+                </Button>
+              </form>
+            </fieldset>
+          </section>
           <section className="completed-entry no-print">
             <h2>{t.addCompleted}</h2>
             <p>{t.completedHelp}</p>

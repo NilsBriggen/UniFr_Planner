@@ -36,10 +36,16 @@
 .planner-page textarea {
   width: 100%;
   min-width: 0;
-  border: 1px solid #bdc5ca;
+  border: 1px solid var(--color-control-border);
   background: white;
   color: var(--color-ink);
-  padding: 10px;
+  padding: 11px 12px;
+  font-size: 0.875rem;
+  line-height: 20px;
+}
+.planner-page input,
+.planner-page select {
+  height: var(--control-height);
 }
 .planner-page textarea {
   font: inherit;
@@ -86,7 +92,23 @@
   padding: 14px;
 }
 .plan-title {
-  margin-top: 32px;
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.plan-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-6);
+  border-top: 1px solid var(--color-line);
+  padding-top: var(--space-6);
+  margin: var(--space-6) 0 var(--space-2);
+}
+.plan-meta p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
 }
 .plan-summary {
   display: grid;
@@ -113,21 +135,67 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 20px;
-  margin: 32px 0;
+  margin: var(--space-6) 0;
+  align-items: start;
 }
 .semester-column {
   background: white;
   border: 1px solid var(--color-line);
-  border-top: 3px solid var(--color-blue);
   padding: 20px;
   min-width: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-panel);
 }
 .semester-heading h2 {
-  margin-bottom: 0;
+  margin-bottom: var(--space-2);
+  font-size: 1.125rem;
+  font-weight: 600;
 }
 .semester-heading .text-link {
   font-size: 0.875rem;
+}
+.semester-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+}
+.semester-actions .button {
+  padding-inline: var(--space-3);
+}
+.plan-tools {
+  border-top: 1px solid var(--color-line);
+  padding-top: 24px;
+}
+.course-planner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  width: 100%;
+  margin: 16px 0;
+}
+.course-planner label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+.course-planner select {
+  height: var(--control-height);
+  max-width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--color-control-border);
+  background: white;
+  color: var(--color-ink);
+  font: inherit;
+}
+.course-planner-result p {
+  margin: 0 0 8px;
+}
+.calendar-weekday {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-blue);
 }
 .semester-column > p {
   font-size: 0.875rem;
@@ -144,7 +212,21 @@
 }
 .course-controls {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+.course-controls > .button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.course-controls > p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.plan-course h3 {
+  font-size: 1rem;
+  margin-bottom: var(--space-2);
 }
 .course-controls .button[aria-pressed="true"] {
   background: var(--color-blue);
@@ -258,6 +340,14 @@
   }
 }
 @media (max-width: 680px) {
+  .planner-page .actions {
+    flex-direction: row;
+    align-items: end;
+    gap: 12px;
+  }
+  .planner-page .view-controls {
+    gap: 12px;
+  }
   .setup-form {
     padding: 20px;
   }

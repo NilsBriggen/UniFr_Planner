@@ -187,6 +187,9 @@ for (const language of ["de", "fr", "en"] as const) {
     const allocation = page.getByLabel(`${t.semester} · DEMO-001`, {
       exact: true,
     });
+    // Adding now chooses a semester immediately; still exercise keyboard allocation.
+    await allocation.selectOption("");
+    await expect(page.locator(".save-status")).toHaveText(t.saved);
     await allocation.focus();
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("Enter");

@@ -1,4 +1,9 @@
-import { api, type CatalogueStatus, type Course } from "../api/client";
+import {
+  api,
+  type CatalogueStatus,
+  type Course,
+  type Filters,
+} from "../api/client";
 import { fromOffering, type Plan, type Selection } from "./domain";
 import type { CatalogueCandidate } from "../suggestions/engine";
 import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
@@ -13,6 +18,7 @@ export type SourceChange = {
 /** Only publish a complete, consistent read. Missing pages are not removals. */
 export async function loadPublishedCatalogue(
   signal?: AbortSignal,
+  filters: Omit<Filters, "offset" | "limit"> = {},
 ): Promise<PublishedCatalogue> {
   const courses: Course[] = [];
   let status: CatalogueStatus | undefined;
@@ -21,7 +27,7 @@ export async function loadPublishedCatalogue(
   const codes = new Set<string>();
   do {
     const result = await api.GET("/api/v1/catalogue/courses", {
-      params: { query: { offset, limit: 100 } },
+      params: { query: { ...filters, offset, limit: 100 } },
       signal,
     });
     const page = result.data;

@@ -1,15 +1,31 @@
 :root {
   font-family: Arial, sans-serif;
-  color: #000000;
+  color: #172b3a;
   background: #ffffff;
   font-synthesis: none;
-  --color-ink: #000000;
+  --color-ink: #172b3a;
   --color-blue: #0a3859;
   --color-orange: #d06516;
   --color-white: #ffffff;
   --color-muted: #545b61;
   --color-line: #dce0e3;
   --color-canvas: #f6f7f8;
+  --color-control-border: #7f8f9a;
+  --color-soft: #edf2f5;
+  --color-danger: #842f2c;
+  --color-danger-surface: #fff1ef;
+  --color-warning: #714715;
+  --color-warning-surface: #fff6e8;
+  --control-height: 44px;
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --page-gutter: clamp(20px, 2.5vw, 40px);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
   --mobile-navigation-clearance: 84px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -34,7 +50,7 @@ button,
 select,
 input,
 .button {
-  min-height: 44px;
+  min-height: var(--control-height);
 }
 button {
   cursor: pointer;
@@ -83,8 +99,8 @@ p {
   transform: none;
 }
 .header {
-  min-height: 112px;
-  padding: 24px 36px;
+  min-height: 88px;
+  padding: 16px var(--page-gutter);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -98,14 +114,14 @@ p {
   flex-shrink: 0;
 }
 .brand img {
-  width: 300px;
+  width: 264px;
   height: auto;
   display: block;
 }
 .header-tools {
   display: flex;
-  align-items: center;
-  gap: 28px;
+  align-items: end;
+  gap: var(--space-6);
 }
 .plan-switcher {
   display: grid;
@@ -114,14 +130,17 @@ p {
   color: var(--color-muted);
 }
 .plan-switcher select {
-  color: var(--color-muted);
-  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  border: 1px solid var(--color-control-border);
   background: white;
   min-width: 140px;
   padding: 0 12px;
   opacity: 1;
 }
 .guest-status {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
   font-size: 0.8125rem;
   white-space: nowrap;
 }
@@ -132,20 +151,43 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 22px;
-  padding: 12px 20px;
-  border: 1px solid var(--color-blue);
+  gap: var(--space-2);
+  padding: 11px 16px;
+  border: 1px solid var(--color-line);
   background: white;
   color: var(--color-blue);
   text-decoration: none;
   font-weight: 600;
-  border-radius: 5px;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+  font-size: 0.875rem;
+  line-height: 20px;
+  border-radius: var(--radius-control);
+  transition: border-color 120ms ease;
 }
 .button:hover {
-  background: #edf1f4;
+  background: var(--color-soft);
+  border-color: var(--color-control-border);
+}
+.button:disabled {
+  cursor: default;
+  color: var(--color-muted);
+  background: var(--color-soft);
+  border-color: var(--color-line);
+}
+.button.icon-button {
+  width: var(--control-height);
+  padding: 0;
+  flex: 0 0 var(--control-height);
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 .languages .button {
   min-width: 44px;
@@ -160,7 +202,7 @@ p {
 .layout {
   display: grid;
   grid-template-columns: 208px minmax(0, 1fr);
-  min-height: calc(100dvh - 112px);
+  min-height: calc(100dvh - 88px);
 }
 .navigation {
   display: flex;
@@ -253,6 +295,7 @@ main {
 }
 .primary {
   background: var(--color-blue);
+  border-color: var(--color-blue);
   color: white;
 }
 .primary:hover {
@@ -263,6 +306,7 @@ main {
   align-items: center;
   min-height: 44px;
   font-weight: 600;
+  font-size: 0.875rem;
 }
 .guest-note {
   color: var(--color-muted);
@@ -300,7 +344,7 @@ footer {
   display: flex;
   align-items: baseline;
   gap: 24px;
-  padding: 24px clamp(28px, 6vw, 96px);
+  padding: var(--space-6) var(--page-gutter);
   border-top: 1px solid var(--color-line);
   font-size: 0.75rem;
   color: var(--color-muted);
@@ -314,7 +358,7 @@ footer p {
   max-width: 85ch;
 }
 .page {
-  padding: 40px clamp(24px, 4vw, 64px);
+  padding: var(--space-8) var(--page-gutter);
 }
 .page > .eyebrow {
   margin-bottom: 12px;
@@ -325,14 +369,72 @@ footer p {
 input,
 select,
 textarea {
-  border-radius: 4px;
+  border-radius: var(--radius-control);
 }
 input::placeholder {
   color: #68747d;
   opacity: 1;
 }
 .page h1 {
-  font-size: clamp(2rem, 3vw, 2.5rem);
+  font-size: clamp(1.75rem, 2.5vw, 2rem);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.workspace-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+.workspace-heading > div:first-child {
+  min-width: 0;
+}
+.workspace-heading .eyebrow {
+  margin-bottom: var(--space-2);
+  overflow-wrap: anywhere;
+}
+.workspace-heading h1 {
+  margin-bottom: var(--space-2);
+}
+.workspace-heading .save-status {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+.workspace-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-shrink: 0;
+}
+.page.source-updates {
+  padding-block: var(--space-2) 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+.source-updates > .button {
+  border-color: transparent;
+  background: transparent;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  padding-inline: var(--space-2);
+}
+.source-updates > .button:hover {
+  background: var(--color-soft);
+}
+.source-updates > .notice {
+  flex-basis: 100%;
+  max-width: none;
+  margin: var(--space-2) 0;
+}
+.source-updates > p {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+.source-updates + .page {
+  padding-top: var(--space-4);
 }
 .notice {
   display: flex;
@@ -369,10 +471,23 @@ input::placeholder {
 }
 .segmented {
   display: flex;
+  background: var(--color-soft);
+  border-radius: var(--radius-control);
+  padding: var(--space-1);
+  gap: var(--space-1);
+}
+.segmented .button {
+  background: transparent;
+  border-color: transparent;
+  padding-inline: var(--space-4);
+  font-weight: 400;
 }
 .segmented .button[aria-pressed="true"] {
-  background: var(--color-blue);
-  color: white;
+  background: var(--color-white);
+  border-color: var(--color-line);
+  color: var(--color-blue);
+  font-weight: 600;
+  box-shadow: 0 1px 2px #172b3a0d;
 }
 .date-label {
   display: grid;
@@ -420,7 +535,7 @@ input {
     padding: 20px 24px;
   }
   .brand img {
-    width: 250px;
+    width: 240px;
   }
   .header-tools {
     gap: 16px;
@@ -511,7 +626,15 @@ input {
   }
   .hero,
   .page {
-    padding: 32px 20px;
+    padding: var(--space-6) var(--page-gutter);
+  }
+  .workspace-heading {
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .workspace-actions {
+    justify-content: space-between;
+    width: 100%;
   }
   .hero h1 {
     font-size: clamp(2.25rem, 10vw, 3.5rem);

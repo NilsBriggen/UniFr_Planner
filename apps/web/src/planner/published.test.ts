@@ -131,3 +131,38 @@ it("reads every catalogue page and refuses a mixed publication", async () => {
   mixed = true;
   await expect(published.loadPublishedCatalogue()).rejects.toThrow();
 });
+
+it("keeps semester and search filters while reading later pages", async () => {
+  const courses = publishedCourses();
+  const requests: URL[] = [];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) => {
+      const url = new URL(request.url);
+      requests.push(url);
+      const offset = Number(url.searchParams.get("offset"));
+      return Response.json({
+        items: [courses[offset]],
+        total: 2,
+        limit: 1,
+        offset,
+        status: publishedStatus,
+      });
+    }),
+  );
+  expect(
+    (
+      await published.loadPublishedCatalogue(undefined, {
+        term: "AS-2026",
+        q: "computer science",
+        language: "en",
+      })
+    ).courses,
+  ).toEqual(courses);
+  expect(requests).toHaveLength(2);
+  for (const url of requests) {
+    expect(url.searchParams.get("term")).toBe("AS-2026");
+    expect(url.searchParams.get("q")).toBe("computer science");
+    expect(url.searchParams.get("language")).toBe("en");
+  }
+});

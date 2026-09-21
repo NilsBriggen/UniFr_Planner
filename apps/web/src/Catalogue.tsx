@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   api,
@@ -14,10 +14,18 @@ import { Button, StatusNotice } from "./components";
 import { catalogueMessages, type CatalogueMessages } from "./catalogue-i18n";
 import { messages, type Language } from "./i18n";
 import "./catalogue.css";
+import CoursePlanner from "./planner/CoursePlanner";
 import { usePlans } from "./planner/context";
-import { activeScenario, addCourse, fromOffering } from "./planner/domain";
-import { plannerMessages } from "./planner/messages";
-import { canonicalCourseCode } from "../../../packages/domain/src/requirements";
+import { loadPublishedCatalogue } from "./planner/published";
+import {
+  discoverCourses,
+  filterDiscovery,
+  offeringKey,
+} from "./discovery/engine";
+import { discoveryMessages } from "./discovery/messages";
+import { OfferingAdvice } from "./discovery/LessonPreview";
+import SemesterSummary from "./discovery/SemesterSummary";
+import "./discovery/discovery.css";
 
 const source = "https://www.unifr.ch/timetable/en/";
 const filterKeys = [
@@ -296,9 +304,6 @@ function Detail({
   status: CatalogueStatus;
 }) {
   const t = catalogueMessages[language];
-  const p = plannerMessages[language];
-  const plans = usePlans();
-  const [saveError, setSaveError] = useState(false);
   const title = localizedTitle(course, language);
   return (
     <>
@@ -325,47 +330,12 @@ function Detail({
             ))}
           </dl>
           <div className="actions">
-            {plans.plan ? (
-              <Button
-                disabled={
-                  plans.busy ||
-                  !plans.ready ||
-                  activeScenario(plans.plan).courses.some(
-                    (c) =>
-                      canonicalCourseCode(c.code) ===
-                      canonicalCourseCode(course.code),
-                  )
-                }
-                onClick={() => {
-                  try {
-                    const next = addCourse(
-                      plans.plan!,
-                      fromOffering(
-                        offering,
-                        crypto.randomUUID(),
-                        status.snapshot_id ?? "unknown",
-                        status.development_fixture,
-                      ),
-                    );
-                    void plans.save(next).then((ok) => setSaveError(!ok));
-                  } catch {
-                    setSaveError(true);
-                  }
-                }}
-              >
-                {activeScenario(plans.plan).courses.some(
-                  (c) =>
-                    canonicalCourseCode(c.code) ===
-                    canonicalCourseCode(course.code),
-                )
-                  ? p.added
-                  : p.add}
-              </Button>
-            ) : (
-              <Link className="text-link" to="/setup">
-                {p.needPlan}
-              </Link>
-            )}
+            <CoursePlanner
+              offering={offering}
+              status={status}
+              language={language}
+              preferredTerm={new URLSearchParams(query).get("term")}
+            />
             {offering.source_url.startsWith(source) && (
               <a className="text-link" href={offering.source_url}>
                 {t.source} ↗
@@ -382,7 +352,6 @@ function Detail({
               language={language}
             />
           </div>
-          {saveError && <p role="alert">{p.actionError}</p>}
           <h3 className="schedule-heading">{t.schedule}</h3>
           {offering.schedule_summary && (
             <p className="source-text">{offering.schedule_summary}</p>
@@ -423,7 +392,7 @@ function Detail({
 }
 
 function Search({
-  page,
+  page: serverPage,
   terms,
   query,
   language,
@@ -438,11 +407,58 @@ function Search({
   change: (query: URLSearchParams) => void;
 }) {
   const t = catalogueMessages[language];
+  const d = discoveryMessages[language];
+  const { plan } = usePlans();
+  const term = plan?.semesters.includes(query.get("term") ?? "")
+    ? query.get("term")!
+    : (plan?.semesters[0] ?? "AS-2026");
+  const discovery = useMemo(
+    () =>
+      plan && serverPage
+        ? discoverCourses(plan, serverPage.items, term, language)
+        : null,
+    [plan, serverPage, term, language],
+  );
+  const hasMatches =
+    discovery && [...discovery.assessments.values()].some((a) => a.match);
+  const programme =
+    !!discovery?.hasProgramme &&
+    query.get("focus") !== "all" &&
+    (query.get("focus") === "programme" || !!hasMatches);
+  const fits = query.get("fits") === "1",
+    hideAdded = query.get("hide_added") === "1";
+  const filtered = discovery
+    ? filterDiscovery(discovery, { programme, fits, hideAdded })
+    : null;
+  const offset = filtered
+    ? Math.min(
+        Math.max(0, Number(query.get("offset")) || 0),
+        Math.max(0, Math.floor((filtered.length - 1) / 20) * 20),
+      )
+    : 0;
+  const page =
+    filtered && serverPage
+      ? {
+          ...serverPage,
+          items: filtered.slice(offset, offset + 20),
+          offset,
+          limit: 20,
+          total: filtered.length,
+        }
+      : serverPage;
+  const updateChoice = (key: string, value: string) => {
+    const next = new URLSearchParams(query);
+    next.set(key, value);
+    next.delete("offset");
+    change(next);
+  };
   const [clientIssue, setClientIssue] = useState<FilterIssue>();
   const formRef = useRef<HTMLFormElement>(null);
   const pendingFocus = useRef<FilterField | undefined>(undefined);
   const [expanded, setExpanded] = useState(
-    filterKeys.some((key) => key !== "q" && query.has(key)),
+    filterKeys.some(
+      (key) => key !== "q" && (!plan || key !== "term") && query.has(key),
+    ),
   );
   const issue =
     clientIssue ??
@@ -493,6 +509,7 @@ function Search({
         next.delete(name),
       );
     else next.delete(key);
+    if (key === "term" && plan) next.set("scope", "all");
     next.delete("offset");
     change(next);
   };
@@ -504,230 +521,347 @@ function Search({
     pendingFocus.current = undefined;
   }, [clientIssue, expanded]);
   return (
-    <>
-      <form
-        ref={formRef}
-        key={query.toString()}
-        className="catalogue-search"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const next = new URLSearchParams();
-          new FormData(event.currentTarget).forEach((value, key) => {
-            if (String(value).trim()) next.set(key, String(value).trim());
-          });
-          const nextIssue = validateFilterQuery(next);
-          if (nextIssue) {
-            pendingFocus.current = nextIssue.fields[0];
-            setClientIssue(nextIssue);
-            setExpanded(true);
-            return;
-          }
-          pendingFocus.current = undefined;
-          setClientIssue(undefined);
-          change(next);
-        }}
-      >
-        <div className="search-bar">
-          <label>
-            {t.search}
-            <input
-              name="q"
-              type="search"
-              defaultValue={query.get("q") ?? ""}
-              maxLength={200}
-            />
-          </label>
-          <Button className="primary" type="submit">
-            {t.submit}
-          </Button>
-          <Button
-            type="button"
-            aria-expanded={expanded}
-            aria-controls="catalogue-filters"
-            onClick={() => setExpanded(!expanded)}
-          >
-            {t.filters}
-          </Button>
-        </div>
-        {issue && (
-          <p className="filter-error" id="catalogue-filter-error" role="alert">
-            {t[issue.kind]}
-          </p>
-        )}
-        <div id="catalogue-filters" hidden={!expanded}>
-          <div className="filter-grid">
-            {select("term", terms.terms)}
-            {select("faculty", terms.faculties)}
-            {select("language", terms.languages)}
-            {select("level", terms.levels)}
+    <div className={plan ? "discovery-workspace" : undefined}>
+      <div>
+        {plan && (
+          <div className="discovery-semester">
             <label>
-              {t.minimum}
-              <input
-                name="ects_min"
-                type="number"
-                min="0"
-                max="180"
-                step="0.5"
-                defaultValue={query.get("ects_min") ?? ""}
-                {...errorAttributes("ects_min")}
-              />
+              {d.semester}
+              <select
+                aria-label={d.semester}
+                value={term}
+                onChange={(e) => updateChoice("term", e.target.value)}
+              >
+                {plan.semesters.map((value) => (
+                  <option key={value}>{value}</option>
+                ))}
+              </select>
             </label>
-            <label>
-              {t.maximum}
-              <input
-                name="ects_max"
-                type="number"
-                min="0"
-                max="180"
-                step="0.5"
-                defaultValue={query.get("ects_max") ?? ""}
-                {...errorAttributes("ects_max")}
-              />
-            </label>
+            <p className="discovery-help">
+              <strong>{plan.programme}</strong>
+              <br />
+              {query.get("term") === term ? d.automatic : d.allTerms}
+            </p>
           </div>
-          <fieldset>
-            <legend>{t.availability}</legend>
-            <p>{t.windowHelp}</p>
+        )}
+        <form
+          ref={formRef}
+          key={query.toString()}
+          className="catalogue-search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const next = new URLSearchParams();
+            new FormData(event.currentTarget).forEach((value, key) => {
+              if (String(value).trim()) next.set(key, String(value).trim());
+            });
+            for (const key of ["focus", "fits", "hide_added"])
+              if (query.has(key)) next.set(key, query.get(key)!);
+            if (plan && !next.has("term")) next.set("scope", "all");
+            const nextIssue = validateFilterQuery(next);
+            if (nextIssue) {
+              pendingFocus.current = nextIssue.fields[0];
+              setClientIssue(nextIssue);
+              setExpanded(true);
+              return;
+            }
+            pendingFocus.current = undefined;
+            setClientIssue(undefined);
+            change(next);
+          }}
+        >
+          <div className="search-bar">
+            <label>
+              {t.search}
+              <input
+                name="q"
+                type="search"
+                defaultValue={query.get("q") ?? ""}
+                maxLength={200}
+              />
+            </label>
+            <Button className="primary" type="submit">
+              {t.submit}
+            </Button>
+            <Button
+              type="button"
+              aria-expanded={expanded}
+              aria-controls="catalogue-filters"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {t.filters}
+            </Button>
+          </div>
+          {issue && (
+            <p
+              className="filter-error"
+              id="catalogue-filter-error"
+              role="alert"
+            >
+              {t[issue.kind]}
+            </p>
+          )}
+          <div id="catalogue-filters" hidden={!expanded}>
             <div className="filter-grid">
+              {select("term", terms.terms)}
+              {select("faculty", terms.faculties)}
+              {select("language", terms.languages)}
+              {select("level", terms.levels)}
               <label>
-                {t.day}
-                <select
-                  name="available_day"
-                  defaultValue={query.get("available_day") ?? ""}
-                  {...errorAttributes("available_day")}
-                >
-                  <option value="">{t.all}</option>
-                  {t.weekdays.map((day, index) => (
-                    <option key={index} value={index}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t.from}
+                {t.minimum}
                 <input
-                  name="available_from"
-                  type="time"
-                  defaultValue={query.get("available_from") ?? ""}
-                  {...errorAttributes("available_from")}
+                  name="ects_min"
+                  type="number"
+                  min="0"
+                  max="180"
+                  step="0.5"
+                  defaultValue={query.get("ects_min") ?? ""}
+                  {...errorAttributes("ects_min")}
                 />
               </label>
               <label>
-                {t.until}
+                {t.maximum}
                 <input
-                  name="available_until"
-                  type="time"
-                  defaultValue={query.get("available_until") ?? ""}
-                  {...errorAttributes("available_until")}
+                  name="ects_max"
+                  type="number"
+                  min="0"
+                  max="180"
+                  step="0.5"
+                  defaultValue={query.get("ects_max") ?? ""}
+                  {...errorAttributes("ects_max")}
                 />
               </label>
             </div>
-          </fieldset>
-        </div>
-      </form>
-      <div className="filter-chips" role="group" aria-label={t.selection}>
-        {filterKeys
-          .filter((key) => query.has(key))
-          .map((key) => (
-            <Button
-              key={key}
-              onClick={() => remove(key)}
-              aria-label={`${t.remove}: ${labels[key]} · ${key === "available_day" ? t.weekdays[Number(query.get(key))] : query.get(key)}`}
-            >
-              <span>
-                {labels[key]}:{" "}
-                {key === "available_day"
-                  ? t.weekdays[Number(query.get(key))]
-                  : query.get(key)}
-              </span>
-              <span aria-hidden="true">×</span>
-            </Button>
-          ))}
-      </div>
-      {page && (
-        <>
-          <p className="result-count" role="status">
-            {page.total} {t.results}
-          </p>
-          {page.total === 0 ? (
-            <StatusNotice>
-              <h2>{t.none}</h2>
-              <p>{t.noneBody}</p>
-            </StatusNotice>
-          ) : (
-            <ul className="course-results" aria-label={t.results}>
-              {page.items.map((course) => (
-                <li key={course.code}>
-                  <h2>
-                    <Link
-                      to={`/catalogue/${encodeURIComponent(course.code)}?${query}`}
-                    >
-                      {localizedTitle(course, language)}{" "}
-                      <span className="course-code">{course.code}</span>
-                    </Link>
-                  </h2>
-                  {course.offerings.map((offering) => (
-                    <div className="course-summary" key={offering.source_id}>
-                      <p>
-                        {offering.terms.join(" · ")} ·{" "}
-                        {offering.ects ?? t.unknown} ECTS ·{" "}
-                        {offering.languages.join(" / ")} ·{" "}
-                        {offering.levels?.join(" / ") || t.unknown}
-                      </p>
-                      <p>
-                        {offering.faculty_domain} · {offering.lecturer}
-                      </p>
-                      <span
-                        className={
-                          offering.meeting_state === "unresolved"
-                            ? "meeting-status unresolved"
-                            : "meeting-status"
-                        }
-                      >
-                        {offering.meeting_state === "unresolved"
-                          ? t.unresolved
-                          : t.resolved}
-                      </span>
-                    </div>
-                  ))}
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="pagination">
-            <Button
-              disabled={page.offset === 0}
-              onClick={() => {
-                const next = new URLSearchParams(query);
-                next.set(
-                  "offset",
-                  String(Math.max(0, page.offset - page.limit)),
-                );
-                change(next);
-              }}
-            >
-              {t.previous}
-            </Button>
-            <span>
-              {page.total ? page.offset + 1 : 0}–
-              {Math.min(page.offset + page.items.length, page.total)} /{" "}
-              {page.total}
-            </span>
-            <Button
-              disabled={page.offset + page.limit >= page.total}
-              onClick={() => {
-                const next = new URLSearchParams(query);
-                next.set("offset", String(page.offset + page.limit));
-                change(next);
-              }}
-            >
-              {t.next}
-            </Button>
+            <fieldset>
+              <legend>{t.availability}</legend>
+              <p>{t.windowHelp}</p>
+              <div className="filter-grid">
+                <label>
+                  {t.day}
+                  <select
+                    name="available_day"
+                    defaultValue={query.get("available_day") ?? ""}
+                    {...errorAttributes("available_day")}
+                  >
+                    <option value="">{t.all}</option>
+                    {t.weekdays.map((day, index) => (
+                      <option key={index} value={index}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  {t.from}
+                  <input
+                    name="available_from"
+                    type="time"
+                    defaultValue={query.get("available_from") ?? ""}
+                    {...errorAttributes("available_from")}
+                  />
+                </label>
+                <label>
+                  {t.until}
+                  <input
+                    name="available_until"
+                    type="time"
+                    defaultValue={query.get("available_until") ?? ""}
+                    {...errorAttributes("available_until")}
+                  />
+                </label>
+              </div>
+            </fieldset>
           </div>
-        </>
-      )}
-    </>
+        </form>
+        <div className="filter-chips" role="group" aria-label={t.selection}>
+          {filterKeys
+            .filter((key) => query.has(key))
+            .map((key) => (
+              <Button
+                key={key}
+                onClick={() => remove(key)}
+                aria-label={`${t.remove}: ${labels[key]} · ${key === "available_day" ? t.weekdays[Number(query.get(key))] : query.get(key)}`}
+              >
+                <span>
+                  {labels[key]}:{" "}
+                  {key === "available_day"
+                    ? t.weekdays[Number(query.get(key))]
+                    : query.get(key)}
+                </span>
+                <span aria-hidden="true">×</span>
+              </Button>
+            ))}
+        </div>
+        {discovery && (
+          <>
+            <div className="discovery-controls" aria-label={d.heading}>
+              {discovery.hasProgramme && (
+                <Button
+                  aria-pressed={programme}
+                  onClick={() => updateChoice("focus", "programme")}
+                >
+                  {d.recommended}
+                </Button>
+              )}
+              <Button
+                aria-pressed={!programme}
+                onClick={() => updateChoice("focus", "all")}
+              >
+                {d.all}
+              </Button>
+              <div className="discovery-toggles">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={fits}
+                    onChange={(e) =>
+                      updateChoice("fits", e.target.checked ? "1" : "0")
+                    }
+                  />
+                  {d.fitsOnly}
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={hideAdded}
+                    onChange={(e) =>
+                      updateChoice("hide_added", e.target.checked ? "1" : "0")
+                    }
+                  />
+                  {d.hideAdded}
+                </label>
+              </div>
+            </div>
+            {!plan?.requirements && !plan?.degreeSelection && (
+              <p className="discovery-help">
+                {d.matchesHelp} <Link to="/requirements">{d.configure}</Link>
+              </p>
+            )}
+            {discovery.hasProgramme && !hasMatches && (
+              <p className="discovery-help">{d.noMatches}</p>
+            )}
+            {discovery.requirementError && (
+              <p role="alert">{d.requirementsError}</p>
+            )}
+          </>
+        )}
+        {page && (
+          <>
+            <p className="result-count" role="status">
+              {page.total} {t.results}
+            </p>
+            {page.total === 0 ? (
+              <StatusNotice>
+                <h2>{t.none}</h2>
+                <p>{discovery ? d.empty : t.noneBody}</p>
+                {discovery && (
+                  <Button
+                    onClick={() => {
+                      const next = new URLSearchParams(query);
+                      next.set("focus", "all");
+                      next.delete("fits");
+                      next.delete("hide_added");
+                      next.delete("offset");
+                      change(next);
+                    }}
+                  >
+                    {d.broaden}
+                  </Button>
+                )}
+              </StatusNotice>
+            ) : (
+              <ul className="course-results" aria-label={t.results}>
+                {page.items.map((course) => (
+                  <li key={course.code}>
+                    <h2>
+                      <Link
+                        to={`/catalogue/${encodeURIComponent(course.code)}?${query}`}
+                      >
+                        {localizedTitle(course, language)}{" "}
+                        <span className="course-code">{course.code}</span>
+                      </Link>
+                    </h2>
+                    {course.offerings.map((offering) => (
+                      <div className="course-summary" key={offering.source_id}>
+                        <div className="course-summary-main">
+                          <p>
+                            {offering.terms.join(" · ")} ·{" "}
+                            {offering.ects ?? t.unknown} ECTS ·{" "}
+                            {offering.languages.join(" / ")} ·{" "}
+                            {offering.levels?.join(" / ") || t.unknown}
+                          </p>
+                          <p>
+                            {offering.faculty_domain} · {offering.lecturer}
+                          </p>
+                          {discovery ? (
+                            <OfferingAdvice
+                              assessment={
+                                discovery.assessments.get(
+                                  offeringKey(offering),
+                                )!
+                              }
+                              language={language}
+                            />
+                          ) : (
+                            <span
+                              className={
+                                offering.meeting_state === "unresolved"
+                                  ? "meeting-status unresolved"
+                                  : "meeting-status"
+                              }
+                            >
+                              {offering.meeting_state === "unresolved"
+                                ? t.unresolved
+                                : t.resolved}
+                            </span>
+                          )}
+                        </div>
+                        <CoursePlanner
+                          offering={offering}
+                          status={page.status}
+                          language={language}
+                          preferredTerm={plan ? term : query.get("term")}
+                        />
+                      </div>
+                    ))}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="pagination">
+              <Button
+                disabled={page.offset === 0}
+                onClick={() => {
+                  const next = new URLSearchParams(query);
+                  next.set(
+                    "offset",
+                    String(Math.max(0, page.offset - page.limit)),
+                  );
+                  change(next);
+                }}
+              >
+                {t.previous}
+              </Button>
+              <span>
+                {page.total ? page.offset + 1 : 0}–
+                {Math.min(page.offset + page.items.length, page.total)} /{" "}
+                {page.total}
+              </span>
+              <Button
+                disabled={page.offset + page.limit >= page.total}
+                onClick={() => {
+                  const next = new URLSearchParams(query);
+                  next.set("offset", String(page.offset + page.limit));
+                  change(next);
+                }}
+              >
+                {t.next}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+      {plan && <SemesterSummary term={term} language={language} />}
+    </div>
   );
 }
 
@@ -735,6 +869,32 @@ export default function Catalogue({ language }: { language: Language }) {
   const { course_code } = useParams();
   const [query, setQuery] = useSearchParams();
   const queryString = query.toString();
+  const { plan, ready } = usePlans();
+  const hasPlan = !!plan;
+  useEffect(() => {
+    if (
+      !course_code &&
+      ready &&
+      plan &&
+      !query.has("term") &&
+      !query.has("scope")
+    ) {
+      const next = new URLSearchParams(query);
+      next.set("term", plan.semesters[0]);
+      setQuery(next, { replace: true });
+    }
+  }, [course_code, ready, plan, query, setQuery]);
+  const apiQueryString = [...query]
+    .filter(
+      ([key]) =>
+        [...filterKeys, "offset", "limit"].includes(key) &&
+        (!hasPlan || (key !== "offset" && key !== "limit")),
+    )
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
+    )
+    .join("&");
   const [retry, setRetry] = useState(0);
   const [state, setState] = useState<LoadState>({ loading: true });
   const heading = useRef<HTMLHeadingElement>(null);
@@ -773,7 +933,7 @@ export default function Catalogue({ language }: { language: Language }) {
             });
         } else {
           const params = Object.fromEntries(
-            new URLSearchParams(queryString),
+            new URLSearchParams(apiQueryString),
           ) as Filters;
           const [courses, terms] = await Promise.all([
             api.GET("/api/v1/catalogue/courses", {
@@ -782,11 +942,23 @@ export default function Catalogue({ language }: { language: Language }) {
             }),
             api.GET("/api/v1/catalogue/terms", { signal: controller.signal }),
           ]);
+          const complete =
+            hasPlan && courses.response.ok && courses.data
+              ? await loadPublishedCatalogue(controller.signal, params)
+              : null;
           if (active)
             setState({
               loading: false,
-              status: courses.data?.status ?? status,
-              page: courses.data,
+              status: complete?.status ?? courses.data?.status ?? status,
+              page:
+                complete && courses.data
+                  ? {
+                      ...courses.data,
+                      items: complete.courses,
+                      total: complete.courses.length,
+                      offset: 0,
+                    }
+                  : courses.data,
               terms: terms.data,
               error:
                 courses.response.status === 422
@@ -805,7 +977,7 @@ export default function Catalogue({ language }: { language: Language }) {
       active = false;
       controller.abort();
     };
-  }, [course_code, queryString, retry]);
+  }, [course_code, apiQueryString, hasPlan, retry]);
   const title = state.course
     ? localizedTitle(state.course, language)
     : messages[language].catalogue;

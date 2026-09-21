@@ -5,6 +5,57 @@ account, evaluation API or recommendation service is involved. JSON backup is
 the transfer mechanism. Clearing browser data removes local plans; exporting a
 backup before changing devices is necessary.
 
+## Planning a semester
+
+Create a local plan, then choose **Add courses** on a semester card. This opens
+the catalogue filtered to that semester. Each offering has a semester selector
+and **Add to plan** action directly in the results and on its detail page.
+The selected semester is saved together with the course; a matching published
+semester is selected by default when browsing without a semester filter.
+**Unscheduled** remains an explicit option for courses to allocate later.
+
+After saving, **View weekly timetable** opens the course's semester. The calendar
+starts in week view, has a semester selector and an **Add courses** action, and
+links back to the degree plan to allocate any unscheduled courses. Missing or
+future dates remain unresolved. A blank calendar does not claim that its schedule
+is conflict-free. Starting setup from a course returns to that course after the
+plan has been saved.
+
+Semester cards and their course actions precede summaries, scenario tools and
+backup controls on the degree plan. Planning terminology is available in DE/FR/EN.
+
+## Assisted course discovery
+
+With a saved plan, the catalogue opens on its first semester unless a semester
+is already in the URL. The visible semester selector changes the catalogue and
+the running semester overview together. Filters and search remain in the URL;
+clearing the term explicitly allows browsing other semesters.
+
+Programme matches are ranked and filtered across the complete matching
+catalogue, before pagination. Configured degree requirements supply course-code
+and source-assignment matches. A personal Computer Science or Business
+Informatics programme label supplies only a clearly marked related-subject
+hint; it does not certify credit recognition or prerequisites. If no matches
+exist, the default view shows all courses and explains why.
+
+Each result shows grouped lesson times, rooms, actual date counts and known
+clashes. **Only courses that fit** checks dated meetings, personal unavailable
+periods and travel buffers. Incomplete source dates or an incomplete existing
+timetable remain unknown and are excluded by this filter. Unstructured
+prerequisite text is not treated as proven eligibility.
+
+The semester overview updates selected courses, known ECTS, unknown credits,
+conflicting course pairs and unresolved dates after a successful save. Removing
+a course keeps it as unscheduled; **Add to semester** can add it back using the
+displayed offering without duplicating the course. Pinned courses cannot be removed here. Links
+open the weekly timetable or the existing reviewable schedule suggestions.
+
+The weekly timetable places lessons at their Zurich local times, gives
+overlapping events separate lanes and splits overnight events across dates.
+Colours identify courses; explicit labels identify conflicts. The calendar
+scrolls within the page on small screens. Day and semester agenda views, print
+and ICS export remain available.
+
 ## Versioned plan contract
 
 The authoritative executable schema is `apps/web/src/planner/domain.ts`
