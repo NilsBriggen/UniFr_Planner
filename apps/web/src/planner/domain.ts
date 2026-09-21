@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Offering } from "../api/client";
+import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
 
 const text = z.string().trim().min(1).max(200);
 const id = z.string().regex(/^[\w-]{1,100}$/);
@@ -107,7 +108,7 @@ export const planSchema = z
         invalid("duplicate requirement evidence");
       if (
         !unique(scenario.courses.map((c) => c.id)) ||
-        !unique(scenario.courses.map((c) => c.code)) ||
+        !unique(scenario.courses.map((c) => canonicalCourseCode(c.code))) ||
         !unique(scenario.unavailable.map((x) => x.id))
       )
         invalid("duplicate course or period");

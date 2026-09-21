@@ -35,6 +35,39 @@ it("detects only changed or removed stable offerings and never edits stored choi
     published.sourceChanges(plan, { status: publishedStatus, courses }),
   ).toMatchObject([{ kind: "removed" }]);
 });
+it("retains source identity across the exact timetable code namespace alias", () => {
+  const plan = publishedPlan(),
+    courses = publishedCourses();
+  courses[0].code = "UE-SIN.01023";
+  for (const offering of courses[0].offerings)
+    offering.course.code = courses[0].code;
+  expect(
+    published.sourceChanges(plan, { status: publishedStatus, courses }),
+  ).toEqual([]);
+  courses[0].offerings[0].meetings[0].starts_at = "2026-09-21T08:30:00Z";
+  expect(
+    published.sourceChanges(plan, { status: publishedStatus, courses }),
+  ).toMatchObject([{ kind: "changed" }]);
+});
+it("rejects a catalogue with two spellings of the same academic course", async () => {
+  const courses = publishedCourses();
+  courses[1].code = "UE-" + courses[0].code;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({
+        items: courses,
+        total: 2,
+        limit: 100,
+        offset: 0,
+        status: publishedStatus,
+      }),
+    ),
+  );
+  await expect(published.loadPublishedCatalogue()).rejects.toThrow(
+    /Duplicate catalogue course/,
+  );
+});
 it("ignores ordering, absent optional meeting fields, and historical completed courses", () => {
   const plan = publishedPlan();
   const courses = publishedCourses();

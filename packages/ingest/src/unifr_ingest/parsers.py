@@ -25,6 +25,25 @@ def clean(tag: Tag | None) -> str:
     return " ".join(tag.get_text(" ", strip=True).split()) if tag else ""
 
 
+def language_codes(labels: tuple[str, ...]) -> tuple[str, ...]:
+    # ListingEntry retains the original source labels and fingerprint. Do not guess
+    # the languages behind unspecified "Bilingual" or "Other" labels.
+    known = {
+        "French": ("fr",),
+        "German": ("de",),
+        "English": ("en",),
+        "Italian": ("it",),
+        "Spanish": ("es",),
+        "Rhaeto-rumantsch": ("rm",),
+        "Bilingual f/d": ("fr", "de"),
+        "Bilingual d/f": ("de", "fr"),
+        "English and/or German": ("en", "de"),
+        "English and/or French": ("en", "fr"),
+        "fr/de/en": ("fr", "de", "en"),
+    }
+    return tuple(dict.fromkeys(code for label in labels for code in known.get(label, ())))
+
+
 class DetailStructure(HTMLParser):
     """Check source boundaries before BeautifulSoup repairs incomplete markup.
 
@@ -194,7 +213,7 @@ def parse_detail(raw: str, entry: ListingEntry) -> Offering:
         course=Course(code=entry.code, titles=titles),
         terms=entry.terms,
         ects=float(ects_match[1].replace(",", ".")) if ects_match else None,
-        languages=entry.languages,
+        languages=language_codes(entry.languages),
         levels=tuple(
             value.strip() for value in fields.get("Level", "").split(",") if value.strip()
         ),

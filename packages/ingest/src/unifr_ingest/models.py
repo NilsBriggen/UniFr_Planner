@@ -95,6 +95,7 @@ class CatalogueSnapshot(Record):
     pages: tuple[ListingPage, ...]
     offerings: tuple[Offering, ...]
     errors: tuple[str, ...] = ()
+    verified_listing_hash: str | None = None
 
 
 class SyncReport(Record):

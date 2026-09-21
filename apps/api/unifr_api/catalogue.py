@@ -2,6 +2,8 @@
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from collections import Counter
+from datetime import datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -294,6 +296,34 @@ class SqlCatalogueRepository:
         with self.engine.begin() as connection:
             connection.execute(delete(source_cache).where(source_cache.c.key == key))
             connection.execute(insert(source_cache).values(key=key, data=value.model_dump()))
+
+    def prune(self, now: datetime) -> None:
+        """Bound replaceable import data; never delete student plans or change notices."""
+        if not self.locked:
+            raise RuntimeError("Retention requires the catalogue lock")
+        with self.engine.begin() as connection:
+            current = connection.scalar(select(head.c.snapshot_id))
+            counts: Counter[str] = Counter()
+            expired = []
+            for row in connection.execute(
+                select(snapshots.c.id, snapshots.c.status).order_by(
+                    snapshots.c.report["completed_at"].as_string().desc(), snapshots.c.id.desc()
+                )
+            ):
+                counts[row.status] += 1
+                keep = 7 if row.status == "published" else 3
+                if counts[row.status] > keep and row.id != current:
+                    expired.append(row.id)
+            if expired:
+                for table in (meetings, assignments, offerings):
+                    connection.execute(delete(table).where(table.c.snapshot_id.in_(expired)))
+                connection.execute(delete(snapshots).where(snapshots.c.id.in_(expired)))
+            connection.execute(
+                delete(source_cache).where(
+                    source_cache.c.data["fetched_at"].as_float()
+                    < (now - timedelta(days=30)).timestamp()
+                )
+            )
 
     def track_plan(self, plan_id: str, source_id: str) -> None:
         with self.engine.begin() as connection:

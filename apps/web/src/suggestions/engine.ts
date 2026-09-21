@@ -1,6 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill";
 import {
   evaluateRequirements,
+  canonicalCourseCode,
+  courseCodeIn,
   type RequirementResult,
 } from "../../../../packages/domain/src/requirements";
 import {
@@ -101,7 +103,11 @@ const canonical = (value: unknown): unknown =>
         )
       : value;
 const sourceKey = (item: CatalogueCandidate, term: string) =>
-  JSON.stringify([item.course.code, item.course.offering?.source_id, term]);
+  JSON.stringify([
+    canonicalCourseCode(item.course.code),
+    item.course.offering?.source_id,
+    term,
+  ]);
 
 /** Lexicographic order, never a weighted blend: lower-priority preferences
  * cannot outweigh even one point at an earlier criterion. */
@@ -219,13 +225,14 @@ export function generateSuggestions(input: {
   )) {
     for (const item of catalogue) {
       const source = item.course;
-      const same = before.code === source.code;
-      const equivalent = item.equivalentTo.includes(before.code);
+      const same =
+        canonicalCourseCode(before.code) === canonicalCourseCode(source.code);
+      const equivalent = courseCodeIn(item.equivalentTo, before.code);
       const elective = beforeRules.some(
         (r) =>
           (r.node.kind === "credit_pool" || r.node.kind === "course_count") &&
-          r.node.codes.includes(before.code) &&
-          r.node.codes.includes(source.code),
+          courseCodeIn(r.node.codes, before.code) &&
+          courseCodeIn(r.node.codes, source.code),
       );
       if (!same && !equivalent && !elective) continue;
       for (const term of [
@@ -246,7 +253,7 @@ export function generateSuggestions(input: {
         if (JSON.stringify(before) === JSON.stringify(after)) continue;
         const id = JSON.stringify([
           before.id,
-          source.code,
+          canonicalCourseCode(source.code),
           source.offering?.source_id,
           term,
         ]);
@@ -279,7 +286,7 @@ export function generateSuggestions(input: {
           (code) =>
             !scenario.courses.some(
               (c) =>
-                c.code === code &&
+                canonicalCourseCode(c.code) === canonicalCourseCode(code) &&
                 c.status === "completed" &&
                 (!c.semester || termIndex(c.semester) < termIndex(term)),
             ),
@@ -290,7 +297,9 @@ export function generateSuggestions(input: {
         }
         if (
           scenario.courses.some(
-            (c) => c.id !== before.id && c.code === after.code,
+            (c) =>
+              c.id !== before.id &&
+              canonicalCourseCode(c.code) === canonicalCourseCode(after.code),
           )
         ) {
           reject("duplicate", after.code);

@@ -43,6 +43,28 @@ def test_postgres_advisory_lock_excludes_second_connection_and_releases(postgres
         assert second.locked
 
 
+def test_postgres_cached_count_reconciliation_and_retention(postgres_repo):
+    from datetime import datetime, timezone
+    from sqlalchemy import func, select
+    from unifr_api.catalogue import snapshots
+    from unifr_ingest.http import CachedResponse
+    from test_sync import cached_count_source
+
+    repo = postgres_repo
+    for _ in range(9):
+        report = sync(cached_count_source(repo), repo)
+        assert report.published, report.errors
+        assert report.parsed_count == 4
+    repo.cache_put("expired", CachedResponse(body="expired", fetched_at=1))
+    with repo.lock():
+        repo.prune(datetime.now(timezone.utc))
+    assert repo.current().snapshot_id == report.snapshot_id
+    assert repo.cache_get("expired") is None
+    assert len(repo.search()) == 4
+    with repo.engine.connect() as connection:
+        assert connection.scalar(select(func.count()).select_from(snapshots)) == 7
+
+
 @pytest.mark.parametrize("damage", ["broken", "truncated"])
 def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo, damage):
     fixtures = Path("packages/ingest/tests/fixtures")

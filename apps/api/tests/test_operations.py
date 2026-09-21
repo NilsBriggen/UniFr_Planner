@@ -95,6 +95,7 @@ def test_due_run_is_recorded_after_boundary_and_not_repeated():
     engine = create_engine("sqlite://")
     module.metadata.create_all(engine)
     before = datetime(2026, 9, 19, 2, 59, 59, tzinfo=timezone.utc)
+    module.put_state(engine, "next:catalogue", module.next_due("catalogue", before).isoformat())
     calls = []
     module.tick(
         engine, before, lambda job: calls.append(job) or {"outcome": "success"}, allow_sqlite=True
@@ -132,12 +133,71 @@ def test_failure_is_durable_redacted_and_blocks_sync_after_backup_failure(tmp_pa
     engine = create_engine("sqlite://")
     module.metadata.create_all(engine)
     now = datetime(2026, 9, 19, 2, 59, 59, tzinfo=timezone.utc)
+    module.put_state(engine, "next:catalogue", module.next_due("catalogue", now).isoformat())
     module.tick(engine, now, lambda _: {}, allow_sqlite=True)
     module.tick(engine, now + timedelta(seconds=2), lambda _: fail(), allow_sqlite=True)
     with engine.connect() as connection:
         row = connection.execute(select(module.runs)).mappings().one()
     assert row["outcome"] == "failure"
     assert "secret-password" not in str(row)
+
+
+def test_fresh_install_imports_immediately_and_retries_with_bounded_backoff():
+    module = ops()
+    engine = create_engine("sqlite://")
+    module.metadata.create_all(engine)
+    now = datetime(2026, 9, 21, 10, tzinfo=timezone.utc)
+    calls = []
+    for delay in (15, 60, 240, 240):
+        module.tick(
+            engine, now, lambda job: calls.append(job) or {"outcome": "rejected"}, allow_sqlite=True
+        )
+        assert calls[-1] == "catalogue"
+        with engine.connect() as connection:
+            due = connection.scalar(
+                select(module.state.c.value).where(module.state.c.key == "next:catalogue")
+            )
+        assert datetime.fromisoformat(due) == now + timedelta(minutes=delay)
+        now = datetime.fromisoformat(due)
+    module.tick(engine, now, lambda job: {"outcome": "success"}, allow_sqlite=True)
+    with engine.connect() as connection:
+        due = connection.scalar(
+            select(module.state.c.value).where(module.state.c.key == "next:catalogue")
+        )
+        failures = connection.scalar(
+            select(module.state.c.value).where(module.state.c.key == "failures:catalogue")
+        )
+    assert datetime.fromisoformat(due) == module.next_due("catalogue", now)
+    assert failures == 0
+
+
+def test_jobs_after_long_import_get_actual_start_finish_and_future_retry(monkeypatch):
+    module = ops()
+    engine = create_engine("sqlite://")
+    module.metadata.create_all(engine)
+    now = datetime(2026, 9, 21, 10, tzinfo=timezone.utc)
+    elapsed = [0]
+    monkeypatch.setattr(module.time, "monotonic", lambda: elapsed[0])
+    for job in ("catalogue", "documents"):
+        module.put_state(engine, f"next:{job}", now.isoformat())
+
+    def execute(job):
+        elapsed[0] += 7200 if job == "catalogue" else 1
+        return {"outcome": "success" if job == "catalogue" else "failure"}
+
+    module.tick(engine, now, execute, allow_sqlite=True)
+    with engine.connect() as connection:
+        document = (
+            connection.execute(select(module.runs).where(module.runs.c.job == "documents"))
+            .mappings()
+            .one()
+        )
+        due = connection.scalar(
+            select(module.state.c.value).where(module.state.c.key == "next:documents")
+        )
+    assert datetime.fromisoformat(document["started_at"]) == now + timedelta(hours=2)
+    assert datetime.fromisoformat(document["finished_at"]) == now + timedelta(hours=2, seconds=1)
+    assert datetime.fromisoformat(due) == now + timedelta(hours=2, minutes=15, seconds=1)
 
 
 def test_document_change_flags_review_and_never_rebaselines():

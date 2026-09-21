@@ -133,6 +133,51 @@ def test_source_cache_roundtrip(tmp_path):
     assert repo.cache_get("key").body == "new HTML"
 
 
+def test_retention_bounds_import_history_without_deleting_plans_or_current_snapshot(tmp_path):
+    from datetime import timedelta
+    from unifr_ingest.http import CachedResponse
+
+    m, repo, engine = repository(tmp_path)
+    now = datetime.now(timezone.utc)
+    for i in range(12):
+        snap, report = sample(f"published-{i}", change=bool(i % 2))
+        report = report.model_copy(update={"completed_at": now - timedelta(days=12 - i)})
+        repo.stage(snap, report)
+        with repo.lock():
+            repo.publish(snap, report)
+        repo.track_plan("keep-me", "135192")
+    for i in range(5):
+        snap, report = sample(f"rejected-{i}")
+        report = report.model_copy(
+            update={
+                "published": False,
+                "outcome": "rejected_validation",
+                "completed_at": now - timedelta(hours=5 - i),
+            }
+        )
+        repo.stage(snap, report)
+    repo.cache_put(
+        "expired", CachedResponse(body="old", fetched_at=(now - timedelta(days=31)).timestamp())
+    )
+    repo.cache_put("recent", CachedResponse(body="new", fetched_at=now.timestamp()))
+    with pytest.raises(RuntimeError, match="lock"):
+        repo.prune(now)
+    with repo.lock():
+        repo.prune(now)
+    assert repo.current().snapshot_id == "published-11"
+    assert repo.get("135192") is not None
+    assert repo.plan_changes("keep-me")
+    assert repo.cache_get("expired") is None
+    assert repo.cache_get("recent") is not None
+    with engine.connect() as connection:
+        rows = connection.execute(select(m.snapshots.c.id)).scalars().all()
+        assert len(rows) == 10
+        assert "published-4" not in rows and "rejected-1" not in rows
+        assert connection.execute(select(m.plan_choices)).mappings().one()["plan_id"] == "keep-me"
+        for table in (m.offerings, m.meetings, m.assignments):
+            assert set(connection.execute(select(table.c.snapshot_id)).scalars()) <= set(rows)
+
+
 def test_publication_cannot_substitute_different_valid_data_for_staged_rows(tmp_path):
     m, repo, engine = repository(tmp_path)
     original, report = sample()

@@ -17,6 +17,7 @@ import "./catalogue.css";
 import { usePlans } from "./planner/context";
 import { activeScenario, addCourse, fromOffering } from "./planner/domain";
 import { plannerMessages } from "./planner/messages";
+import { canonicalCourseCode } from "../../../packages/domain/src/requirements";
 
 const source = "https://www.unifr.ch/timetable/en/";
 const filterKeys = [
@@ -291,7 +292,9 @@ function Detail({
                   plans.busy ||
                   !plans.ready ||
                   activeScenario(plans.plan).courses.some(
-                    (c) => c.code === course.code,
+                    (c) =>
+                      canonicalCourseCode(c.code) ===
+                      canonicalCourseCode(course.code),
                   )
                 }
                 onClick={() => {
@@ -312,7 +315,9 @@ function Detail({
                 }}
               >
                 {activeScenario(plans.plan).courses.some(
-                  (c) => c.code === course.code,
+                  (c) =>
+                    canonicalCourseCode(c.code) ===
+                    canonicalCourseCode(course.code),
                 )
                   ? p.added
                   : p.add}

@@ -8,7 +8,7 @@ from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from .models import ListingEntry, ListingPage, Record
-from .parsers import BASE, digest, parse_listing
+from .parsers import BASE, digest, parse_detail, parse_listing
 
 CONNECTOR = (
     "https://www.unifr.ch/timetable/assets/components/timetable/connector.php?action=getlist"
@@ -86,11 +86,24 @@ class HttpCatalogueSource:
         self.last_request: float | None = None
 
     def fetch(
-        self, url: str, data: bytes | None = None, *, check: Callable[[str], object] | None = None
+        self,
+        url: str,
+        data: bytes | None = None,
+        *,
+        check: Callable[[str], object] | None = None,
+        cache_scope: str = "",
+        max_age: float = 0,
     ) -> str:
         public_url(url)
-        key = digest(url + "|" + (data.decode() if data else "GET"))
+        key = digest(url + "|" + (data.decode() if data else "GET") + cache_scope)
         cached = self.cache.cache_get(key)
+        if cached and max_age > 0 and 0 <= time.time() - cached.fetched_at < max_age:
+            try:
+                if check:
+                    check(cached.body)
+                return cached.body
+            except ValueError:
+                cached = None  # Invalid bytes cannot be refreshed by a conditional 304.
         headers = {"User-Agent": "UniFrPlanner/0.1 (public catalogue sync; max 2 req/s)"}
         if cached and data is None:
             if cached.etag:
@@ -122,7 +135,11 @@ class HttpCatalogueSource:
                     ),
                 )
                 return body
-            except (OSError, ValueError):
+            except (OSError, ValueError) as error:
+                if isinstance(error, ValueError):
+                    cached = None
+                    headers.pop("If-None-Match", None)
+                    headers.pop("If-Modified-Since", None)
                 if attempt == 3:
                     raise
                 self.sleep(2**attempt)
@@ -150,4 +167,9 @@ class HttpCatalogueSource:
         return parse_listing(raw, number)
 
     def detail(self, entry: ListingEntry) -> str:
-        return self.fetch(BASE + "course.html?show=" + entry.source_id)
+        return self.fetch(
+            BASE + "course.html?show=" + entry.source_id,
+            check=lambda html: parse_detail(html, entry),
+            cache_scope="|" + entry.fingerprint,
+            max_age=3600,
+        )

@@ -164,6 +164,15 @@ export function resolveTemplate(
     throw new Error("template revision or cohort unavailable");
   return matches[0];
 }
+/** Timetable teaching-unit namespace; not a course equivalence or a title match. */
+export function canonicalCourseCode(code: string): string {
+  return code.replace(/^UE-(?=[A-Z][A-Z0-9]*\.\d+$)/, "");
+}
+export function courseCodeIn(codes: readonly string[], code: string): boolean {
+  return codes.some(
+    (candidate) => canonicalCourseCode(candidate) === canonicalCourseCode(code),
+  );
+}
 export function evaluateRequirements(
   root: RequirementNode,
   records: readonly CourseRecord[],
@@ -172,7 +181,8 @@ export function evaluateRequirements(
   const nodes = validateTree(root);
   if (
     new Set(records.map((c) => c.id)).size !== records.length ||
-    new Set(records.map((c) => c.code)).size !== records.length
+    new Set(records.map((c) => canonicalCourseCode(c.code))).size !==
+      records.length
   )
     throw new Error("duplicate course record");
   if (records.some((c) => c.ects !== null && !positive(c.ects)))
@@ -194,7 +204,7 @@ export function evaluateRequirements(
       !("codes" in n) ||
       !c ||
       !o.reason.trim() ||
-      (o.kind === "allocation" && !n.codes.includes(c.code))
+      (o.kind === "allocation" && !courseCodeIn(n.codes, c.code))
     )
       throw new Error("invalid personal allocation");
   }
@@ -225,7 +235,7 @@ export function evaluateRequirements(
           c.status !== "unscheduled" &&
           (single && personal.size > 0
             ? personal.has(c.id)
-            : node.codes.includes(c.code) || personal.has(c.id)),
+            : courseCodeIn(node.codes, c.code) || personal.has(c.id)),
       )
       .sort(
         (a, b) =>
@@ -304,7 +314,9 @@ export function evaluateRequirements(
         amount: remaining,
         codes:
           "codes" in result.node
-            ? result.node.codes.map((code) => `code:${code}`)
+            ? result.node.codes.map(
+                (code) => `code:${canonicalCourseCode(code)}`,
+              )
             : [],
         reusable: !!result.node.allowReuse,
       });
@@ -364,7 +376,7 @@ export function evaluateRequirements(
         )
           continue;
         if (
-          !node.codes.includes(c.code) &&
+          !courseCodeIn(node.codes, c.code) &&
           !(override?.kind === "substitution" && override.nodeId === node.id)
         )
           continue;

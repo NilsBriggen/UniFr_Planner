@@ -106,17 +106,35 @@ its credentials available for disaster recovery; database archives omit role def
 
 The scheduler uses `Europe/Zurich` wall time, including daylight-saving changes:
 
-- Catalogue import: every day at 05:00. A verified `pg_dump` is completed first. If the backup
+- Catalogue import: immediately on a fresh installation, then every day at 05:00. A verified `pg_dump` is completed first. If the backup
   fails, the importer is not called and the job is recorded as `failure`.
+- Failed/rejected catalogue runs automatically retry after 15 minutes, then one hour, then
+  every four hours, without delaying the next regular daily run. Successful runs reset this
+  durable backoff. Retry times are calculated from completion, including long-running imports.
+  Transient document-check failures retry too; a detected document change retains the weekly
+  review cadence and is never silently accepted.
 - Source-document review: every Monday at 04:30. `UNIFR_SOURCE_DOCUMENTS` is a JSON list of
   `{"id":"...","url":"https://...","sha256":"..."}` objects. A digest change records
   `changed_review_required` and a `rejected` job; it never re-baselines or rewrites requirements.
+  The production CS PDF monitoring baseline is versioned in
+  `data/programmes/source-monitor.json`; use its `documents` array when provisioning the server.
+  These September 21 byte hashes establish monitoring from that date, not certification of
+  encoded curriculum rules. BI source ambiguities and new curriculum/cohort rules still require
+  review; timetable imports do not invent degree requirements.
 
 Scheduler and importer PostgreSQL advisory locks prevent overlapping coordinators/imports. A run is
 written as `running` before execution and finalized as `success`, `rejected`, or `failure`; an
 interrupted `running` record becomes `failure` on the next tick. A rejected or incomplete catalogue
 crawl never advances `catalogue_head`, so the last complete published catalogue remains visible.
 Review the reported/parsed/page counts and source warnings before retrying or changing policy.
+Independent upstream page caches may display different totals. Publication still requires exact
+unique-ID coverage of the largest total and an unchanged second pass of the entire index; this
+reconciliation is retained as a warning in the import report.
+
+After backed-up imports, old catalogue generations and unused raw caches rotate automatically
+(seven published generations, three rejected/staged per status, 30-day unused caches). The current
+published generation, saved student plans and their change notices are protected. This bounds
+routine importer storage without deleting user history.
 
 An operator can request a durable immediate run through the same path:
 

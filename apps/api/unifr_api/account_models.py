@@ -82,7 +82,13 @@ def validate_plan(value: dict[str, Any]) -> dict[str, Any]:
             if course["offering"]:
                 trim(course["offering"], "source_id")
         unique([c["id"] for c in scenario["courses"]])
-        unique([c["code"] for c in scenario["courses"]])
+        # Match the browser's exact timetable teaching-unit namespace rule.
+        unique(
+            [
+                re.sub(r"^UE-(?=[A-Z][A-Z0-9]*\.[0-9]+\Z)", "", c["code"])
+                for c in scenario["courses"]
+            ]
+        )
         unique([p["id"] for p in scenario["unavailable"]])
         for period in scenario["unavailable"]:
             identifier(period["id"])

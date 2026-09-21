@@ -1,0 +1,21 @@
+{
+  "baseline_date": "2026-09-21",
+  "purpose": "Byte-change monitoring baseline, not certification or revalidation of programme rules. Never automatically accept a changed digest.",
+  "documents": [
+    {
+      "id": "cs-2024",
+      "url": "https://cdn.unifr.ch/scimed/plans/2024/Plan_BSc_IN_fr.pdf",
+      "sha256": "0d48cb0e24d946eec8e6bc99e10299cc8a1000ea9aeaedabc61225468939dc41"
+    },
+    {
+      "id": "cs-2025",
+      "url": "https://cdn.unifr.ch/scimed/plans/2025/Plan_BSc_IN_fr.pdf",
+      "sha256": "5263e28516bdf7e0444b32733a77680c6f3a63f93650e06715ba2620658a185a"
+    },
+    {
+      "id": "cs-current",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BSc_IN_fr.pdf",
+      "sha256": "c031431e2b80d835218ee14a6edf20649afcd63f23173c82c9efb3a5059262bd"
+    }
+  ]
+}

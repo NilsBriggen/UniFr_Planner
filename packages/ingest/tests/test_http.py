@@ -86,3 +86,56 @@ def test_retries_are_bounded_and_private_urls_rejected():
     assert len(calls) == 4
     with pytest.raises(ValueError):
         source.fetch("https://my.unifr.ch/private")
+
+
+def test_detail_loading_is_retried_and_validated_checkpoint_survives_new_source():
+    from unifr_ingest.parsers import parse_listing
+
+    m = module()
+    cache, clock, calls = Cache(), Clock(), []
+    entry = parse_listing(fixture("listing.html"), 1).entries[1]
+
+    def transport(request):
+        calls.append(request)
+        return m.Response(
+            status=200, body=fixture("detail.html") if len(calls) > 1 else "<p>Still loading...</p>"
+        )
+
+    source = m.HttpCatalogueSource(cache, transport=transport, clock=clock.now, sleep=clock.sleep)
+    assert source.detail(entry) == fixture("detail.html")
+    resumed = m.HttpCatalogueSource(cache, transport=transport, clock=clock.now, sleep=clock.sleep)
+    assert resumed.detail(entry) == fixture("detail.html")
+    assert len(calls) == 2
+    # A changed listing must not use an earlier detail checkpoint.
+    resumed.detail(entry.model_copy(update={"fingerprint": "new"}))
+    assert len(calls) == 3
+    # Expired checkpoints cannot conceal detail-only updates.
+    import time
+
+    for key, value in cache.data.items():
+        cache.data[key] = value.model_copy(update={"fetched_at": time.time() - 7200})
+    resumed.detail(entry)
+    assert len(calls) == 4
+
+
+@pytest.mark.parametrize("age", [0, 7200])
+def test_invalid_checkpoint_recovers_with_unconditional_request(age):
+    import time
+    from unifr_ingest.parsers import parse_listing, digest
+
+    m = module()
+    cache, clock, calls = Cache(), Clock(), []
+    entry = parse_listing(fixture("listing.html"), 1).entries[1]
+    key = digest(entry.detail_url + "|GET|" + entry.fingerprint)
+    cache.cache_put(key, m.CachedResponse(body="broken", etag="old", fetched_at=time.time() - age))
+
+    def transport(request):
+        calls.append(request)
+        if request.get_header("If-none-match"):
+            return m.Response(status=304, body="")
+        return m.Response(status=200, body=fixture("detail.html"))
+
+    source = m.HttpCatalogueSource(cache, transport=transport, clock=clock.now, sleep=clock.sleep)
+    assert source.detail(entry) == fixture("detail.html")
+    assert not calls[-1].get_header("If-none-match")
+    assert len(calls) <= 2

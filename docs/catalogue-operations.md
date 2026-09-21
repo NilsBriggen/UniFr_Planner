@@ -46,14 +46,27 @@ and scheduled runs. No scheduled service was enabled during implementation.
 4. Parse exact dates from the detail's Dates and rooms table; retain its recurrence summary,
    assessment, prerequisites, equivalences, multilingual titles, ECTS and study-plan assignments.
    An unpublished ECTS is `None`; unknown time is an explicit unresolved meeting.
+   Source language labels are retained in listing provenance and mapped to ISO codes in
+   offerings for filtering and suggestions; unspecified “Bilingual”/“Other” remain unknown.
+   Timetable `UE-` teaching-unit prefixes are preserved in catalogue data. The degree evaluator
+   matches only the exact numeric academic-code namespace (e.g. `UE-SIN.01023` / `SIN.01023`),
+   never titles or distinct course numbers. Both spellings cannot count as separate courses.
    The downloadable calendar URL is retained. `parse_calendar` separately supports RRULE,
    EXDATE, RDATE, recurrence overrides, cancellations and UTC/Zurich DST conversion; normal
    imports use authoritative detail-table dates and do not additionally download every ICS.
-5. Recheck the first listing after detail processing. Validate full page coverage, constant
-   counts/page size, listing/detail identity, unique source IDs, unique code per term,
+5. Recheck **every listing page** after detail processing. Every normalized listing field,
+   per-page count, and page size must be unchanged across the two passes. Discover additional
+   pages if a later response reports a larger total. Validate full page coverage against the
+   largest advertised count, exact page lengths, listing/detail identity, unique source IDs,
+   unique code per term,
    required fields, and removals above 20% of the previous catalogue. A multi-semester
    offering occupies each listed term. Duplicate code/term pairs block publication for
-   operator review rather than being merged silently.
+   operator review rather than being merged silently. UniFr caches pages independently: on
+   2026-09-21 page 1 advertised 3,662 while a freshly generated equivalent page and subsequent
+   pages advertised 3,664. Mixed cached counts are a recorded warning **only** when the complete
+   unique listing/detail set reconciles to the largest count and the full second index pass
+   is identical. Missing or changing pages still reject the generation. No count is guessed,
+   no records are silently dropped, and a loading response is never considered an empty page.
 6. Persist normalized staging and the report. Only a valid staged generation may atomically
    update `catalogue_head`; publication revalidates and checks that persisted staging equals
    the candidate. The same transaction appends affected-plan change records. Existing plan
@@ -62,8 +75,17 @@ and scheduled runs. No scheduled service was enabled during implementation.
 `rejected_due_to_source_change` is an unsuccessful crawl. Restart only after inspecting
 the observed counts; never relabel a partial scrape as complete. A suspicious removal
 requires source/term review and a deliberate policy change; there is no unchecked force flag.
-No retention pruning is automated yet: historic snapshots, outbox events and source cache
-remain available for audit and need an operational retention policy as usage grows.
+The production scheduler retries failed/rejected catalogue jobs after 15 minutes, then one hour,
+then at most every four hours (or the next regular 05:00 run if sooner). Validated detail responses
+are checkpointed for one hour, keyed by the complete listing fingerprint, so a retry can reuse
+recent downloads without publishing an incomplete generation. Invalid detail HTML is retried
+before caching. Expired checkpoints are revalidated over HTTP; changed listings bypass them.
+
+After a backed-up scheduled import, retention keeps seven published generations and three
+rejected/staged generations per status, always protecting the current head. Raw response caches
+expire after 30 days of disuse. Student plans, embedded historical course data, and plan change
+notices are never pruned by this policy. Backups retain their independent seven-day/four-week
+rotation. The standalone development `catalogue_sync` command does not run retention.
 
 ## Task 3 integration boundary
 
@@ -90,8 +112,15 @@ production instance refuses it because SQLite cannot supply PostgreSQL advisory 
 Integration tests use disposable, uniquely named schemas and verify lock exclusion,
 successful publication, and broken-fixture rejection with the exact old pointer preserved.
 
-On 2026-09-17, three complete-crawl attempts were started and rejected because the public
-listing mixed **3,658** and **3,660** results across pages. The latest stored rejected run is
-`323188c6-d406-48f4-b940-1a8fb99ce2c6`. The local production pointer is still empty; a complete
-authoritative catalogue is **not yet available**. The searchable fixture catalogue in tests
-demonstrates the repository contract but is never installed as authoritative production data.
+On 2026-09-17, complete-crawl attempts were rejected because the public listing mixed **3,658**
+and **3,660** results across pages. Investigation on 2026-09-21 reproduced this with 3,662/3,664:
+all 306 pages contained exactly 3,664 unique offerings, and only the cached first page advertised
+the lower total. A freshly generated equivalent first-page request advertised 3,664. Session
+cookies and ordinary HTTP cache-busting did not change the stale response. The reconciliation
+contract above fixes this without treating either inconsistent counts or partial coverage as
+success. Publication still waits for every detail and the complete second index pass.
+
+The current release gate is a real public import followed by public API/browser verification.
+Check `/api/v1/status/catalogue` for the deployed generation, freshness and last outcome; do not
+infer deployment state from historical local reports. Fixture catalogues exercise the contract
+but must never be installed as authoritative production data.

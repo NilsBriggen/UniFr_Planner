@@ -1,6 +1,7 @@
 import { api, type CatalogueStatus, type Course } from "../api/client";
 import { fromOffering, type Plan, type Selection } from "./domain";
 import type { CatalogueCandidate } from "../suggestions/engine";
+import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
 
 export type PublishedCatalogue = { status: CatalogueStatus; courses: Course[] };
 export type SourceChange = {
@@ -39,8 +40,9 @@ export async function loadPublishedCatalogue(
     status = page.status;
     total = page.total;
     for (const course of page.items) {
-      if (codes.has(course.code)) throw new Error("Duplicate catalogue course");
-      codes.add(course.code);
+      const code = canonicalCourseCode(course.code);
+      if (codes.has(code)) throw new Error("Duplicate catalogue course");
+      codes.add(code);
       courses.push(course);
     }
     offset += page.items.length;
@@ -109,7 +111,10 @@ export function sourceChanges(
 ): SourceChange[] {
   if (plan.programme === "SUGGESTIONS-DEMO") return [];
   const courses = new Map(
-    catalogue.courses.map((course) => [course.code, course]),
+    catalogue.courses.map((course) => [
+      canonicalCourseCode(course.code),
+      course,
+    ]),
   );
   return plan.scenarios.flatMap((scenario) =>
     scenario.courses.flatMap((course): SourceChange[] => {
@@ -122,7 +127,7 @@ export function sourceChanges(
       )
         return [];
       const current = courses
-        .get(course.code)
+        .get(canonicalCourseCode(course.code))
         ?.offerings.find((o) => o.source_id === stored.source_id);
       if (!current)
         return [

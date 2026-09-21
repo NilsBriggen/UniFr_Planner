@@ -52,6 +52,26 @@ const evaluate = (
 it("exports a pure requirements evaluator", () =>
   expect(typeof engine.evaluateRequirements).toBe("function"));
 describe("allocation and progress", () => {
+  it("accepts exact UE namespace aliases in pools and explicit allocations", () => {
+    const root = all(pool("intro", ["UE-SIN.01023"]));
+    const record = course("SIN.01023");
+    expect(
+      evaluate(root, [record], {
+        overrides: [
+          {
+            kind: "allocation",
+            courseId: record.id,
+            nodeId: "intro",
+            reason: "Exact course",
+          },
+        ],
+      }).earned,
+    ).toBe(6);
+    expect(evaluate(root, [record]).earned).toBe(6);
+    expect(
+      evaluate(all(pool("custom", ["UE-CUSTOM"])), [course("CUSTOM")]).earned,
+    ).toBe(0);
+  });
   it("uses a pool beyond its local minimum to satisfy an ancestor minimum", () => {
     const result = evaluate(
       { ...all(pool("pool", ["A", "B"], 6)), minCredits: 12 },

@@ -172,10 +172,13 @@ def main() -> None:
         if job == "documents":
             return check_documents(settings.source_documents)
         repository = SqlCatalogueRepository(engine)
-        return catalogue_job(
+        result = catalogue_job(
             lambda: backup(settings.backup_dir, settings.database_url, datetime.now(timezone.utc)),
             lambda: sync(HttpCatalogueSource(repository), repository),
         )
+        with repository.lock():
+            repository.prune(datetime.now(timezone.utc))
+        return result
 
     try:
         if args.once:

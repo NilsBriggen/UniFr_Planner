@@ -2,11 +2,12 @@
 
 from collections import Counter
 from datetime import datetime, time, timedelta, timezone
+import json
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from .models import CatalogueSnapshot, ListingPage, Offering, SyncReport
-from .parsers import parse_detail
+from .parsers import digest, parse_detail
 from .ports import CatalogueRepository, CatalogueSource
 
 
@@ -14,6 +15,15 @@ def next_sync(now: datetime) -> datetime:
     local = now.astimezone(ZoneInfo("Europe/Zurich"))
     due = datetime.combine(local.date(), time(5), local.tzinfo)
     return due if local < due else due + timedelta(days=1)
+
+
+def listing_hash(pages: list[ListingPage] | tuple[ListingPage, ...]) -> str:
+    """Ignore incidental markup, but include every count, ID and listing field."""
+    return digest(
+        json.dumps(
+            [page.model_dump(mode="json", exclude={"raw_hash"}) for page in pages], sort_keys=True
+        )
+    )
 
 
 def validate(
@@ -25,13 +35,22 @@ def validate(
     if not pages:
         errors.append("No listing coverage")
     else:
-        if [p.number for p in pages] != list(pages[0].pages):
+        expected_pages = pages[0].model_copy(update={"reported_count": snapshot.reported_count})
+        if [p.number for p in pages] != list(expected_pages.pages):
             errors.append("Incomplete pagination coverage")
-        if any(
-            p.reported_count != snapshot.reported_count or p.page_size != pages[0].page_size
-            for p in pages
+        counts = {p.reported_count for p in pages}
+        if max(counts) != snapshot.reported_count or any(
+            p.page_size != pages[0].page_size for p in pages
         ):
             errors.append("Pagination changed during crawl")
+        if len(counts) > 1:
+            if snapshot.verified_listing_hash != listing_hash(pages):
+                errors.append("Pagination changed: mixed cached counts without full index recheck")
+            else:
+                warnings.append(
+                    f"Reconciled cached counts {sorted(counts)} against complete, "
+                    "unique listing coverage and a stable full index recheck"
+                )
         for page in pages:
             expected = min(
                 page.page_size, max(0, snapshot.reported_count - (page.number - 1) * page.page_size)
@@ -87,16 +106,20 @@ def sync(
         pages: list[ListingPage] = []
         offerings: list[Offering] = []
         failures: list[str] = []
+        verified_listing_hash = None
         count = 0
         try:
             first = source.listing(1)
             pages.append(first)
             count = first.reported_count
-            for number in list(first.pages)[1:]:
+            number = 2
+            while (number - 1) * first.page_size < count:
                 page = source.listing(number)
                 pages.append(page)
-                if page.reported_count != count or page.page_size != first.page_size:
-                    raise ValueError("Pagination changed during crawl")
+                count = max(count, page.reported_count)
+                if page.page_size != first.page_size:
+                    raise ValueError("Pagination changed during crawl: page size")
+                number += 1
             entries = [entry for page in pages for entry in page.entries]
             ids = [entry.source_id for entry in entries]
             if len(ids) != count or len(set(ids)) != len(ids):
@@ -113,14 +136,10 @@ def sync(
                 else:
                     offering = parse_detail(source.detail(entry), entry)
                     offerings.append(offering.model_copy(update={"detail_checked_at": checked_at}))
-            final = source.listing(1)
-            if (
-                final.reported_count != count
-                or final.page_size != first.page_size
-                or [(entry.source_id, entry.fingerprint) for entry in final.entries]
-                != [(entry.source_id, entry.fingerprint) for entry in first.entries]
-            ):
-                raise ValueError("Pagination changed during crawl (final listing recheck)")
+            final = [source.listing(page.number) for page in pages]
+            if listing_hash(final) != listing_hash(pages):
+                raise ValueError("Pagination changed during crawl (full index recheck)")
+            verified_listing_hash = listing_hash(final)
         except (ValueError, OSError, KeyError) as exc:
             failures.append(f"{type(exc).__name__}: {exc}")
         snap = CatalogueSnapshot(
@@ -129,6 +148,7 @@ def sync(
             pages=tuple(pages),
             offerings=tuple(offerings),
             errors=tuple(failures),
+            verified_listing_hash=verified_listing_hash,
         )
         errors, warnings = validate(snap, previous)
         new = {off.source_id: off for off in offerings}

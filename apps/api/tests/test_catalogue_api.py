@@ -114,6 +114,20 @@ def test_filters_use_published_data(catalogue, query, expected):
     assert [course["code"] for course in response.json()["items"]] == expected
 
 
+def test_real_public_html_languages_are_usable_filter_values(catalogue):
+    client, repo = catalogue
+    snap, report = sample()
+    repo.stage(snap, report)
+    with repo.lock():
+        repo.publish(snap, report)
+    terms = client.get("/api/v1/catalogue/terms").json()
+    assert set(terms["languages"]) == {"de", "fr"}
+    for language in terms["languages"]:
+        response = client.get("/api/v1/catalogue/courses", params={"language": language})
+        assert response.status_code == 200
+        assert response.json()["total"] == 1
+
+
 @pytest.mark.parametrize(
     "query",
     [

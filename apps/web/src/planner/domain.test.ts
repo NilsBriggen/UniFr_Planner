@@ -23,6 +23,16 @@ const course = () => ({
 });
 
 describe("local degree plan", () => {
+  it("rejects duplicate curriculum and public timetable code aliases", () => {
+    const plan = domain.addCourse(setup(), { ...course(), code: "SIN.01023" });
+    expect(() =>
+      domain.addCourse(plan, {
+        ...course(),
+        id: "imported",
+        code: "UE-SIN.01023",
+      }),
+    ).toThrow(/duplicate/);
+  });
   it("rejects invalid personal intervals and inconsistent course status on import", () => {
     const plan = setup();
     expect(() =>

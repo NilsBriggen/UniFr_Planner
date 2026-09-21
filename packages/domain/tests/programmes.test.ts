@@ -55,6 +55,28 @@ it("shows verified course progress while blocking an unsupported degree-completi
     "complete",
   );
 });
+it("recognizes the public timetable UE namespace without treating aliases as two courses", () => {
+  const template = packs.programmeTemplates[0];
+  const imported = {
+    id: "intro",
+    code: "UE-SIN.01023",
+    ects: 6,
+    status: "completed" as const,
+  };
+  const result = evaluateRequirements(template.root, [imported]);
+  expect(result.earned).toBe(6);
+  expect(result.allocations[0].code).toBe("UE-SIN.01023");
+  expect(() =>
+    evaluateRequirements(template.root, [
+      imported,
+      { ...imported, id: "manual", code: "SIN.01023" },
+    ]),
+  ).toThrow(/duplicate course/);
+  expect(
+    evaluateRequirements(template.root, [{ ...imported, code: "UE-SIN.01024" }])
+      .earned,
+  ).toBe(0);
+});
 it("records each rule source and leaves unknown codes and revision dates unresolved", () => {
   for (const t of packs.programmeTemplates)
     for (const n of flattenRequirements(t.root)) {

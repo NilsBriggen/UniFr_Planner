@@ -53,6 +53,7 @@ def test_detail_multilingual_titles_exact_dates_and_assignments():
     entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
     detail = p.parse_detail(fixture("detail.html"), entry)
     assert detail.ects == 9
+    assert detail.languages == ("fr", "de")
     assert set(detail.course.titles) == {"en", "fr", "de"}
     assert len(detail.meetings) == 8
     assert detail.meetings[0].starts_at.isoformat() == "2026-09-17T13:15:00+02:00"
@@ -61,6 +62,26 @@ def test_detail_multilingual_titles_exact_dates_and_assignments():
     assert detail.assignments[0].version == "SA14_MA_P2_bi_v01"
     assert detail.calendar_url.endswith("show=135192")
     assert "Hebdomadaire" in detail.recurrence_summary
+
+
+@pytest.mark.parametrize(
+    "labels, expected",
+    [
+        (("French", "German"), ("fr", "de")),
+        (("Bilingual f/d", "French"), ("fr", "de")),
+        (("Bilingual d/f",), ("de", "fr")),
+        (("English and/or German",), ("en", "de")),
+        (("English and/or French",), ("en", "fr")),
+        (("fr/de/en",), ("fr", "de", "en")),
+        (("Italian", "Spanish", "Rhaeto-rumantsch"), ("it", "es", "rm")),
+        (("Bilingual", "Other"), ()),
+    ],
+)
+def test_source_language_labels_normalize_without_guessing_unknowns(labels, expected):
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    detail = p.parse_detail(fixture("detail.html"), entry.model_copy(update={"languages": labels}))
+    assert detail.languages == expected
 
 
 def test_block_course_and_unpublished_time():

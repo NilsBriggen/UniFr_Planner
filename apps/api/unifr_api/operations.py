@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import sys
+import time
 from typing import Any
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 from urllib.parse import urlsplit
@@ -71,6 +72,11 @@ def tick(
     """One coordinator owns a tick; importer additionally acquires its existing lock."""
     if engine.dialect.name != "postgresql" and not allow_sqlite:
         raise ValueError("Scheduler requires PostgreSQL locking")
+    anchor = time.monotonic()
+
+    def current_time() -> datetime:
+        return now + timedelta(seconds=max(0, int(time.monotonic() - anchor)))
+
     with engine.connect() as lock:
         postgres = engine.dialect.name == "postgresql"
         if postgres:
@@ -91,13 +97,16 @@ def tick(
                     )
                 )
             for job in ("catalogue", "documents"):
+                started_at = current_time()
                 key = f"next:{job}"
                 with engine.connect() as connection:
                     due = connection.scalar(select(state.c.value).where(state.c.key == key))
                 if due is None:
-                    put_state(engine, key, next_due(job, now).isoformat())
-                    continue
-                if now < datetime.fromisoformat(due):
+                    due = (
+                        started_at if job == "catalogue" else next_due(job, started_at)
+                    ).isoformat()
+                    put_state(engine, key, due)
+                if started_at < datetime.fromisoformat(due):
                     continue
                 identifier = str(uuid4())
                 with engine.begin() as connection:
@@ -106,7 +115,7 @@ def tick(
                             id=identifier,
                             job=job,
                             due_at=due,
-                            started_at=now.isoformat(),
+                            started_at=started_at.isoformat(),
                             outcome="running",
                             details={},
                         )
@@ -119,6 +128,7 @@ def tick(
                         outcome = "failure"
                 except Exception as error:
                     outcome, details = "failure", {"reason": type(error).__name__}
+                finished = current_time()
                 with engine.begin() as connection:
                     connection.execute(
                         update(runs)
@@ -126,10 +136,22 @@ def tick(
                         .values(
                             outcome=outcome,
                             details=details,
-                            finished_at=datetime.now(timezone.utc).isoformat(),
+                            finished_at=finished.isoformat(),
                         )
                     )
-                put_state(engine, key, next_due(job, now).isoformat())
+                retry_key = f"failures:{job}"
+                with engine.connect() as connection:
+                    failures = (
+                        connection.scalar(select(state.c.value).where(state.c.key == retry_key))
+                        or 0
+                    )
+                retry = outcome == "failure" or (job == "catalogue" and outcome == "rejected")
+                failures = min(int(failures) + 1, 3) if retry else 0
+                put_state(engine, retry_key, failures)
+                due_at = next_due(job, finished)
+                if retry:
+                    due_at = min(due_at, finished + timedelta(minutes=(15, 60, 240)[failures - 1]))
+                put_state(engine, key, due_at.isoformat())
                 event("job_finished", job=job, job_id=identifier, outcome=outcome)
         finally:
             if postgres:

@@ -100,6 +100,22 @@ function setup() {
 }
 
 describe("candidate generation and hard constraints", () => {
+  it("finds timetable alternatives for the same manually entered curriculum code", () => {
+    const input = setup();
+    input.plan.scenarios[0].courses[0].code = "SIN.01023";
+    input.catalogue[0].course.code = "UE-SIN.01023";
+    const root = {
+      ...input.requirements.node,
+      codes: ["SIN.01023"],
+    } as RequirementNode;
+    input.requirements = evaluateRequirements(
+      root,
+      activeScenario(input.plan).courses,
+    );
+    const result = generateSuggestions(input);
+    expect(result.suggestions.length).toBeGreaterThan(0);
+    expect(result.suggestions[0].route).toBe("alternative");
+  });
   it("preserves the supplied one_of choice even when automatic evaluation would prefer another branch", () => {
     const input = setup();
     const root: RequirementNode = {
@@ -185,6 +201,28 @@ describe("candidate generation and hard constraints", () => {
         catalogue: [input.catalogue[0], conflicting],
       }).rejected[0].reason,
     ).toBe("sourceConflict");
+  });
+  it("cannot bypass conflicting-source checks using the UE namespace alias", () => {
+    const input = setup();
+    input.plan.scenarios[0].courses[0].code = "SIN.01023";
+    input.catalogue[0].course.code = "SIN.01023";
+    const conflict = structuredClone(input.catalogue[0]);
+    conflict.course.code = "UE-SIN.01023";
+    conflict.prerequisites = ["UNMET"];
+    for (const catalogue of [
+      [input.catalogue[0], conflict],
+      [conflict, input.catalogue[0]],
+    ]) {
+      const result = generateSuggestions({
+        ...input,
+        catalogue,
+        requirements: null,
+      });
+      expect(result.suggestions).toEqual([]);
+      expect(
+        result.rejected.every((item) => item.reason === "sourceConflict"),
+      ).toBe(true);
+    }
   });
   it("repairs a dated real clash by changing only its offering, deterministically and without mutation", () => {
     const input = setup(),

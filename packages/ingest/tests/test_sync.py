@@ -168,7 +168,7 @@ def test_live_changed_count_has_distinct_rejected_outcome():
     )
     report = m.sync(source, repo, now=NOW)
     assert report.outcome == "rejected_due_to_source_change"
-    assert report.reported_count == 3658
+    assert report.reported_count == 3660
     assert repo.staged[-1][0].pages[1].reported_count == 3660
     assert repo.current().snapshot_id == "old"
 
@@ -186,3 +186,61 @@ def test_source_changes_during_details_are_rejected_before_publish():
     assert not report.published
     assert report.outcome == "rejected_due_to_source_change"
     assert repo.current().snapshot_id == "old"
+
+
+def cached_count_source(repo):
+    entry = one_page().entries[0]
+    entries = tuple(
+        entry.model_copy(update={"source_id": str(i), "code": f"UE-TEST.{i}"}) for i in range(4)
+    )
+    first = one_page().model_copy(
+        update={"reported_count": 3, "page_size": 2, "entries": entries[:2]}
+    )
+    second = first.model_copy(update={"number": 2, "reported_count": 4, "entries": entries[2:]})
+
+    class CachedSource(Source):
+        def detail(self, item):
+            return self.html.replace(entry.code, item.code)
+
+    return CachedSource(repo, pages={1: first, 2: second})
+
+
+def test_stable_stale_page_counts_reconcile_only_with_full_coverage_and_recheck():
+    repo = MemoryRepository()
+    source = cached_count_source(repo)
+    report = sync_module().sync(source, repo, now=NOW)
+    assert report.published, report.errors
+    assert report.reported_count == report.parsed_count == 4
+    assert any("cached counts" in warning for warning in report.warnings)
+    assert source.calls.count(("listing", 1)) == 2
+    assert source.calls.count(("listing", 2)) == 2
+
+
+def test_stale_count_does_not_allow_short_or_changing_pages():
+    for damage in ("short", "duplicate", "changed"):
+        repo = MemoryRepository()
+        source = cached_count_source(repo)
+        if damage == "short":
+            source.pages[2] = source.pages[2].model_copy(update={"entries": ()})
+        elif damage == "duplicate":
+            source.pages[2] = source.pages[2].model_copy(
+                update={"entries": (source.pages[1].entries[0],)}
+            )
+        else:
+            detail = source.detail
+
+            def change(item):
+                second = source.pages[2]
+                source.pages[2] = second.model_copy(
+                    update={
+                        "entries": (
+                            second.entries[0].model_copy(update={"fingerprint": "changed"}),
+                        )
+                    }
+                )
+                return detail(item)
+
+            source.detail = change
+        report = sync_module().sync(source, repo, now=NOW)
+        assert not report.published, damage
+        assert repo.current() is None

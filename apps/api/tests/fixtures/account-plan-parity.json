@@ -10,6 +10,12 @@
     "scenarios": [{"id": "s", "name": "Main", "courses": [], "unavailable": [], "travelMinutes": 0}]
   },
   "cases": [
+    {"name": "duplicate timetable and curriculum code aliases", "valid": false, "patch": {
+      "scenarios": [{"id": "s", "name": "Main", "travelMinutes": 0, "unavailable": [], "courses": [
+        {"id": "manual", "code": "SIN.01023", "titles": {"en": "Programming"}, "ects": 6, "status": "completed", "semester": "AS-2026", "pinned": false, "offering": null},
+        {"id": "imported", "code": "UE-SIN.01023", "titles": {"en": "Programming"}, "ects": 6, "status": "completed", "semester": "AS-2026", "pinned": false, "offering": null}
+      ]}]
+    }},
     {"name": "valid baseline", "valid": true, "patch": {}},
     {"name": "semester trailing newline", "valid": false, "patch": {"semesters": ["AS-2026\n"]}},
     {"name": "semester trailing CRLF", "valid": false, "patch": {"semesters": ["AS-2026\r\n"]}},
