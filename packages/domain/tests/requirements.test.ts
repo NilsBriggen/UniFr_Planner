@@ -52,6 +52,268 @@ const evaluate = (
 it("exports a pure requirements evaluator", () =>
   expect(typeof engine.evaluateRequirements).toBe("function"));
 describe("allocation and progress", () => {
+  it("uses a pool beyond its local minimum to satisfy an ancestor minimum", () => {
+    const result = evaluate(
+      { ...all(pool("pool", ["A", "B"], 6)), minCredits: 12 },
+      [course("A"), course("B")],
+    );
+    expect(result).toMatchObject({
+      status: "complete",
+      earned: 12,
+      remaining: 0,
+    });
+    expect(result.children[0]).toMatchObject({
+      status: "complete",
+      earned: 12,
+    });
+    expect(result.allocations.map((a) => a.code)).toEqual(["A", "B"]);
+  });
+  it.each([false, true])(
+    "satisfies nested and multiple-child minima independently of order, reverse=%s",
+    (reverse) => {
+      const children: RequirementNode[] = [
+        { ...all(pool("inner", ["A", "B"], 3)), id: "nested", minCredits: 9 },
+        pool("other", ["C"], 6),
+      ];
+      const records = [course("A", 3), course("B", 6), course("C", 6)];
+      const result = evaluate(
+        {
+          ...all(...(reverse ? children.reverse() : children)),
+          minCredits: 15,
+        },
+        reverse ? records.reverse() : records,
+      );
+      expect(result).toMatchObject({
+        status: "complete",
+        earned: 15,
+        remaining: 0,
+      });
+      expect(
+        result.children.find((c) => c.node.id === "nested")?.children[0].earned,
+      ).toBe(9);
+    },
+  );
+  it("counts extra courses when ancestor ECTS require more than the local course count", () => {
+    const result = evaluate(
+      {
+        ...all({
+          ...pool("count", ["A", "B", "C"], 0),
+          kind: "course_count",
+          minCourses: 1,
+        }),
+        minCredits: 12,
+      },
+      [course("A"), course("B"), course("C")],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 12 });
+    expect(result.children[0].allocations).toHaveLength(2);
+  });
+  it("leaves extra evidence unused while respecting both local and ancestor maxima", () => {
+    const result = evaluate(
+      {
+        ...all({ ...pool("pool", ["A", "B", "C"], 3), maxCredits: 9 }),
+        minCredits: 9,
+        maxCredits: 9,
+      },
+      [course("A", 3), course("B", 6), course("C", 6)],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 9 });
+    expect(result.children[0].allocations.map((a) => a.code)).toEqual([
+      "A",
+      "B",
+    ]);
+    const incompatible = evaluate(
+      {
+        ...all({ ...pool("pool", ["A", "B"], 6), maxCredits: 6 }),
+        minCredits: 12,
+      },
+      [course("A"), course("B")],
+    );
+    expect(incompatible.status).not.toBe("complete");
+    expect(incompatible.status).toBe("needs_clarification");
+  });
+  it("retains explicit evidence while adding fractional credits for an ancestor", () => {
+    const result = evaluate(
+      {
+        ...all(pool("pool", ["A", "B", "C"], 1.5)),
+        minCredits: 6,
+        maxCredits: 6,
+      },
+      [course("A", 1.5), course("B", 4.5), course("C", 6)],
+      {
+        overrides: [
+          {
+            kind: "allocation",
+            courseId: "A",
+            nodeId: "pool",
+            reason: "Approved component",
+          },
+        ],
+      },
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 6 });
+    expect(result.allocations.map((a) => [a.code, a.credits])).toEqual([
+      ["A", 1.5],
+      ["B", 4.5],
+    ]);
+    expect(result.allocations[0].override?.reason).toBe("Approved component");
+  });
+  it.each([false, true])(
+    "counts reused evidence once while fulfilling an ancestor minimum, reverse=%s",
+    (reverse) => {
+      const children = [
+        pool("ordinary", ["A"], 6),
+        { ...pool("reused", ["A", "B"], 6), allowReuse: true },
+      ];
+      const result = evaluate(
+        {
+          ...all(...(reverse ? children.reverse() : children)),
+          minCredits: 12,
+          maxCredits: 12,
+        },
+        [course("A"), course("B")],
+      );
+      expect(result).toMatchObject({ status: "complete", earned: 12 });
+      expect(result.allocations.map((a) => a.code).sort()).toEqual(["A", "B"]);
+      expect(
+        evaluate({ ...all(...children), minCredits: 12 }, [course("A")]),
+      ).toMatchObject({ status: "missing", earned: 6, remaining: 6 });
+    },
+  );
+  it.each(["course", "project"] as const)(
+    "does not combine equivalent %s attempts to reach an ancestor minimum",
+    (kind) => {
+      const result = evaluate(
+        { ...all({ ...pool("single", ["A", "B"], 6), kind }), minCredits: 12 },
+        [course("A"), course("B")],
+      );
+      expect(result).toMatchObject({
+        status: "missing",
+        earned: 6,
+        remaining: 6,
+      });
+      expect(result.children[0].allocations).toHaveLength(1);
+    },
+  );
+  it("deduplicates a genuinely reused fractional bundle at its ancestor", () => {
+    const result = evaluate(
+      {
+        ...all(pool("ordinary", ["A"], 4.5), {
+          ...pool("reused", ["A", "B"], 6),
+          allowReuse: true,
+        }),
+        minCredits: 6,
+        maxCredits: 6,
+      },
+      [course("A", 4.5), course("B", 1.5)],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 6 });
+    expect(result.children.map((child) => child.earned)).toEqual([4.5, 6]);
+    expect(result.allocations).toHaveLength(2);
+  });
+  it.each(["current", "planned"] as const)(
+    "retains %s status for evidence added beyond a pool minimum",
+    (status) => {
+      const result = evaluate(
+        { ...all(pool("pool", ["A", "B"], 6)), minCredits: 12 },
+        [course("A"), course("B", 6, status)],
+      );
+      expect(result).toMatchObject({
+        status: status === "current" ? "in_progress" : "covered",
+        earned: 6,
+        remaining: 0,
+        remainingToEarn: 6,
+      });
+    },
+  );
+  it("matches independent exhaustive feasibility for bounded pool/count trees", () => {
+    // The oracle assigns each of three indivisible records to neither/first/second
+    // directly, checking numerical constraints without using evaluator helpers.
+    for (const weights of [
+      [1.5, 1.5, 3],
+      [3, 3, 3],
+      [1.5, 3, 4.5],
+    ])
+      for (const eligible of [
+        [
+          ["A", "B", "C"],
+          ["A", "B", "C"],
+        ],
+        [
+          ["A", "B"],
+          ["B", "C"],
+        ],
+        [
+          ["A", "B"],
+          ["A", "C"],
+        ],
+      ])
+        for (const minimum of [0, 3, 6, 9])
+          for (const maximum of [undefined, 9])
+            for (const countRule of [false, true]) {
+              const records = weights.map((weight, i) =>
+                course(["A", "B", "C"][i], weight),
+              );
+              let feasible = false;
+              for (let assignment = 0; assignment < 27; assignment++) {
+                const sums = [0, 0],
+                  counts = [0, 0];
+                let valid = true;
+                for (let i = 0; i < 3; i++) {
+                  const owner = (Math.floor(assignment / 3 ** i) % 3) - 1;
+                  if (owner < 0) continue;
+                  valid &&= eligible[owner].includes(records[i].code);
+                  sums[owner] += weights[i];
+                  counts[owner]++;
+                }
+                const total = sums[0] + sums[1];
+                feasible ||=
+                  valid &&
+                  sums.every((sum) => sum >= 1.5 && sum <= 6) &&
+                  (!countRule || counts[0] >= 2) &&
+                  total >= minimum &&
+                  total <= (maximum ?? Infinity);
+              }
+              const firstPool = {
+                ...pool("first", eligible[0], 1.5),
+                maxCredits: 6,
+              };
+              const first: RequirementNode = countRule
+                ? { ...firstPool, kind: "course_count", minCourses: 2 }
+                : firstPool;
+              const root = {
+                ...all(first, {
+                  ...pool("second", eligible[1], 1.5),
+                  maxCredits: 6,
+                }),
+                minCredits: minimum,
+                maxCredits: maximum,
+              };
+              const result = evaluate(root, records);
+              expect(
+                result.status === "complete",
+                JSON.stringify({
+                  weights,
+                  eligible,
+                  minimum,
+                  maximum,
+                  countRule,
+                }),
+              ).toBe(feasible);
+              if (result.status === "complete") {
+                expect(
+                  new Set(result.allocations.map((a) => a.courseId)).size,
+                ).toBe(
+                  result.children.reduce(
+                    (sum, child) => sum + child.allocations.length,
+                    0,
+                  ),
+                );
+                expect(result.earned).toBeGreaterThanOrEqual(minimum);
+                expect(result.earned).toBeLessThanOrEqual(maximum ?? Infinity);
+              }
+            }
+  });
   it.each([
     [0, 1, 2],
     [0, 2, 1],

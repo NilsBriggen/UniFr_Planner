@@ -352,7 +352,6 @@ export function evaluateRequirements(
       );
       allocations = [...unique.values()];
     } else if ("codes" in node) {
-      let credits = 0;
       for (const c of candidatesByNode.get(node.id)!) {
         const override = overrides.find((o) => o.courseId === c.id);
         if (c.status === "unscheduled" || (used.has(c.id) && !node.allowReuse))
@@ -369,13 +368,13 @@ export function evaluateRequirements(
           !(override?.kind === "substitution" && override.nodeId === node.id)
         )
           continue;
+        // Pools/counts consume the selected subset in full: evidence above a
+        // local minimum can be necessary for an ancestor's credit obligation.
+        // Equivalent attempts still represent one course/project, except for
+        // explicitly approved combined substitution evidence.
         const enough =
-          node.kind === "course_count"
-            ? allocations.length >= node.minCourses &&
-              credits >= (node.minCredits ?? 0)
-            : node.kind === "course" || node.kind === "project"
-              ? allocations.length > 0
-              : allocations.length > 0 && credits >= (node.minCredits ?? 0);
+          (node.kind === "course" || node.kind === "project") &&
+          allocations.length > 0;
         if (enough && !override) continue;
         allocations.push({
           courseId: c.id,
@@ -384,7 +383,6 @@ export function evaluateRequirements(
           status: c.status,
           ...(override ? { override } : {}),
         });
-        credits = round(credits + (c.ects ?? 0));
         // A reusable requirement never claims exclusive ownership, even when
         // it appears before the ordinary sibling that will also use the record.
         if (!node.allowReuse) used.add(c.id);
@@ -588,7 +586,7 @@ export function evaluateRequirements(
     previousKey = key;
   }
   // The objective is global progress, then compulsory-course progress, then
-  // earned/current/planned evidence. Stable IDs and course ordering break ties,
+  // the smallest sufficient evidence subset. Stable IDs and course ordering break ties,
   // never the presentation order of siblings or the caller's record order.
   function score(result: RequirementResult): number[] {
     const descendants: RequirementResult[] = [];
@@ -612,6 +610,8 @@ export function evaluateRequirements(
         .filter((r) => r.node.kind === "course" || r.node.kind === "project")
         .reduce((sum, r) => sum + rank[r.status], 0),
       descendants.reduce((sum, r) => sum + rank[r.status], 0),
+      -round(result.earned + result.inProgress + result.planned),
+      -descendants.reduce((sum, r) => sum + r.allocations.length, 0),
       -[...permissions.values()].reduce(
         (sum, choice) => sum + choice.omissions,
         0,
