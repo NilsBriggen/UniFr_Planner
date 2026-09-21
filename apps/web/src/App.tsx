@@ -17,6 +17,8 @@ import Suggestions from "./suggestions/Suggestions";
 import SourceChanges from "./planner/SourceChanges";
 import Accounts from "./accounts/Accounts";
 import Operations from "./Operations";
+import { SharingProvider } from "./sharing/context";
+const SharedPlanPage = lazy(() => import("./sharing/SharedPlanPage"));
 const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
 
 const languages = [
@@ -294,8 +296,18 @@ function AppShell() {
         </nav>
         <div className="canvas">
           <main id="main" tabIndex={-1}>
-            <SourceChanges language={language} />
+            {!location.pathname.startsWith("/shared/") && (
+              <SourceChanges language={language} />
+            )}
             <Routes>
+              <Route
+                path="/shared/:id"
+                element={
+                  <Suspense fallback={<p>…</p>}>
+                    <SharedPlanPage language={language} />
+                  </Suspense>
+                }
+              />
               <Route path="/" element={<Home t={t} />} />
               <Route path="/setup" element={<Setup language={language} />} />
               <Route path="/plan" element={<PlanBoard language={language} />} />
@@ -358,7 +370,9 @@ function AppShell() {
 export default function App() {
   return (
     <PlanProvider>
-      <AppShell />
+      <SharingProvider>
+        <AppShell />
+      </SharingProvider>
     </PlanProvider>
   );
 }

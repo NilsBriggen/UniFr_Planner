@@ -90,13 +90,19 @@ def test_runtime_roles_can_operate_but_cannot_administer_or_cross_write(roles):
         connection.execute(
             "INSERT INTO account_user(id,username,password_hash,recovery_hash) VALUES ('proof','proof','hash','hash')"
         )
+        connection.execute(
+            "INSERT INTO sharing_plan(id,owner_hash,revision,snapshot,updated_at) VALUES ('share','owner',1,'{}','2026-09-21')"
+        )
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             connection.execute("DELETE FROM catalogue_offering")
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             connection.execute("DELETE FROM operations_state")
     with runtime(url, scheduler, "scheduler test password") as connection:
         assert connection.execute("SELECT id FROM account_user").fetchone() == ("proof",)
+        assert connection.execute("SELECT id FROM sharing_plan").fetchone() == ("share",)
         connection.execute("DELETE FROM catalogue_offering")
         connection.execute("DELETE FROM operations_state")
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             connection.execute("DELETE FROM account_user")
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            connection.execute("DELETE FROM sharing_plan")

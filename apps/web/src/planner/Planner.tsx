@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { Language } from "../i18n";
 import { messages } from "../i18n";
 import { Button } from "../components";
+import SharePanel from "../sharing/SharePanel";
 import {
   activeScenario,
   addCourse,
@@ -437,6 +438,7 @@ export function PlanBoard({ language }: { language: Language }) {
         </div>
         {plan && (
           <div className="workspace-actions no-print">
+            <SharePanel language={language} />
             <Link className="text-link" to={`/semester/${plan.semesters[0]}`}>
               {t.openCalendar}
             </Link>

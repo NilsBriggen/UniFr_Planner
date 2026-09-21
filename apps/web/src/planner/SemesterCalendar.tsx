@@ -20,6 +20,8 @@ import { plannerMessages } from "./messages";
 import { Download, SaveStatus } from "./Planner";
 import WeekTimetable from "./WeekTimetable";
 import { discoveryMessages } from "../discovery/messages";
+import SharePanel from "../sharing/SharePanel";
+import WeeklyDownloads from "./WeeklyDownloads";
 
 function EventCard({
   event,
@@ -147,6 +149,7 @@ export default function SemesterCalendar({ language }: { language: Language }) {
           <SaveStatus language={language} />
         </div>
         <div className="workspace-actions no-print">
+          <SharePanel language={language} />
           <Link className="text-link" to="/plan">
             {messages[language].plan}
           </Link>
@@ -351,6 +354,19 @@ export default function SemesterCalendar({ language }: { language: Language }) {
         </div>
       </div>
       <div className="calendar-support">
+        <section className="weekly-download-panel no-print">
+          <WeeklyDownloads
+            input={{
+              name: plan.name,
+              term,
+              monday: monday.toString(),
+              events: all,
+              courses: scenario.courses,
+              language,
+              unresolved: calendar.unresolved.length > 0,
+            }}
+          />
+        </section>
         <section className="calendar-check" id="schedule-check">
           <h2>{t.conflictHeading}</h2>
           {calendar.unresolved.length > 0 && (

@@ -10,6 +10,7 @@ from unifr_api.account_routes import router as account_router
 from unifr_api.account_security import AccountError
 from unifr_api.config import Settings
 from unifr_api.admin_routes import router as admin_router
+from unifr_api.sharing import router as sharing_router
 from unifr_api.operations import event
 from uuid import uuid4
 import time
@@ -23,7 +24,9 @@ class AccountBoundary:
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http" or not scope["path"].startswith("/api/v1/account"):
+        if scope["type"] != "http" or not scope["path"].startswith(
+            ("/api/v1/account", "/api/v1/shares")
+        ):
             await self.app(scope, receive, send)
             return
         headers = dict(scope["headers"])
@@ -48,7 +51,11 @@ class AccountBoundary:
                     scope, receive, private_send
                 )
                 return
-        maximum = 20_000_000 if "/plans" in scope["path"] else 4096
+        maximum = (
+            6_000_000
+            if scope["path"].startswith("/api/v1/shares")
+            else (20_000_000 if "/plans" in scope["path"] else 4096)
+        )
         body = bytearray()
         while True:
             part = await receive()
@@ -78,6 +85,7 @@ app = FastAPI(title="UniFr Planner API", version="0.1.0")
 app.include_router(catalogue_router)
 app.include_router(account_router)
 app.include_router(admin_router)
+app.include_router(sharing_router)
 app.add_middleware(AccountBoundary)
 
 
@@ -110,7 +118,7 @@ async def account_error(request: Request, error: AccountError) -> JSONResponse:
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, error: RequestValidationError) -> Response:
-    if request.url.path.startswith("/api/v1/account"):
+    if request.url.path.startswith(("/api/v1/account", "/api/v1/shares")):
         # FastAPI's default validation response echoes input, including passwords.
         return JSONResponse({"detail": "Invalid input"}, status_code=422)
     from fastapi.exception_handlers import request_validation_exception_handler

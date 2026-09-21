@@ -76,14 +76,14 @@ def provision(
         ).fetchall()
         for (table,) in tables:
             if (
-                not table.startswith(("account_", "catalogue_", "operations_"))
+                not table.startswith(("account_", "catalogue_", "operations_", "sharing_"))
                 and table != "alembic_version"
             ):
                 continue
             for role in (api_role, scheduler_role):
                 if (
                     role == api_role
-                    and not table.startswith("account_")
+                    and not table.startswith(("account_", "sharing_"))
                     and table
                     not in {
                         "catalogue_snapshot",
@@ -94,7 +94,7 @@ def provision(
                     }
                 ):
                     continue
-                writes = (role == api_role and table.startswith("account_")) or (
+                writes = (role == api_role and table.startswith(("account_", "sharing_"))) or (
                     role == scheduler_role and table.startswith(("catalogue_", "operations_"))
                 )
                 privilege = sql.SQL("SELECT, INSERT, UPDATE, DELETE" if writes else "SELECT")

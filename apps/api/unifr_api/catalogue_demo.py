@@ -22,6 +22,7 @@ from unifr_ingest.parsers import parse_calendar
 from .catalogue import SqlCatalogueRepository
 from .database import metadata
 from . import account_repository  # noqa: F401 -- account demo tables
+from . import sharing  # noqa: F401 -- sharing demo tables
 
 # Synthetic source data: the EXDATE mirrors calendar-edge.ics; additions and an
 # override exercise source metadata without expanding any recurrence.

@@ -280,3 +280,24 @@ records, a real PostgreSQL dump/clean restore, browser workflows, structured log
 alert receiver. It does not prove public DNS propagation, firewall/NAT reachability, ACME issuance,
 certificate renewal, or delivery by an external alert provider. Verify those separately on the
 owned production hostname and record the exact evidence before calling the public deployment live.
+
+
+## Shared plan storage
+
+Migration `0005_sharing` adds `sharing_plan` and `sharing_rate_limit`. Run the
+normal provisioning command before the API is started; it applies the migration
+and grants API read/write access plus scheduler read access for backups. Existing
+PostgreSQL backups include these tables. Account deletion also removes shares
+created under that account; revoked guest links retain a tombstone and no plan
+snapshot, preventing accidental link reuse.
+
+The `/api/v1/shares` routes use the same exact-origin write policy as account
+routes. Configure the public application origin in `UNIFR_ACCOUNT_ORIGINS`.
+Responses are uncached and validation errors do not echo snapshots or secrets.
+Creation is limited to 10 requests per client per minute and writes to 120;
+these budgets are separate from account sign-in limits. Public reading requires
+an unguessable link. Ownership is enforced by the API, never by hidden controls
+alone. Link contents are intentionally readable by anyone with the link.
+
+Weekly Excel and print exports are generated in the browser. They require no
+additional server process or document service.

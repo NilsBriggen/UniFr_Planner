@@ -1,9 +1,10 @@
 # Guest degree and semester planning
 
-Guest plans are stored only in this browser's IndexedDB. No identity, email,
-account, evaluation API or recommendation service is involved. JSON backup is
-the transfer mechanism. Clearing browser data removes local plans; exporting a
-backup before changing devices is necessary.
+Guest plans are saved in this browser's IndexedDB without an account or email.
+Sharing is optional and publishes the chosen plan content to the server; private
+account sync is also optional. JSON backups preserve the complete local plan.
+Clearing browser data removes local plans and guest share ownership keys, so
+export a backup before changing devices.
 
 ## Planning a semester
 
@@ -118,8 +119,8 @@ and absence of `activeScenarioId`; the first scenario is its active scenario.
 guess missing courses, unknown fields, new schema versions or invalid values.
 This compatibility fixture is tested, not a claim that a v0 planner was deployed.
 
-Import always requires validation and an explicit preview before adding a new
-plan. The new root plan ID is generated locally; source content and scenarios
+JSON import requires validation and an explicit preview before adding a new
+plan. A shared link displays its plan before the recipient chooses to import it. The new root plan ID is generated locally; source content and scenarios
 are preserved. Existing plans are not overwritten. Changing the import text
 invalidates the preview. JSON export preserves all scenarios and unavailable
 periods, including information that cannot currently be scheduled.
@@ -196,9 +197,57 @@ disables the complete ICS export; the full JSON backup remains available.
 This is a snapshot export, not a live subscription or a promise that repeated
 imports into every calendar client remove previously imported events.
 
-Agenda/day/week views share the dated event set. Phone week view stacks dated
-days; the print view prints the whole semester agenda and conflict information,
-regardless of the currently selected on-screen day/week.
+Agenda/day/week views share the dated event set. Phone week view scrolls horizontally within its calendar panel. The existing
+semester print action prints the whole semester agenda and conflict information.
+The separate weekly download controls export only the selected week.
+
+## Live share links
+
+Choose **Share plan** from the degree plan or semester heading, then **Create
+share link**. The link shows the active scenario across every semester and
+updates automatically after saved changes while the owning browser is online.
+Recipients already viewing it refresh automatically within 15 seconds. Other
+scenarios and private requirement evidence are excluded. Personal unavailable
+periods are excluded unless explicitly included before creating the link.
+Anyone holding the link can read it; it is not an invitation to collaborate.
+
+Only the original browser's private ownership key or the account signed in when
+the link was created can change or revoke it. An unrelated signed-in account
+has the same read-only view as a guest. **Edit original** verifies ownership and
+loads the latest shared version into a local plan, preserving existing local
+plans. **Import as my plan** always creates an independent editable copy with a
+new ID and no ownership credentials. Importing does not subscribe the copy to
+future changes. **Stop sharing** makes the old link unavailable; creating a new
+share produces a new link.
+
+Ownership keys remain in IndexedDB preferences, separate from plan snapshots,
+JSON backups, account exports and Excel files. Lost browser data cannot recover
+a guest ownership key. Creating a link while signed in additionally associates
+it with that account, allowing the account owner to edit on another browser.
+The owner must reopen that link to attach an editor on the other browser.
+Concurrent publication reports a conflict instead of replacing newer changes;
+reopen the shared link to load its latest version. Failed publication leaves
+local edits saved and offers retry from the share dialog.
+
+## Weekly print and Excel downloads
+
+Open **Semester**, select a semester and week, and use the controls below the
+calendar. They are also available on read-only shared plans.
+
+- **Print week / save PDF** opens a landscape A4 preview. Its print button uses
+  the browser's print dialog, including Save as PDF where available. The first
+  page is a coloured weekly grid with notes space; subsequent pages contain
+  every lesson's full title, exact time and room.
+- **Download Excel** creates an editable `.xlsx` file. The weekly sheet has
+  coloured lessons, 15-minute rows, frozen headings, free cells and a notes area
+  for personal additions. A second sheet lists exact dates/times, locations,
+  overlaps and available course source URLs. Both sheets have print settings.
+
+Exports use Zurich local dates and the same resolved meetings as the calendar,
+including overnight splits and overlapping lessons. Incomplete source schedules
+are marked explicitly. Downloads are snapshots; later plan edits do not change
+files already saved. Excel cells are unprotected and course text is written as
+literal text, never evaluated as formulas.
 
 ## Reproducible verification
 

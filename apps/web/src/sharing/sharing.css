@@ -1,0 +1,91 @@
+.share-dialog {
+  width: min(560px, calc(100% - 32px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  padding: 24px;
+  color: var(--color-ink);
+}
+.share-dialog::backdrop {
+  background: rgb(14 32 45 / 45%);
+}
+.share-dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.share-dialog-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.share-dialog label {
+  display: grid;
+  gap: 8px;
+  margin-block: 20px;
+}
+.share-dialog input:not([type="checkbox"]) {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--color-control-border);
+  border-radius: 6px;
+  padding: 10px;
+  font: inherit;
+}
+.share-dialog .share-personal {
+  display: flex;
+  align-items: center;
+}
+.share-personal input {
+  width: 20px;
+  height: 20px;
+}
+.share-status {
+  flex-basis: 100%;
+  max-width: 520px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-warning);
+}
+.shared-notice {
+  padding: 16px 20px;
+  margin: 20px 0;
+  background: var(--color-white);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+}
+.shared-notice p {
+  margin: 0 0 8px;
+}
+.shared-course-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  list-style: none;
+  gap: 12px;
+  padding: 0;
+}
+.shared-course-list li {
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  padding: 16px;
+}
+.shared-course-list h3 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.weekly-download-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.weekly-download-panel {
+  grid-column: 1 / -1;
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+}

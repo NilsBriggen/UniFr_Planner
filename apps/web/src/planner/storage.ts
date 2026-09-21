@@ -17,6 +17,26 @@ const complete = (tx: IDBTransaction) =>
   });
 export class PlanStore {
   constructor(private readonly factory: IDBFactory) {}
+  async preference<T>(key: string): Promise<T | undefined> {
+    const db = await this.open();
+    try {
+      const tx = db.transaction("preferences", "readonly");
+      return await request(tx.objectStore("preferences").get(key));
+    } finally {
+      db.close();
+    }
+  }
+  async setPreference(key: string, value: unknown): Promise<void> {
+    const db = await this.open();
+    try {
+      const tx = db.transaction("preferences", "readwrite");
+      const done = complete(tx);
+      tx.objectStore("preferences").put(value, key);
+      await done;
+    } finally {
+      db.close();
+    }
+  }
   private open(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const open = this.factory.open("unifr-planner", 3);

@@ -8,17 +8,19 @@ from sqlalchemy import create_engine
 def test_baseline_migration_roundtrip(tmp_path, monkeypatch):
     config = Config("alembic.ini")
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_current_head() == "0004_operations"
+    assert scripts.get_current_head() == "0005_sharing"
     url = f"sqlite:///{tmp_path}/migration.sqlite"
     monkeypatch.setenv("UNIFR_DATABASE_URL", url)
     command.upgrade(config, "head")
     engine = create_engine(url)
     with engine.connect() as connection:
-        assert MigrationContext.configure(connection).get_current_revision() == "0004_operations"
+        assert MigrationContext.configure(connection).get_current_revision() == "0005_sharing"
         from sqlalchemy import inspect
 
         assert "catalogue_offering" in inspect(connection).get_table_names()
         assert "catalogue_plan_change" in inspect(connection).get_table_names()
+        assert "sharing_plan" in inspect(connection).get_table_names()
+        assert "sharing_rate_limit" in inspect(connection).get_table_names()
     command.downgrade(config, "base")
     with engine.connect() as connection:
         assert MigrationContext.configure(connection).get_current_revision() is None
