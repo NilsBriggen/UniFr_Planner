@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { resolveRecipeEligibility } from "../src/eligibility";
 import { assertRecipeRegistry, composeDegree } from "../src/recipes";
 import type {
   RecipeRegistry,
@@ -696,4 +697,174 @@ describe("publication completeness", () => {
     };
     expect(() => assertRecipeRegistry(r)).toThrow(/empty|requirement/i);
   });
+});
+
+describe("independent composition review regressions", () => {
+  it("requires evidence for distinct teaching variants of the same programme", () => {
+    const r = registry(),
+      s = selection();
+    r.structures[0].slots[0].role = "teaching_subject";
+    r.structures[0].slots[1].role = "teaching_subject";
+    r.programmes[0].variants[0].role = "teaching_subject";
+    r.programmes[0].variants.push({
+      ...r.programmes[1].variants[0],
+      role: "teaching_subject",
+    });
+    s.components[1].programmeId = "a";
+    const result = composeDegree(r, s);
+    expect(result.status).toBe("needs_clarification");
+    expect(result.root.reviewStatus).toBe("needs_clarification");
+    r.combinationRules = [
+      { ...rule([{ kind: "allow_combination" }]), when: { components: ["a"] } },
+    ];
+    expect(composeDegree(r, s).status).toBe("allowed");
+  });
+  it("rejects replacement credit demand above the selected component target", () => {
+    const r = registry();
+    r.combinationRules = [
+      rule([
+        {
+          kind: "replace_requirements",
+          component: "a",
+          requirements: pool("replacement", ["X"], 150),
+        },
+      ]),
+    ];
+    expect(() => composeDegree(r, selection())).toThrow(/credit/i);
+  });
+  it("rejects a replacement maximum below the selected component target", () => {
+    const r = registry();
+    r.combinationRules = [
+      rule([
+        {
+          kind: "replace_requirements",
+          component: "a",
+          requirements: { ...pool("replacement", ["X"], 90), maxCredits: 90 },
+        },
+      ]),
+    ];
+    expect(() => composeDegree(r, selection())).toThrow(/credit/i);
+  });
+  it("exposes documented replacement credit discrepancies as unresolved", () => {
+    const r = registry();
+    r.programmes[0].variants[0].reviewStatus = "needs_clarification";
+    r.programmes[0].variants[0].gaps = [
+      "Combination replacement totals 150 ECTS against the 120 ECTS slot",
+    ];
+    r.combinationRules = [
+      rule([
+        {
+          kind: "replace_requirements",
+          component: "a",
+          requirements: pool("replacement", ["X"], 150),
+        },
+      ]),
+    ];
+    const result = composeDegree(r, selection());
+    expect(result.status).toBe("needs_clarification");
+    expect(result.root.reviewStatus).toBe("needs_clarification");
+    expect(result.issues.some((issue) => /credit/i.test(issue))).toBe(true);
+    expect(evaluateRequirements(result.root, []).status).toBe(
+      "needs_clarification",
+    );
+  });
+  it.each(["same", "different"])(
+    "discards original selector/prerequisite metadata after %s-ID replacement",
+    (kind) => {
+      const r = registry(),
+        v = r.programmes[0].variants[0];
+      v.requirements = {
+        ...pool("root"),
+        kind: "all_of",
+        children: [pool("first", ["A"], 60), pool("later", ["B"], 60)],
+      };
+      v.poolSelectors = {
+        later: { programme: "catalogue-a", version: "2026", path: "electives" },
+      };
+      v.prerequisites = [{ nodeId: "later", requires: ["first"] }];
+      const replacement =
+        kind === "same"
+          ? {
+              ...pool("root"),
+              kind: "all_of" as const,
+              children: [pool("first", ["X"], 60), pool("later", ["Y"], 60)],
+            }
+          : pool("replacement", ["X"], 120);
+      r.combinationRules = [
+        rule([
+          {
+            kind: "replace_requirements",
+            component: "a",
+            requirements: replacement,
+          },
+        ]),
+      ];
+      const result = composeDegree(r, selection());
+      expect(result.poolSelectors).toEqual({});
+      expect(result.prerequisites).toEqual([]);
+      const original = evaluateRequirements(result.root, [
+        { id: "a", code: "A", ects: 60, status: "completed" },
+        { id: "b", code: "B", ects: 60, status: "completed" },
+      ]);
+      expect(original.children[0].earned).toBe(0);
+    },
+  );
+  it("rejects a restriction referring to a node discarded by replacement", () => {
+    const r = registry();
+    r.combinationRules = [
+      rule([
+        {
+          kind: "replace_requirements",
+          component: "a",
+          requirements: pool("replacement", ["X"], 120),
+        },
+        { kind: "restrict_pool", component: "a", nodeId: "pool", codes: ["A"] },
+      ]),
+    ];
+    expect(() => composeDegree(r, selection())).toThrow(/pool/i);
+  });
+});
+
+it("does not broaden replacement codes from original authoritative catalogue assignments", () => {
+  const r = registry(),
+    v = r.programmes[0].variants[0];
+  v.poolSelectors = {
+    pool: { programme: "catalogue-a", version: "2026", path: "electives" },
+  };
+  const courses = [
+    {
+      id: "new",
+      code: "Y",
+      ects: 120,
+      status: "completed" as const,
+      offering: {
+        snapshot_id: "captured",
+        source_url: "https://www.unifr.ch/timetable",
+        assignments: [
+          { programme: "catalogue-a", version: "2026", paths: ["electives"] },
+        ],
+      },
+    },
+  ];
+  const nodeId = "a/120@2026.1/pool";
+  const codes = (tree: RequirementNode) => {
+    const node = flattenRequirements(tree).find((n) => n.id === nodeId)!;
+    return "codes" in node ? node.codes : [];
+  };
+  // Positive control: the same authoritative assignment expands the original recipe.
+  expect(
+    codes(resolveRecipeEligibility(composeDegree(r, selection()), courses)),
+  ).toContain("Y");
+  r.combinationRules = [
+    rule([
+      {
+        kind: "replace_requirements",
+        component: "a",
+        requirements: pool("pool", ["X"], 120),
+      },
+    ]),
+  ];
+  expect(
+    codes(resolveRecipeEligibility(composeDegree(r, selection()), courses)),
+  ).toEqual(["X"]);
 });

@@ -793,7 +793,6 @@ export function composeDegree(
           [a.slot.role, b.slot.role].includes("major") &&
           [a.slot.role, b.slot.role].includes("minor")
         ) &&
-        a.programme.id !== b.programme.id &&
         !explicitlyAllowed([a.programme.id, b.programme.id])
       )
         issues.push(
@@ -848,6 +847,10 @@ export function composeDegree(
         );
         replacements.set(key, payload);
         c.tree = clone(action.requirements);
+        // Replacement is a complete requirement contract. Catalogue expansion and
+        // prerequisite metadata belong to the old tree, even if IDs are reused.
+        c.selectors = {};
+        c.prerequisites = [];
       }
     }
   }
@@ -888,6 +891,23 @@ export function composeDegree(
     prerequisites: RecipePrerequisite[] = [];
   for (const c of components) {
     const prefix = `${c.programme.id}/${c.variant.id}@${registry.edition}`;
+    if (c.tree) {
+      const documentedGap =
+        c.variant.reviewStatus !== "verified" && c.variant.gaps.length > 0;
+      validateRequirements(c.tree, documentedGap);
+      const compatible =
+        minimumDemand(c.tree) <= c.variant.ects &&
+        (c.tree.maxCredits === undefined ||
+          c.tree.maxCredits >= c.variant.ects);
+      check(
+        compatible || documentedGap,
+        `Composed requirement credits incompatible with slot: ${c.selected.slotId}`,
+      );
+      if (!compatible)
+        c.local.push(
+          `Composed requirement credit discrepancy: ${c.programme.id}/${c.variant.id} (${c.variant.ects} ECTS slot)`,
+        );
+    }
     validateCatalogueRefs(c.tree, c.selectors, c.prerequisites);
     for (const [id, selector] of Object.entries(c.selectors))
       poolSelectors[`${prefix}/${id}`] = selector;
