@@ -69,8 +69,9 @@ class Source:
         self.calls.append(("listing", number))
         return self.pages[number]
 
-    def detail(self, entry):
+    def detail(self, entry, *, previous=None):
         self.calls.append(("detail", entry.source_id))
+        self.previous_detail = previous
         return self.html
 
 
@@ -81,6 +82,27 @@ def test_valid_crawl_publishes_and_reconciles():
     assert report.published
     assert report.parsed_count == report.reported_count == 1
     assert report.added == 1
+    assert repo.value.offerings[0].detail_checked_at == NOW
+
+
+def test_parser_upgrade_reprocesses_recent_details_without_claiming_new_source_check():
+    old = snapshot()
+    old = old.model_copy(
+        update={
+            "offerings": (
+                old.offerings[0].model_copy(
+                    update={"parser_revision": 0, "detail_checked_at": NOW}
+                ),
+            )
+        }
+    )
+    repo = MemoryRepository(old)
+    source = Source(repo)
+    report = sync_module().sync(source, repo, now=NOW + timedelta(minutes=10))
+    assert report.published
+    assert ("detail", old.offerings[0].source_id) in source.calls
+    assert source.previous_detail == old.offerings[0]
+    assert repo.value.offerings[0].parser_revision > 0
     assert repo.value.offerings[0].detail_checked_at == NOW
 
 

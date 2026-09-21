@@ -8,7 +8,7 @@ import time
 from sqlalchemy import create_engine
 
 from unifr_ingest.http import HttpCatalogueSource
-from unifr_ingest.models import ListingEntry, ListingPage
+from unifr_ingest.models import ListingEntry, ListingPage, Offering
 from unifr_ingest.sync import next_sync, sync
 
 from .catalogue import SqlCatalogueRepository
@@ -23,8 +23,8 @@ class ProgressSource(HttpCatalogueSource):
         LOG.info("Listing %s/%s: %s reported", number, len(page.pages), page.reported_count)
         return page
 
-    def detail(self, entry: ListingEntry) -> str:
-        raw = super().detail(entry)
+    def detail(self, entry: ListingEntry, *, previous: Offering | None = None) -> str:
+        raw = super().detail(entry, previous=previous)
         LOG.info("Detail %s %s", entry.source_id, entry.code)
         return raw
 

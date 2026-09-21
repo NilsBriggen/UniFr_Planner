@@ -64,6 +64,64 @@ def test_detail_multilingual_titles_exact_dates_and_assignments():
     assert "Hebdomadaire" in detail.recurrence_summary
 
 
+def test_teachers_preserve_source_person_boundaries():
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    detail = p.parse_detail(fixture("detail.html"), entry)
+    assert detail.lecturer == "Delz Anja, Gelshorn Julia"
+    raw = fixture("detail.html").replace(
+        "Delz Anja", '<a href="/person">Delz <strong>Anja</strong></a>'
+    )
+    assert p.parse_detail(raw, entry).lecturer == "Delz Anja, Gelshorn Julia"
+
+
+@pytest.mark.parametrize("label", ["Condition of access", "Conditions of access", "Prerequisites"])
+def test_all_official_prerequisite_labels_are_retained(label):
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    raw = fixture("detail.html").replace(
+        "</tbody>",
+        f"<tr><td>{label}</td><td>Students must have validated 6 ECTS in Financial Accounting.</td></tr></tbody>",
+        1,
+    )
+    assert p.parse_detail(raw, entry).prerequisites == (
+        "Students must have validated 6 ECTS in Financial Accounting."
+    )
+
+
+def test_schedule_lines_and_assessment_sessions_keep_their_boundaries():
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(fixture("detail.html"), "html.parser")
+    for row in soup.select("main tr"):
+        cells = row.find_all("td", recursive=False)
+        if len(cells) == 2 and p.clean(cells[0]) == "Summary schedule":
+            cells[1].clear()
+            cells[1].append(
+                BeautifulSoup("Tuesday 08:15, G314<br>Wednesday 11:15, G414", "html.parser")
+            )
+    panel = soup.select_one('[data-accordion-content="tab-3"]')
+    panel.clear()
+    panel.append(
+        BeautifulSoup(
+            """
+      <h3>Winter exam</h3><table><tr><td>Date</td><td>18.01.2027 08:30</td></tr>
+      <tr><td>Description</td><td><p>Written exam.</p><p>No notes.</p></td></tr></table>
+      <h3>Resit</h3><table><tr><td>Date</td><td>24.08.2027 08:00</td></tr></table>
+    """,
+            "html.parser",
+        )
+    )
+    detail = p.parse_detail(str(soup), entry)
+    assert detail.recurrence_summary == "Tuesday 08:15, G314\nWednesday 11:15, G414"
+    assert (
+        detail.assessment
+        == "Winter exam\nDate: 18.01.2027 08:30\nDescription: Written exam.\nNo notes.\nResit\nDate: 24.08.2027 08:00"
+    )
+
+
 @pytest.mark.parametrize(
     "labels, expected",
     [
@@ -116,6 +174,33 @@ def test_calendar_public_dates_and_dst():
     assert len(meetings) == 8
     assert meetings[0].starts_at.hour == 13
     assert meetings[-1].starts_at.utcoffset().total_seconds() == 3600
+
+
+def test_structured_text_preserves_children_of_repaired_break_tags():
+    from bs4 import BeautifulSoup
+
+    # html.parser can produce nested break nodes for repaired source HTML.
+    soup = BeautifulSoup("<p>Prerequisites:<br /></p>", "html.parser")
+    soup.br.append("First course")
+    nested = soup.new_tag("br")
+    nested.append("Second course")
+    soup.br.append(nested)
+    assert parser().structured_text(soup.p) == ("Prerequisites:\nFirst course\nSecond course")
+
+
+def test_russian_language_is_normalized():
+    assert parser().language_codes(("Russian",)) == ("ru",)
+
+
+def test_mixed_source_break_markup_keeps_all_prerequisite_text():
+    from bs4 import BeautifulSoup
+
+    # Minimal reduction of source 133409: an earlier non-self-closing break
+    # changes how html.parser represents the later self-closing breaks.
+    soup = BeautifulSoup(
+        "<br><td><p>Prérequis :<br />F24.00823<br />F24.00954</p></td>", "html.parser"
+    )
+    assert parser().structured_text(soup.td) == "Prérequis :\nF24.00823\nF24.00954"
 
 
 def test_calendar_alternating_weeks_exceptions_and_cancelled():

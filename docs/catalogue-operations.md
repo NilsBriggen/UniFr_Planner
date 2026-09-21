@@ -79,6 +79,24 @@ and scheduled runs. No scheduled service was enabled during implementation.
 `rejected_due_to_source_change` is an unsuccessful crawl. Restart only after inspecting
 the observed counts; never relabel a partial scrape as complete. A suspicious removal
 requires source/term review and a deliberate policy change; there is no unchecked force flag.
+
+Parser revisions invalidate normalized detail records even when the source listing has not
+changed. A recent published detail can be reparsed from its fingerprint-scoped raw cache only
+when the exact content hash matches and both timestamps are less than 24 hours old; its original
+source-check timestamp is retained. Otherwise the normal fetch/retry path applies. Internal
+parser revisions are not exposed in public offering responses.
+
+Tutor list items are separated with commas. Prerequisites recognize the source's singular
+“Condition of access” label as well as older aliases. Schedule lines and assessment sections
+retain source line breaks, headings, and table labels, including text nested under repaired
+HTML break elements; the course detail view preserves these breaks visually.
+
+The 2026-09-21 parser audit reparsed all 3,664 downloaded public details: 3,374 tutor
+lists (5,339 names, 857 multi-person lists), 250 nonempty prerequisites, 3,606 assessment
+sections with 7,848 headings, and 2,918 schedule texts retained their source content.
+Against 3,663 prior successful parses, all 42,366 meeting records, 47,800 programme
+assignments, and ECTS values were unchanged. Course 134176 had no old successful baseline.
+
 The production scheduler retries failed/rejected catalogue jobs after 15 minutes, then one hour,
 then at most every four hours (or the next regular 05:00 run if sooner). Validated detail responses
 are checkpointed for one hour, keyed by the complete listing fingerprint, so a retry can reuse

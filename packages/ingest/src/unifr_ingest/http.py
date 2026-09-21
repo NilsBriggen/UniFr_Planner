@@ -7,7 +7,7 @@ from urllib.error import HTTPError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
-from .models import ListingEntry, ListingPage, Record
+from .models import ListingEntry, ListingPage, Offering, Record
 from .parsers import BASE, digest, parse_detail, parse_listing
 
 CONNECTOR = (
@@ -166,9 +166,27 @@ class HttpCatalogueSource:
         )
         return parse_listing(raw, number)
 
-    def detail(self, entry: ListingEntry) -> str:
+    def detail(self, entry: ListingEntry, *, previous: Offering | None = None) -> str:
+        url = BASE + "course.html?show=" + entry.source_id
+        # A parser upgrade may reprocess the exact bytes behind a recently verified
+        # published detail. This does not extend its source-check timestamp in sync.
+        # Unpublished checkpoints retain the normal one-hour retry window below.
+        if previous and previous.listing_fingerprint == entry.fingerprint:
+            cached = self.cache.cache_get(digest(url + "|GET|" + entry.fingerprint))
+            if (
+                cached
+                and previous.detail_checked_at
+                and 0 <= time.time() - previous.detail_checked_at.timestamp() < 86400
+                and 0 <= time.time() - cached.fetched_at < 86400
+                and digest(cached.body) == previous.detail_hash
+            ):
+                try:
+                    parse_detail(cached.body, entry)
+                    return cached.body
+                except ValueError:
+                    pass  # A stricter parser must be allowed to re-fetch current bytes.
         return self.fetch(
-            BASE + "course.html?show=" + entry.source_id,
+            url,
             check=lambda html: parse_detail(html, entry),
             cache_scope="|" + entry.fingerprint,
             max_age=3600,

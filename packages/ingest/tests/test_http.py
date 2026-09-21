@@ -71,6 +71,45 @@ def test_conditional_detail_cache_and_304():
     assert requests[1].get_header("If-none-match") == "v1"
 
 
+@pytest.mark.parametrize(
+    "kind, fetches", [("verified", 0), ("hash-mismatch", 1), ("expired", 1), ("changed-listing", 1)]
+)
+def test_parser_upgrade_can_reuse_only_recent_hash_verified_published_raw(kind, fetches):
+    from datetime import datetime, timezone
+    import time
+    from unifr_ingest.parsers import parse_detail, parse_listing, digest
+
+    m = module()
+    cache, clock, calls = Cache(), Clock(), []
+    entry = parse_listing(fixture("listing.html"), 1).entries[1]
+    raw = fixture("detail.html")
+    age = 25 * 3600 if kind == "expired" else 7200
+    previous = parse_detail(raw, entry).model_copy(
+        update={
+            "parser_revision": 0,
+            "detail_checked_at": datetime.now(timezone.utc),
+            "detail_hash": "different" if kind == "hash-mismatch" else digest(raw),
+        }
+    )
+    cache.cache_put(
+        digest(entry.detail_url + "|GET|" + entry.fingerprint),
+        m.CachedResponse(
+            body=raw,
+            fetched_at=time.time() - age,
+        ),
+    )
+    if kind == "changed-listing":
+        entry = entry.model_copy(update={"fingerprint": "changed"})
+
+    def transport(request):
+        calls.append(request)
+        return m.Response(status=200, body=raw)
+
+    source = m.HttpCatalogueSource(cache, transport=transport, clock=clock.now, sleep=clock.sleep)
+    assert source.detail(entry, previous=previous) == raw
+    assert len(calls) == fetches
+
+
 def test_retries_are_bounded_and_private_urls_rejected():
     m = module()
     calls = []

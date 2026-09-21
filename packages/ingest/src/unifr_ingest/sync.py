@@ -7,7 +7,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from .models import CatalogueSnapshot, ListingPage, Offering, SyncReport
-from .parsers import digest, parse_detail
+from .parsers import PARSER_REVISION, digest, parse_detail
 from .ports import CatalogueRepository, CatalogueSource
 
 
@@ -126,16 +126,25 @@ def sync(
                 raise ValueError("Incomplete listing or duplicate source IDs")
             for entry in entries:
                 cached = old.get(entry.source_id)
-                if (
+                fresh = (
                     cached
                     and cached.listing_fingerprint == entry.fingerprint
                     and cached.detail_checked_at
-                    and checked_at - cached.detail_checked_at < detail_ttl
-                ):
+                    and timedelta(0) <= checked_at - cached.detail_checked_at < detail_ttl
+                )
+                if fresh and cached and cached.parser_revision == PARSER_REVISION:
                     offerings.append(cached)
                 else:
-                    offering = parse_detail(source.detail(entry), entry)
-                    offerings.append(offering.model_copy(update={"detail_checked_at": checked_at}))
+                    if fresh and cached:
+                        raw = source.detail(entry, previous=cached)
+                        detail_checked_at = cached.detail_checked_at
+                    else:
+                        raw = source.detail(entry)
+                        detail_checked_at = checked_at
+                    offering = parse_detail(raw, entry)
+                    offerings.append(
+                        offering.model_copy(update={"detail_checked_at": detail_checked_at})
+                    )
             final = [source.listing(page.number) for page in pages]
             if listing_hash(final) != listing_hash(pages):
                 raise ValueError("Pagination changed during crawl (full index recheck)")

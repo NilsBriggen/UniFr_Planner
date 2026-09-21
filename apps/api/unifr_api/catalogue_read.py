@@ -60,6 +60,7 @@ class CatalogueStatus(BaseModel):
 
 
 class PublicOffering(Offering):
+    parser_revision: int = Field(default=0, exclude=True)
     source_url: str
     meeting_state: Literal["resolved", "unresolved"]
 

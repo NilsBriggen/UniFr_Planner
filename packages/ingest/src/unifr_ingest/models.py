@@ -87,6 +87,8 @@ class Offering(Record):
     detail_hash: str
     calendar_hash: str | None = None
     detail_checked_at: datetime | None = None
+    # Old persisted records default to revision zero and are reparsed after upgrades.
+    parser_revision: int = 0
 
 
 class CatalogueSnapshot(Record):

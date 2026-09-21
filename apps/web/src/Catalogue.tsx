@@ -345,8 +345,12 @@ function Detail({
           </div>
           {saveError && <p role="alert">{p.actionError}</p>}
           <h3 className="schedule-heading">{t.schedule}</h3>
-          {offering.schedule_summary && <p>{offering.schedule_summary}</p>}
-          {offering.recurrence_summary && <p>{offering.recurrence_summary}</p>}
+          {offering.schedule_summary && (
+            <p className="source-text">{offering.schedule_summary}</p>
+          )}
+          {offering.recurrence_summary && (
+            <p className="source-text">{offering.recurrence_summary}</p>
+          )}
           <MeetingList offering={offering} language={language} />
           {(
             [
@@ -357,7 +361,7 @@ function Detail({
           ).map(([label, value]) => (
             <section key={label}>
               <h3>{label}</h3>
-              <p>{value || t.unknown}</p>
+              <p className="source-text">{value || t.unknown}</p>
             </section>
           ))}
           {offering.assignments.length > 0 && (

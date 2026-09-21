@@ -9,13 +9,14 @@ from html.parser import HTMLParser
 from zoneinfo import ZoneInfo
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Comment, NavigableString, Tag
 from icalendar import Calendar  # type: ignore[import-untyped]
 
 from .models import Course, ListingEntry, ListingPage, Meeting, Offering, ProgrammeAssignment
 
 BASE = "https://www.unifr.ch/timetable/en/"
 ZURICH = ZoneInfo("Europe/Zurich")
+PARSER_REVISION = 1
 
 
 def digest(raw: str) -> str:
@@ -24,6 +25,37 @@ def digest(raw: str) -> str:
 
 def clean(tag: Tag | None) -> str:
     return " ".join(tag.get_text(" ", strip=True).split()) if tag else ""
+
+
+def structured_text(tag: Tag | None) -> str:
+    """Plain text with explicit source item/section boundaries, never guessed names."""
+
+    def render(node: Tag | NavigableString) -> str:
+        if isinstance(node, Comment):
+            return ""
+        if isinstance(node, NavigableString):
+            return re.sub(r"\s+", " ", str(node))
+        if node.name in {"script", "style"}:
+            return ""
+        if node.name == "tr":
+            cells = node.find_all(["td", "th"], recursive=False)
+            if len(cells) == 2:
+                return "\n" + clean(cells[0]) + ": " + structured_text(cells[1]) + "\n"
+        value = "".join(
+            render(child) for child in node.children if isinstance(child, (Tag, NavigableString))
+        )
+        if node.name == "br":
+            # Repaired HTML can attach following text as children of a break.
+            return "\n" + value
+        if node.name in {"p", "div", "li", "ul", "ol", "h1", "h2", "h3", "h4", "table", "tr"}:
+            return "\n" + value + "\n"
+        return value
+
+    return (
+        "\n".join(" ".join(line.split()) for line in render(tag).splitlines() if line.strip())
+        if tag
+        else ""
+    )
 
 
 def language_codes(labels: tuple[str, ...]) -> tuple[str, ...]:
@@ -35,6 +67,7 @@ def language_codes(labels: tuple[str, ...]) -> tuple[str, ...]:
         "English": ("en",),
         "Italian": ("it",),
         "Spanish": ("es",),
+        "Russian": ("ru",),
         "Rhaeto-rumantsch": ("rm",),
         "Bilingual f/d": ("fr", "de"),
         "Bilingual d/f": ("de", "fr"),
@@ -159,10 +192,15 @@ def parse_detail(raw: str, entry: ListingEntry) -> Offering:
     if "tab-1" not in advertised or not advertised <= available:
         raise ValueError("Incomplete detail: missing advertised course section")
     fields = {}
-    for row in main.select("tr"):
+    for row in main.select('[data-accordion-content="tab-1"] tr'):
         cells = row.find_all("td", recursive=False)
         if len(cells) == 2:
-            fields[clean(cells[0])] = clean(cells[1])
+            label = clean(cells[0])
+            if label == "Teachers":
+                people = [clean(person) for person in cells[1].select(".liprof > li")]
+                fields[label] = ", ".join(people or structured_text(cells[1]).splitlines())
+            else:
+                fields[label] = structured_text(cells[1])
     if fields.get("Code") != entry.code or not main.select_one("h2"):
         raise ValueError(f"Detail identity/structure mismatch {entry.source_id}")
     detail_terms = tuple(re.findall(r"(?:AS|SS|SA|SP|HS|FS)-\d{4}", fields.get("Semester", "")))
@@ -233,13 +271,17 @@ def parse_detail(raw: str, entry: ListingEntry) -> Offering:
         schedule_summary=entry.schedule_summary,
         recurrence_summary=fields.get("Summary schedule", ""),
         meetings=tuple(meetings),
-        assessment=clean(main.select_one('[data-accordion-content="tab-3"]')),
-        prerequisites=fields.get("Conditions of access", fields.get("Prerequisites", "")),
+        assessment=structured_text(main.select_one('[data-accordion-content="tab-3"]')),
+        prerequisites=fields.get(
+            "Condition of access",
+            fields.get("Conditions of access", fields.get("Prerequisites", "")),
+        ),
         equivalents=fields.get("Equivalent courses", fields.get("Equivalences", "")),
         assignments=tuple(assignments),
         calendar_url=urljoin(BASE, str(link["href"])) if link else None,
         listing_fingerprint=entry.fingerprint,
         detail_hash=digest(raw),
+        parser_revision=PARSER_REVISION,
     )
 
 
