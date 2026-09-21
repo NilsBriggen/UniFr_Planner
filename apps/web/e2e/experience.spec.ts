@@ -17,6 +17,9 @@ for (const language of ["de", "fr", "en"] as const) {
     await expect(
       page.getByRole("combobox", { name: p.startTerm, exact: true }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("spinbutton", { name: p.startYear, exact: true }),
+    ).toBeVisible();
     expect(
       (
         await new AxeBuilder({ page })

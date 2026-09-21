@@ -38,7 +38,7 @@ async function createStudentPlan(page: Page) {
   await page
     .getByLabel(p.programme, { exact: true })
     .fill("CS + Business Informatics");
-  await page.getByLabel(`${p.startTerm} · Year`, { exact: true }).fill("2026");
+  await page.getByLabel(p.startYear, { exact: true }).fill("2026");
   await page.getByRole("button", { name: p.create, exact: true }).click();
   await expect(
     page.getByRole("heading", {

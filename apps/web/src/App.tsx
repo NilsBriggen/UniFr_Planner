@@ -169,6 +169,7 @@ function AppShell() {
   const t = messages[language];
   const location = useLocation();
   const previousPath = useRef(location.pathname);
+  const navigationRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (previousPath.current !== location.pathname) {
       document.getElementById("main")?.focus({ preventScroll: true });
@@ -187,6 +188,26 @@ function AppShell() {
   useEffect(() => {
     document.title = `${document.querySelector("h1")?.textContent ?? "UniFr"} · UniFr Planner`;
   }, [language, location.pathname]);
+  useEffect(() => {
+    const element = navigationRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const updateClearance = () => {
+      const clearance = Math.ceil(element.getBoundingClientRect().height) + 8;
+      document.documentElement.style.setProperty(
+        "--mobile-navigation-clearance",
+        `${clearance}px`,
+      );
+    };
+    const observer = new ResizeObserver(updateClearance);
+    observer.observe(element);
+    updateClearance();
+    return () => {
+      observer.disconnect();
+      document.documentElement.style.removeProperty(
+        "--mobile-navigation-clearance",
+      );
+    };
+  }, []);
   return (
     <>
       <a className="skip-link" href="#main">
@@ -235,7 +256,7 @@ function AppShell() {
         </div>
       </header>
       <div className="layout">
-        <nav className="navigation" aria-label={t.nav}>
+        <nav ref={navigationRef} className="navigation" aria-label={t.nav}>
           {navigation.map(({ path, key, icon }) => (
             <NavLink
               key={key}

@@ -296,9 +296,24 @@ test("invalid filter window keeps values editable and valid availability exclude
     "/catalogue?faculty=Science&available_day=0&available_from=14:00&available_until=12:00",
   );
   await page.getByRole("button", { name: "English", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Available from must be earlier than Available until.",
+  );
+  await expect(
+    page.getByLabel("Available from", { exact: true }),
+  ).toHaveAttribute("aria-invalid", "true");
+  await expect(
+    page.getByLabel("Available until", { exact: true }),
+  ).toHaveAttribute("aria-invalid", "true");
+  await expect(
+    page.getByLabel("Available from", { exact: true }),
+  ).toHaveAttribute("aria-describedby", "catalogue-filter-error");
+  await expect(
+    page.getByLabel("Available until", { exact: true }),
+  ).toHaveAttribute("aria-describedby", "catalogue-filter-error");
   await expect(
     page.getByRole("heading", {
-      name: "Check your filter values and availability window.",
+      name: "Course catalogue",
     }),
   ).toBeVisible();
   await expect(
@@ -319,6 +334,37 @@ test("invalid filter window keeps values editable and valid availability exclude
   await expect(
     page.getByRole("heading", { name: "No matching courses" }),
   ).toBeVisible();
+});
+
+test("invalid ECTS range identifies both fields, suggests a correction and focuses the first", async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
+  await page.goto("/catalogue");
+  await page.getByRole("button", { name: "Filters", exact: true }).click();
+  const minimum = page.getByLabel("Minimum ECTS", { exact: true });
+  const maximum = page.getByLabel("Maximum ECTS", { exact: true });
+  await minimum.fill("10");
+  await maximum.fill("5");
+  await page.getByRole("button", { name: "Filters", exact: true }).click();
+  await expect(minimum).toBeHidden();
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "Minimum ECTS must not exceed Maximum ECTS.",
+  );
+  await expect(minimum).toHaveAttribute("aria-invalid", "true");
+  await expect(maximum).toHaveAttribute("aria-invalid", "true");
+  await expect(minimum).toHaveAttribute(
+    "aria-describedby",
+    "catalogue-filter-error",
+  );
+  await expect(maximum).toHaveAttribute(
+    "aria-describedby",
+    "catalogue-filter-error",
+  );
+  await expect(minimum).toBeVisible();
+  await expect(minimum).toBeFocused();
+  await expect(page).toHaveURL(/\/catalogue$/);
 });
 
 test("real rejected database renders unavailable, never empty catalogue", async ({

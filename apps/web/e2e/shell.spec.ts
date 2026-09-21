@@ -86,3 +86,110 @@ test("keyboard skip link reaches the main content and controls have touch target
     expect(box!.width).toBeGreaterThanOrEqual(44);
   }
 });
+
+test("compact navigation keeps localized labels intact and focused content above it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "de"));
+  await page.goto("/");
+  const navigation = page.getByRole("navigation", { name: "Hauptnavigation" });
+  const expandedTextStyles = `
+    html { font-size: 150% !important; }
+    .navigation, .navigation * {
+      letter-spacing: 0.12em !important;
+      line-height: 1.5 !important;
+      word-spacing: 0.16em !important;
+    }
+  `;
+  for (const label of [
+    "Studienplan",
+    "Semester",
+    "Kurskatalog",
+    "Anforderungen",
+    "Einstellungen",
+  ]) {
+    const text = navigation
+      .getByRole("link", { name: label })
+      .locator("span")
+      .last();
+    expect(
+      await text.evaluate((element) => {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        return new Set(
+          [...range.getClientRects()].map((rect) => Math.round(rect.top)),
+        ).size;
+      }),
+      `${label} should remain on one line`,
+    ).toBe(1);
+  }
+
+  await page.addStyleTag({ content: expandedTextStyles });
+  await expect
+    .poll(() =>
+      navigation.evaluate((element) => ({
+        clientWidth: element.clientWidth,
+        scrollWidth: element.scrollWidth,
+      })),
+    )
+    .toEqual({ clientWidth: 320, scrollWidth: 320 });
+  await expect
+    .poll(() =>
+      navigation.evaluate(
+        (element) =>
+          Number.parseFloat(
+            getComputedStyle(document.documentElement).scrollPaddingBottom,
+          ) >= element.getBoundingClientRect().height,
+      ),
+    )
+    .toBe(true);
+  for (const link of await navigation.getByRole("link").all()) {
+    const contained = await link.evaluate((element) => {
+      const linkRect = element.getBoundingClientRect();
+      const navRect = element.parentElement!.getBoundingClientRect();
+      return linkRect.left >= navRect.left && linkRect.right <= navRect.right;
+    });
+    expect(contained).toBe(true);
+  }
+
+  await page.goto("/catalogue");
+  await page.addStyleTag({ content: expandedTextStyles });
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const nav = document.querySelector(".navigation")!;
+        const height = nav.getBoundingClientRect().height;
+        return {
+          clears:
+            Number.parseFloat(
+              getComputedStyle(document.documentElement).scrollPaddingBottom,
+            ) >= height,
+          wrapped: height > 76,
+        };
+      }),
+    )
+    .toEqual({ clears: true, wrapped: true });
+  const course = page.locator(".course-results h2 a").nth(8);
+  await expect(course).toBeVisible();
+  await course.evaluate((element) =>
+    element.scrollIntoView({ block: "end", inline: "nearest" }),
+  );
+  await course.focus();
+  const clearance = await page.evaluate(() => {
+    const focused = document.activeElement!.getBoundingClientRect();
+    const nav = document.querySelector(".navigation")!.getBoundingClientRect();
+    return {
+      focusedBottom: focused.bottom,
+      navigationTop: nav.top,
+      scrollPaddingBottom: Number.parseFloat(
+        getComputedStyle(document.documentElement).scrollPaddingBottom,
+      ),
+      navigationHeight: nav.height,
+    };
+  });
+  expect(clearance.focusedBottom).toBeLessThanOrEqual(clearance.navigationTop);
+  expect(clearance.scrollPaddingBottom).toBeGreaterThanOrEqual(
+    clearance.navigationHeight,
+  );
+});

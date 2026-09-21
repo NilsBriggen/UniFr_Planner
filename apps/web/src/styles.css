@@ -10,6 +10,7 @@
   --color-muted: #545b61;
   --color-line: #dce0e3;
   --color-canvas: #f6f7f8;
+  --mobile-navigation-clearance: 84px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -429,6 +430,9 @@ input {
   }
 }
 @media (max-width: 680px) {
+  html {
+    scroll-padding-bottom: var(--mobile-navigation-clearance);
+  }
   .header {
     min-height: 108px;
     padding: 16px 20px 8px;
@@ -476,6 +480,7 @@ input {
     right: 0;
     z-index: 5;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 0;
     border: 0;
     border-top: 1px solid var(--color-line);
@@ -483,13 +488,15 @@ input {
     padding: 0 4px env(safe-area-inset-bottom);
   }
   .navigation a {
-    flex: 1;
-    min-width: 0;
+    flex: 1 1 56px;
+    min-width: max-content;
     min-height: 76px;
     border-left: 0;
     border-top: 3px solid transparent;
     font-size: 0.625rem;
     padding: 8px 2px;
+    overflow-wrap: normal;
+    white-space: nowrap;
   }
   .navigation a.active {
     border-top-color: var(--color-orange);
@@ -500,7 +507,7 @@ input {
   .canvas {
     border-left: 0;
     min-height: calc(100dvh - 108px);
-    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+    padding-bottom: var(--mobile-navigation-clearance);
   }
   .hero,
   .page {

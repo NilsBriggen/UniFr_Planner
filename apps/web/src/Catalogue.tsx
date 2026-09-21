@@ -40,6 +40,45 @@ type LoadState = {
   terms?: Terms;
   error?: "transport" | "missing" | "invalid";
 };
+type FilterField =
+  | "ects_min"
+  | "ects_max"
+  | "available_day"
+  | "available_from"
+  | "available_until";
+type FilterIssue = {
+  kind:
+    | "ectsOrder"
+    | "availabilityIncomplete"
+    | "availabilityOrder"
+    | "invalid";
+  fields: FilterField[];
+};
+
+function validateFilterQuery(query: URLSearchParams): FilterIssue | undefined {
+  const minimum = query.get("ects_min");
+  const maximum = query.get("ects_max");
+  if (minimum !== null && maximum !== null && Number(minimum) > Number(maximum))
+    return { kind: "ectsOrder", fields: ["ects_min", "ects_max"] };
+
+  const availability = [
+    "available_day",
+    "available_from",
+    "available_until",
+  ] as const;
+  const selected = availability.filter((field) => query.has(field));
+  if (selected.length > 0 && selected.length < availability.length)
+    return { kind: "availabilityIncomplete", fields: [...availability] };
+  if (
+    selected.length === availability.length &&
+    query.get("available_from")! >= query.get("available_until")!
+  )
+    return {
+      kind: "availabilityOrder",
+      fields: ["available_from", "available_until"],
+    };
+  return undefined;
+}
 
 function localizedTitle(course: Course, language: Language) {
   return (
@@ -388,18 +427,35 @@ function Search({
   terms,
   query,
   language,
+  invalid,
   change,
 }: {
   page?: CoursePage;
   terms: Terms;
   query: URLSearchParams;
   language: Language;
+  invalid: boolean;
   change: (query: URLSearchParams) => void;
 }) {
   const t = catalogueMessages[language];
+  const [clientIssue, setClientIssue] = useState<FilterIssue>();
+  const formRef = useRef<HTMLFormElement>(null);
+  const pendingFocus = useRef<FilterField | undefined>(undefined);
   const [expanded, setExpanded] = useState(
     filterKeys.some((key) => key !== "q" && query.has(key)),
   );
+  const issue =
+    clientIssue ??
+    (invalid
+      ? (validateFilterQuery(query) ?? { kind: "invalid", fields: [] })
+      : undefined);
+  const errorAttributes = (field: FilterField) =>
+    issue?.fields.includes(field)
+      ? ({
+          "aria-invalid": true,
+          "aria-describedby": "catalogue-filter-error",
+        } as const)
+      : {};
   const labels: Record<(typeof filterKeys)[number], string> = {
     q: t.search,
     term: t.term,
@@ -440,9 +496,17 @@ function Search({
     next.delete("offset");
     change(next);
   };
+  useEffect(() => {
+    const field = pendingFocus.current;
+    if (!field || !expanded || !clientIssue) return;
+    const first = formRef.current?.elements.namedItem(field);
+    if (first instanceof HTMLElement) first.focus();
+    pendingFocus.current = undefined;
+  }, [clientIssue, expanded]);
   return (
     <>
       <form
+        ref={formRef}
         key={query.toString()}
         className="catalogue-search"
         onSubmit={(event) => {
@@ -451,6 +515,15 @@ function Search({
           new FormData(event.currentTarget).forEach((value, key) => {
             if (String(value).trim()) next.set(key, String(value).trim());
           });
+          const nextIssue = validateFilterQuery(next);
+          if (nextIssue) {
+            pendingFocus.current = nextIssue.fields[0];
+            setClientIssue(nextIssue);
+            setExpanded(true);
+            return;
+          }
+          pendingFocus.current = undefined;
+          setClientIssue(undefined);
           change(next);
         }}
       >
@@ -476,6 +549,11 @@ function Search({
             {t.filters}
           </Button>
         </div>
+        {issue && (
+          <p className="filter-error" id="catalogue-filter-error" role="alert">
+            {t[issue.kind]}
+          </p>
+        )}
         <div id="catalogue-filters" hidden={!expanded}>
           <div className="filter-grid">
             {select("term", terms.terms)}
@@ -491,6 +569,7 @@ function Search({
                 max="180"
                 step="0.5"
                 defaultValue={query.get("ects_min") ?? ""}
+                {...errorAttributes("ects_min")}
               />
             </label>
             <label>
@@ -502,6 +581,7 @@ function Search({
                 max="180"
                 step="0.5"
                 defaultValue={query.get("ects_max") ?? ""}
+                {...errorAttributes("ects_max")}
               />
             </label>
           </div>
@@ -514,6 +594,7 @@ function Search({
                 <select
                   name="available_day"
                   defaultValue={query.get("available_day") ?? ""}
+                  {...errorAttributes("available_day")}
                 >
                   <option value="">{t.all}</option>
                   {t.weekdays.map((day, index) => (
@@ -529,6 +610,7 @@ function Search({
                   name="available_from"
                   type="time"
                   defaultValue={query.get("available_from") ?? ""}
+                  {...errorAttributes("available_from")}
                 />
               </label>
               <label>
@@ -537,6 +619,7 @@ function Search({
                   name="available_until"
                   type="time"
                   defaultValue={query.get("available_until") ?? ""}
+                  {...errorAttributes("available_until")}
                 />
               </label>
             </div>
@@ -752,18 +835,10 @@ export default function Catalogue({ language }: { language: Language }) {
           <Button onClick={() => setRetry(retry + 1)}>{t.retry}</Button>
         </StatusNotice>
       )}
-      {state.error && (
+      {state.error && state.error !== "invalid" && (
         <StatusNotice>
-          <h2>
-            {state.error === "missing"
-              ? t.missing
-              : state.error === "invalid"
-                ? t.invalid
-                : t.transport}
-          </h2>
-          {state.error !== "invalid" && (
-            <p>{state.error === "missing" ? t.missingBody : t.transportBody}</p>
-          )}
+          <h2>{state.error === "missing" ? t.missing : t.transport}</h2>
+          <p>{state.error === "missing" ? t.missingBody : t.transportBody}</p>
           <Button onClick={() => setRetry(retry + 1)}>{t.retry}</Button>
           <Link className="text-link" to="/catalogue">
             {t.back}
@@ -784,6 +859,7 @@ export default function Catalogue({ language }: { language: Language }) {
           terms={state.terms}
           query={query}
           language={language}
+          invalid={state.error === "invalid"}
           change={setQuery}
         />
       )}

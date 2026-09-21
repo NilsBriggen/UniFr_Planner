@@ -133,7 +133,6 @@ export function Setup({ language }: { language: Language }) {
           <label>
             {t.startYear}
             <input
-              aria-label={`${t.startTerm} · ${language === "de" ? "Jahr" : language === "fr" ? "Année" : "Year"}`}
               name="year"
               type="number"
               min="2000"

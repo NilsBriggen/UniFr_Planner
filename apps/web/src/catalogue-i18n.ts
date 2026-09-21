@@ -79,6 +79,10 @@ export const catalogueMessages = {
     replacedOccurrence: "Ersetzter Termin laut Quelle",
     selection: "Aktive Filter",
     invalid: "Bitte prüfe die Filterwerte und Zeitangaben.",
+    ectsOrder: "„ECTS ab“ darf nicht grösser als „ECTS bis“ sein.",
+    availabilityIncomplete:
+      "Wochentag, Beginn und Ende müssen gemeinsam gewählt werden.",
+    availabilityOrder: "„Verfügbar ab“ muss vor „Verfügbar bis“ liegen.",
   },
   fr: {
     search: "Rechercher des cours",
@@ -158,6 +162,10 @@ export const catalogueMessages = {
     replacedOccurrence: "Occurrence remplacée selon la source",
     selection: "Filtres actifs",
     invalid: "Vérifiez les filtres et les horaires saisis.",
+    ectsOrder: "ECTS minimum ne doit pas dépasser ECTS maximum.",
+    availabilityIncomplete:
+      "Le jour, l’heure de début et l’heure de fin doivent être choisis ensemble.",
+    availabilityOrder: "Disponible dès doit précéder Disponible jusqu’à.",
   },
   en: {
     search: "Search courses",
@@ -236,6 +244,10 @@ export const catalogueMessages = {
     replacedOccurrence: "Replaced occurrence from source",
     selection: "Active filters",
     invalid: "Check your filter values and availability window.",
+    ectsOrder: "Minimum ECTS must not exceed Maximum ECTS.",
+    availabilityIncomplete:
+      "Choose the weekday, start time, and end time together.",
+    availabilityOrder: "Available from must be earlier than Available until.",
   },
 } satisfies Record<Language, Record<string, string | string[]>>;
 export type CatalogueMessages = (typeof catalogueMessages)[Language];

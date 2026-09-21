@@ -51,6 +51,16 @@
 .catalogue-search .button {
   gap: 8px;
 }
+.filter-error {
+  border-left: 4px solid var(--color-orange);
+  margin: 16px 0 0;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+.catalogue-search [aria-invalid="true"] {
+  border-color: var(--color-blue);
+  border-width: 2px;
+}
 .filter-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
