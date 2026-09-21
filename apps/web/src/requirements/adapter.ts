@@ -14,6 +14,7 @@ import {
   flattenRequirements,
   resolveTemplate,
   type RequirementNode,
+  type RequirementResult,
 } from "../../../../packages/domain/src/requirements";
 import {
   activeScenario,
@@ -144,23 +145,46 @@ function recipeEvidence(
     completedChecklist: evidence.completedChecklist.filter((id) => ids.has(id)),
   };
 }
+function degreeCourses(plan: Plan, degree: ResolvedDegree) {
+  const additionalIds = new Set(
+    degree.additionalRoot
+      ? flattenRequirements(degree.additionalRoot).map((n) => n.id)
+      : [],
+  );
+  const reserved = new Set(
+    activeScenario(plan)
+      .requirementEvidence?.overrides.filter((o) => additionalIds.has(o.nodeId))
+      .map((o) => o.courseId),
+  );
+  return activeScenario(plan).courses.filter((c) => !reserved.has(c.id));
+}
 export function evaluateAdditionalRequirements(plan: Plan) {
   const degree = resolvedPlanDegree(plan);
-  return degree?.additionalRoot
-    ? evaluateRecipeRequirements(
-        degree,
-        activeScenario(plan).courses,
-        recipeEvidence(plan, degree, degree.additionalRoot),
-        degree.additionalRoot,
-      )
-    : null;
+  if (!degree?.additionalRoot) return null;
+  const counted = evaluatePlanRequirements(plan)!;
+  const used = new Set<string>();
+  const visit = (result: RequirementResult) => {
+    result.allocations.forEach((a) => used.add(a.courseId));
+    result.children.forEach(visit);
+  };
+  visit(counted);
+  const countedIds = new Set(flattenRequirements(degree.root).map((n) => n.id));
+  for (const override of activeScenario(plan).requirementEvidence?.overrides ??
+    [])
+    if (countedIds.has(override.nodeId)) used.add(override.courseId);
+  return evaluateRecipeRequirements(
+    degree,
+    activeScenario(plan).courses.filter((c) => !used.has(c.id)),
+    recipeEvidence(plan, degree, degree.additionalRoot),
+    degree.additionalRoot,
+  );
 }
 export function evaluatePlanRequirements(plan: Plan) {
   const degree = resolvedPlanDegree(plan);
   if (degree)
     return evaluateRecipeRequirements(
       degree,
-      activeScenario(plan).courses,
+      degreeCourses(plan, degree),
       recipeEvidence(plan, degree, degree.root),
     );
   const root = requirementTree(plan);

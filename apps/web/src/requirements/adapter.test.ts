@@ -238,3 +238,50 @@ it("does not add credits for an empty optional minor", () => {
   expect(plan.targetEcts).toBe(90);
   expect(adapter.resolvedPlanDegree(plan)?.additionalEcts).toBe(0);
 });
+
+it("allocates each course once across diploma and additional requirements, including explicit substitutions", () => {
+  let plan = adapter.bindDegreeSelection(makePlan(), {
+    structureId: "ba-180-extra-60",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-ius-law",
+        variantId: "major-180",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+      {
+        slotId: "extra",
+        programmeId: "bachelor-digitinf-businessinformatics",
+        variantId: "minor-60",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  });
+  plan.scenarios[0].courses.push({
+    id: "accounting",
+    code: "EIG.00036",
+    titles: { en: "Accounting" },
+    ects: 6,
+    status: "completed",
+    semester: null,
+    pinned: false,
+    offering: null,
+  });
+  const majorNode = "bachelor-ius-law/major-180@2026-27.1/law-iur-1-1";
+  expect(adapter.evaluateAdditionalRequirements(plan)?.earned).toBe(6);
+  plan = adapter.setRequirementEvidence(plan, {
+    overrides: [
+      {
+        kind: "substitution",
+        courseId: "accounting",
+        nodeId: majorNode,
+        reason: "Approved transfer",
+      },
+    ],
+    completedChecklist: [],
+  });
+  expect(adapter.evaluatePlanRequirements(plan)?.earned).toBe(6);
+  expect(adapter.evaluateAdditionalRequirements(plan)?.earned).toBe(0);
+});

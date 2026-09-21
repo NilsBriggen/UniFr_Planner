@@ -1,5 +1,15 @@
 export const recipeMessages = {
   en: {
+    diagnostics: "Technical review details",
+    applicabilityGap:
+      "The applicable starting semesters have not been confirmed.",
+    curriculumGap:
+      "Detailed curriculum requirements are not yet available for this variant.",
+    sourceGap: "Programme sources still need to be documented.",
+    creditGap:
+      "The source requirements and this component’s credit total differ; faculty clarification is required.",
+    reviewGap:
+      "Some requirements still need to be checked against the official sources.",
     title: "Choose a degree",
     degree: "Degree",
     faculty: "Faculty",
@@ -52,6 +62,15 @@ export const recipeMessages = {
     },
   },
   de: {
+    diagnostics: "Technische Prüfdetails",
+    applicabilityGap: "Die gültigen Startsemester sind noch nicht bestätigt.",
+    curriculumGap:
+      "Die detaillierten Studienanforderungen dieser Variante sind noch nicht verfügbar.",
+    sourceGap: "Die Programmquellen müssen noch dokumentiert werden.",
+    creditGap:
+      "Die Anforderungen der Quelle weichen vom ECTS-Umfang dieser Komponente ab; die Fakultät muss dies klären.",
+    reviewGap:
+      "Einige Anforderungen müssen noch anhand der offiziellen Quellen geprüft werden.",
     title: "Abschluss wählen",
     degree: "Abschluss",
     faculty: "Fakultät",
@@ -105,6 +124,16 @@ export const recipeMessages = {
     },
   },
   fr: {
+    diagnostics: "Détails techniques de la vérification",
+    applicabilityGap:
+      "Les semestres de début applicables ne sont pas encore confirmés.",
+    curriculumGap:
+      "Les exigences détaillées de cette variante ne sont pas encore disponibles.",
+    sourceGap: "Les sources du programme restent à documenter.",
+    creditGap:
+      "Les exigences de la source diffèrent du total de crédits de cette composante ; une clarification de la faculté est nécessaire.",
+    reviewGap:
+      "Certaines exigences doivent encore être vérifiées dans les sources officielles.",
     title: "Choisir un cursus",
     degree: "Diplôme",
     faculty: "Faculté",

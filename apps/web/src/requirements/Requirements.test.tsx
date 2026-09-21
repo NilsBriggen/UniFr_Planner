@@ -278,3 +278,60 @@ it("shows pinned recipe gaps after reopening and keeps additions outside degree 
     screen.getByText("Additional requirements outside the degree: 30 ECTS"),
   ).toBeVisible();
 });
+
+it("groups source gaps by programme and keeps technical diagnostics collapsed", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const { bindDegreeSelection } = await import("./adapter");
+  const plan = bindDegreeSelection(
+    createPlan({
+      id: "review-summary",
+      scenarioId: "s",
+      name: "Review summary",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    {
+      structureId: "ba-120-60",
+      components: [
+        {
+          slotId: "major",
+          programmeId: "bachelor-digitinf-informatics",
+          variantId: "major-120",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+        {
+          slotId: "minor",
+          programmeId: "bachelor-digitinf-businessinformatics",
+          variantId: "minor-60",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+      ],
+    },
+  );
+  await new PlanStore(indexedDB).save(plan);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const review = await screen.findByRole("region", { name: "Review gaps" });
+  expect(
+    within(review).getByRole("heading", { name: "Computer Science" }),
+  ).toBeVisible();
+  expect(
+    within(review).getByRole("heading", { name: "Business Informatics" }),
+  ).toBeVisible();
+  const diagnostics = within(review)
+    .getByText("Technical review details")
+    .closest("details");
+  expect(diagnostics).not.toHaveAttribute("open");
+  const issues = within(review).getAllByText(
+    /Unresolved requirement evidence:/,
+  );
+  expect(issues.length).toBeGreaterThan(0);
+  for (const issue of issues) expect(diagnostics).toContainElement(issue);
+});

@@ -1,3 +1,4 @@
+import ReviewGaps from "./ReviewGaps";
 import {
   inheritedStructures,
   majorProgrammes,
@@ -389,14 +390,7 @@ export default function RecipeChooser({
             </>
           )}
           {preview.issues.length > 0 && (
-            <>
-              <h4>{t.gaps}</h4>
-              <ul>
-                {preview.issues.map((issue, i) => (
-                  <li key={i}>{issue}</li>
-                ))}
-              </ul>
-            </>
+            <ReviewGaps degree={preview} language={language} />
           )}
           <details>
             <summary>{t.sources}</summary>
