@@ -233,23 +233,14 @@ export function evaluateRequirements(
           (single ? Number(sufficient(b)) - Number(sufficient(a)) : 0),
       );
   }
-  // Reserve narrow compulsory leaves globally, so an earlier broad pool cannot steal them.
-  function reserve(
-    subtree: RequirementNode,
-    parent: ReadonlyMap<string, string>,
-  ): Map<string, string> {
-    const reserved = new Map(parent);
-    function walk(n: RequirementNode) {
-      if (n.kind === "one_of") return;
-      if ((n.kind === "course" || n.kind === "project") && !n.allowReuse) {
-        const c = candidates(n).find((c) => !reserved.has(c.id));
-        if (c) reserved.set(c.id, n.id);
-      } else if ("children" in n) n.children.forEach(walk);
-    }
-    walk(subtree);
-    for (const o of overrides) reserved.set(o.courseId, o.nodeId);
-    return reserved;
-  }
+  const candidatesByNode = new Map(nodes.map((n) => [n.id, candidates(n)]));
+  const rank = {
+    complete: 4,
+    in_progress: 3,
+    covered: 2,
+    missing: 1,
+    needs_clarification: 0,
+  };
   const totals = (allocations: Allocation[], status: CourseRecord["status"]) =>
     round(
       allocations
@@ -332,17 +323,10 @@ export function evaluateRequirements(
         const candidates = node.children.map((child) => {
           const branchUsed = new Set(used);
           return {
-            result: visit(child, branchUsed, reserve(child, reserved)),
+            result: visit(child, branchUsed, reserved),
             used: branchUsed,
           };
         });
-        const rank = {
-          complete: 4,
-          in_progress: 3,
-          covered: 2,
-          missing: 1,
-          needs_clarification: 0,
-        };
         const selected = options.choices?.[node.id];
         const best = selected
           ? candidates.find((c) => c.result.node.id === selected)!
@@ -354,7 +338,8 @@ export function evaluateRequirements(
                   b.result.planned -
                   a.result.earned -
                   a.result.inProgress -
-                  a.result.planned,
+                  a.result.planned ||
+                a.result.node.id.localeCompare(b.result.node.id, "en"),
             )[0];
         selectedChildId = best.result.node.id;
         best.used.forEach((id) => used.add(id));
@@ -367,7 +352,7 @@ export function evaluateRequirements(
       allocations = [...unique.values()];
     } else if ("codes" in node) {
       let credits = 0;
-      for (const c of candidates(node)) {
+      for (const c of candidatesByNode.get(node.id)!) {
         const override = overrides.find((o) => o.courseId === c.id);
         if (c.status === "unscheduled" || (used.has(c.id) && !node.allowReuse))
           continue;
@@ -474,5 +459,133 @@ export function evaluateRequirements(
       explanations: [node.explanation],
     };
   }
-  return visit(root, new Set(), reserve(root, new Map()));
+  // Allocate exclusive ownership before rendering results. Greedy reservations
+  // cannot solve overlapping pools, equivalent courses, or fractional bundles.
+  // Explicit personal allocations are fixed; reusable leaves never compete.
+  const owners = new Map(overrides.map((o) => [o.courseId, o.nodeId]));
+  const eligibleNodes = new Set<string>();
+  function collectEligible(node: RequirementNode) {
+    eligibleNodes.add(node.id);
+    if ("children" in node) {
+      const choice = options.choices?.[node.id];
+      node.children
+        .filter((child) => !choice || child.id === choice)
+        .forEach(collectEligible);
+    }
+  }
+  collectEligible(root);
+  const leaves = nodes
+    .filter((n) => "codes" in n && eligibleNodes.has(n.id))
+    .sort((a, b) => a.id.localeCompare(b.id, "en"));
+  type OwnershipGroup = { records: CourseRecord[]; owners: string[] };
+  const competing: OwnershipGroup[] = [];
+  let previousKey: string | undefined;
+  for (const record of courses) {
+    if (owners.has(record.id)) {
+      previousKey = undefined;
+      continue;
+    }
+    const eligible = leaves.filter((n) =>
+      candidatesByNode.get(n.id)!.some((c) => c.id === record.id),
+    );
+    const exclusive = eligible.filter((n) => !n.allowReuse).map((n) => n.id);
+    if (exclusive.length < 2) {
+      if (exclusive.length) owners.set(record.id, exclusive[0]);
+      previousKey = undefined;
+      continue;
+    }
+    // Only consecutive equivalent candidates are interchangeable: an intervening
+    // differently weighted record can change a leaf's greedy stopping point.
+    // Reusable leaves choose evidence independently, so retain record identity
+    // there to preserve the unique-record totals of parent groups.
+    const key = JSON.stringify([
+      record.status,
+      record.ects,
+      eligible.map((n) => n.id),
+      eligible.some((n) => n.allowReuse) ? record.id : null,
+    ]);
+    if (key === previousKey) competing.at(-1)!.records.push(record);
+    else competing.push({ records: [record], owners: exclusive });
+    previousKey = key;
+  }
+  // Bound synchronous browser work before searching, not after returning a
+  // plausible partial result. Untrusted/custom packs may have exponentially
+  // many distinct competing signatures. Callers already handle domain errors;
+  // an over-budget tree must remain unevaluated instead of claiming a deficit.
+  const evaluationSize =
+    nodes.length +
+    [...candidatesByNode.values()].reduce((sum, list) => sum + list.length, 0);
+  const searchLimit = Math.max(
+    1,
+    Math.min(4096, Math.floor(250_000 / evaluationSize)),
+  );
+  let distributions = 1;
+  for (const group of competing) {
+    let choices = 1;
+    for (let i = 1; i < group.owners.length; i++) {
+      choices = Math.round((choices * (group.records.length + i)) / i);
+      if (choices * distributions > searchLimit)
+        throw new Error("requirement allocation search limit exceeded");
+    }
+    distributions *= choices;
+  }
+  // The objective is global progress, then compulsory-course progress, then
+  // earned/current/planned evidence. Stable IDs and course ordering break ties,
+  // never the presentation order of siblings or the caller's record order.
+  function score(result: RequirementResult): number[] {
+    const descendants: RequirementResult[] = [];
+    function collect(r: RequirementResult) {
+      if (r.children.length) r.children.forEach(collect);
+      else descendants.push(r);
+    }
+    collect(result);
+    return [
+      rank[result.status],
+      -result.remaining,
+      -descendants.reduce((sum, r) => sum + r.remainingCourses, 0),
+      -result.remainingToEarn,
+      descendants
+        .filter((r) => r.node.kind === "course" || r.node.kind === "project")
+        .reduce((sum, r) => sum + rank[r.status], 0),
+      descendants.reduce((sum, r) => sum + rank[r.status], 0),
+      result.earned,
+      result.inProgress,
+      result.planned,
+    ];
+  }
+  let best: RequirementResult | undefined;
+  let bestScore: number[] = [];
+  function search(index: number): void {
+    if (index === competing.length) {
+      const result = visit(root, new Set(), owners);
+      const candidateScore = score(result);
+      const difference = candidateScore.findIndex((n, i) => n !== bestScore[i]);
+      if (
+        !best ||
+        (difference >= 0 && candidateScore[difference] > bestScore[difference])
+      ) {
+        best = result;
+        bestScore = candidateScore;
+      }
+      return;
+    }
+    const group = competing[index];
+    // Enumerate counts, not permutations of equivalent records: m records and
+    // k eligible owners have C(m+k-1,k-1) distributions, instead of k**m.
+    // Different eligibility/credit groups multiply. The preflight rejects
+    // excessive work explicitly; every accepted search is exhaustive.
+    function distribute(ownerIndex: number, start: number): void {
+      const last = ownerIndex === group.owners.length - 1;
+      for (let count = group.records.length - start; count >= 0; count--) {
+        for (let i = start; i < start + count; i++)
+          owners.set(group.records[i].id, group.owners[ownerIndex]);
+        if (last) search(index + 1);
+        else distribute(ownerIndex + 1, start + count);
+        if (last) break;
+      }
+    }
+    distribute(0, 0);
+  }
+  search(0);
+  return best!;
 }

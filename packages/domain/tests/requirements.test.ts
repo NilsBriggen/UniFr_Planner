@@ -52,6 +52,228 @@ const evaluate = (
 it("exports a pure requirements evaluator", () =>
   expect(typeof engine.evaluateRequirements).toBe("function"));
 describe("allocation and progress", () => {
+  it.each([false, true])(
+    "resolves competing credit pools independently of sibling order, reverse=%s",
+    (reverse) => {
+      const children = [pool("broad", ["A", "B"]), pool("narrow", ["A"])];
+      const result = evaluate(
+        all(...(reverse ? children.reverse() : children)),
+        [course("A"), course("B")],
+      );
+      expect(result).toMatchObject({
+        status: "complete",
+        earned: 12,
+        remaining: 0,
+      });
+      expect(
+        Object.fromEntries(
+          result.children.map((child) => [
+            child.node.id,
+            child.allocations.map((a) => a.code),
+          ]),
+        ),
+      ).toEqual({ broad: ["B"], narrow: ["A"] });
+    },
+  );
+  it.each([false, true])(
+    "finds a global assignment for overlapping equivalent-course leaves, reverse=%s",
+    (reverse) => {
+      const children: RequirementNode[] = [
+        { ...pool("flexible", ["A", "B"]), kind: "course" },
+        { ...pool("required", ["A"]), kind: "course" },
+      ];
+      const result = evaluate(
+        all(...(reverse ? children.reverse() : children)),
+        [course("A"), course("B")],
+      );
+      expect(result).toMatchObject({ status: "complete", earned: 12 });
+      expect(
+        result.children
+          .find((c) => c.node.id === "flexible")
+          ?.allocations.map((a) => a.code),
+      ).toEqual(["B"]);
+    },
+  );
+  it("backtracks across fractional pools with equally broad eligibility", () => {
+    const result = evaluate(
+      all(
+        pool("first", ["A", "B", "C"], 6),
+        pool("second", ["A", "B", "C"], 4.5),
+      ),
+      [course("A", 4.5), course("B", 3), course("C", 3)],
+    );
+    expect(result).toMatchObject({
+      status: "complete",
+      earned: 10.5,
+      remaining: 0,
+    });
+    expect(result.children[0].allocations.map((a) => a.code)).toEqual([
+      "B",
+      "C",
+    ]);
+  });
+  it("does not collapse equal-credit records across a differently weighted candidate", () => {
+    const result = evaluate(
+      all(
+        { ...pool("first", ["A", "B", "C"], 6), maxCredits: 6 },
+        { ...pool("second", ["A", "B", "C"], 3), maxCredits: 3 },
+      ),
+      [course("A", 3), course("B", 6), course("C", 3)],
+    );
+    expect(result.status).toBe("complete");
+    expect(result.children[0].allocations.map((a) => a.code)).toEqual(["B"]);
+    expect(result.children[1].allocations.map((a) => a.code)).toEqual(["A"]);
+  });
+  it.each([
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0],
+  ])(
+    "resolves three-way competition for sibling permutation %s,%s,%s",
+    (...order) => {
+      const children = [
+        pool("first", ["A", "B"]),
+        pool("second", ["A", "C"]),
+        pool("third", ["A", "C"]),
+      ];
+      const root = all(...order.map((index) => children[index]));
+      const records = [course("A"), course("B"), course("C")];
+      const result = evaluate(root, records);
+      expect(result).toMatchObject({
+        status: "complete",
+        earned: 18,
+        remaining: 0,
+      });
+      expect(
+        Object.fromEntries(
+          result.children.map((c) => [
+            c.node.id,
+            c.allocations.map((a) => a.code),
+          ]),
+        ),
+      ).toEqual({ first: ["B"], second: ["A"], third: ["C"] });
+      expect(evaluate(root, records.reverse())).toEqual(result);
+    },
+  );
+  it.each(["current", "planned"] as const)(
+    "keeps %s progress distinct while resolving competing pools",
+    (status) => {
+      const result = evaluate(
+        all(pool("broad", ["A", "B"]), pool("narrow", ["A"])),
+        [course("A"), course("B", 6, status)],
+      );
+      expect(result).toMatchObject({
+        status: status === "current" ? "in_progress" : "covered",
+        earned: 6,
+        remaining: 0,
+        remainingToEarn: 6,
+      });
+    },
+  );
+  it("keeps an explicit personal allocation even when another assignment could complete the tree", () => {
+    const result = evaluate(
+      all(pool("broad", ["A", "B"]), pool("narrow", ["A"])),
+      [course("A"), course("B")],
+      {
+        overrides: [
+          {
+            kind: "allocation",
+            courseId: "A",
+            nodeId: "broad",
+            reason: "Personal choice",
+          },
+        ],
+      },
+    );
+    expect(result.status).toBe("missing");
+    expect(result.children[0].allocations[0]).toMatchObject({
+      courseId: "A",
+      override: { reason: "Personal choice" },
+    });
+    expect(result.children[1].allocations).toEqual([]);
+  });
+  it("resolves a course-count requirement competing with a credit pool", () => {
+    const result = evaluate(
+      all(pool("broad", ["A", "B", "C"]), {
+        ...pool("count", ["A", "B"], 0),
+        kind: "course_count",
+        minCourses: 2,
+      }),
+      [course("A", 3), course("B", 3), course("C")],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 12 });
+    expect(result.children[1].allocations.map((a) => a.code)).toEqual([
+      "A",
+      "B",
+    ]);
+  });
+  it.each([false, true])(
+    "does not double-count scarce evidence unless reuse=%s",
+    (allowReuse) => {
+      const result = evaluate(
+        all(pool("first", ["A"]), { ...pool("second", ["A"]), allowReuse }),
+        [course("A")],
+      );
+      expect(result).toMatchObject({
+        status: allowReuse ? "complete" : "missing",
+        earned: 6,
+        remaining: allowReuse ? 0 : 6,
+      });
+    },
+  );
+  it("groups many interchangeable competing records without enumerating their permutations", () => {
+    const codes = Array.from(
+      { length: 40 },
+      (_, index) => `C${String(index).padStart(2, "0")}`,
+    );
+    const result = evaluate(
+      all(pool("first", codes, 120), pool("second", codes, 120)),
+      codes.map((code) => course(code)),
+    );
+    expect(result).toMatchObject({
+      status: "complete",
+      earned: 240,
+      remaining: 0,
+    });
+    expect(result.children.map((child) => child.allocations.length)).toEqual([
+      20, 20,
+    ]);
+  }, 1000);
+  it.each([16, 40, 100])(
+    "rejects an excessive exact search with %s distinct signatures instead of returning partial progress",
+    (count) => {
+      const records = Array.from({ length: count }, (_, index) =>
+        course(`C${index}`, index + 1),
+      );
+      const codes = records.map((record) => record.code);
+      expect(() =>
+        evaluate(
+          all(pool("first", codes, 68), pool("second", codes, 68)),
+          records,
+        ),
+      ).toThrow("requirement allocation search limit exceeded");
+    },
+  );
+  it.each([false, true])(
+    "resolves a nested competing pool with reuse=%s",
+    (allowReuse) => {
+      const result = evaluate(
+        all(pool("broad", ["A", "B"]), {
+          ...all({ ...pool("narrow", ["A"]), allowReuse }),
+          id: "nested",
+        }),
+        [course("A"), course("B")],
+      );
+      expect(result.status).toBe("complete");
+      expect(
+        result.children[1].children[0].allocations.map((a) => a.code),
+      ).toEqual(["A"]);
+      expect(result.earned).toBe(allowReuse ? 6 : 12);
+    },
+  );
   it("keeps reuse status and deficits independent of sibling presentation order", () => {
     const result = evaluate(
       all({ ...pool("reuse", ["A"]), allowReuse: true }, pool("first", ["A"])),
