@@ -310,10 +310,11 @@ export function evaluateRequirements(
       });
     return demands;
   }
+  type Permission = { nodes: ReadonlySet<string>; omissions: number };
   function visit(
     node: RequirementNode,
     used: Set<string>,
-    reserved: ReadonlyMap<string, string>,
+    permitted: ReadonlyMap<string, Permission>,
   ): RequirementResult {
     let children: RequirementResult[] = [],
       allocations: Allocation[] = [],
@@ -323,7 +324,7 @@ export function evaluateRequirements(
         const candidates = node.children.map((child) => {
           const branchUsed = new Set(used);
           return {
-            result: visit(child, branchUsed, reserved),
+            result: visit(child, branchUsed, permitted),
             used: branchUsed,
           };
         });
@@ -345,7 +346,7 @@ export function evaluateRequirements(
         best.used.forEach((id) => used.add(id));
         // Only the selected alternative contributes; unselected branches remain visible as alternatives in node.children.
         children = [best.result];
-      } else children = node.children.map((n) => visit(n, used, reserved));
+      } else children = node.children.map((n) => visit(n, used, permitted));
       const unique = new Map(
         children.flatMap((c) => c.allocations).map((a) => [a.courseId, a]),
       );
@@ -359,9 +360,8 @@ export function evaluateRequirements(
         if (override && override.nodeId !== node.id) continue;
         if (
           !override &&
-          !node.allowReuse &&
-          reserved.has(c.id) &&
-          reserved.get(c.id) !== node.id
+          permitted.has(c.id) &&
+          !permitted.get(c.id)!.nodes.has(node.id)
         )
           continue;
         if (
@@ -459,29 +459,62 @@ export function evaluateRequirements(
       explanations: [node.explanation],
     };
   }
-  // Allocate exclusive ownership before rendering results. Greedy reservations
-  // cannot solve overlapping pools, equivalent courses, or fractional bundles.
-  // Explicit personal allocations are fixed; reusable leaves never compete.
-  const owners = new Map(overrides.map((o) => [o.courseId, o.nodeId]));
+  // Choose evidence subsets before rendering results. An automatic record may
+  // be unused, owned by one exclusive leaf, and independently used by reusable
+  // leaves. Personal allocations remain binding even when they exceed a maximum.
+  const permissions = new Map<string, Permission>(
+    overrides.map((o) => [
+      o.courseId,
+      { nodes: new Set([o.nodeId]), omissions: 0 },
+    ]),
+  );
   const eligibleNodes = new Set<string>();
-  function collectEligible(node: RequirementNode) {
+  const optionalNodes = new Set<string>();
+  function collectEligible(node: RequirementNode, optional = false) {
     eligibleNodes.add(node.id);
+    if (optional) optionalNodes.add(node.id);
     if ("children" in node) {
       const choice = options.choices?.[node.id];
       node.children
         .filter((child) => !choice || child.id === choice)
-        .forEach(collectEligible);
+        .forEach((child) =>
+          collectEligible(
+            child,
+            optional || (node.kind === "one_of" && !choice),
+          ),
+        );
     }
   }
   collectEligible(root);
   const leaves = nodes
     .filter((n) => "codes" in n && eligibleNodes.has(n.id))
     .sort((a, b) => a.id.localeCompare(b.id, "en"));
-  type OwnershipGroup = { records: CourseRecord[]; owners: string[] };
+  type OwnershipGroup = { records: CourseRecord[]; choices: Permission[] };
   const competing: OwnershipGroup[] = [];
+  // Bound both subset preparation and complete evaluations before enumeration.
+  // Rejected trees stay unevaluated, never a plausible partial deficit.
+  const evaluationSize =
+    nodes.length +
+    [...candidatesByNode.values()].reduce((sum, list) => sum + list.length, 0);
+  const searchLimit = Math.max(
+    1,
+    Math.min(4096, Math.floor(250_000 / evaluationSize)),
+  );
+  function checkSearchSize(): void {
+    let distributions = 1;
+    for (const group of competing) {
+      let choices = 1;
+      for (let i = 1; i < group.choices.length; i++) {
+        choices = Math.round((choices * (group.records.length + i)) / i);
+        if (choices * distributions > searchLimit)
+          throw new Error("requirement allocation search limit exceeded");
+      }
+      distributions *= choices;
+    }
+  }
   let previousKey: string | undefined;
   for (const record of courses) {
-    if (owners.has(record.id)) {
+    if (permissions.has(record.id)) {
       previousKey = undefined;
       continue;
     }
@@ -489,8 +522,53 @@ export function evaluateRequirements(
       candidatesByNode.get(n.id)!.some((c) => c.id === record.id),
     );
     const exclusive = eligible.filter((n) => !n.allowReuse).map((n) => n.id);
-    if (exclusive.length < 2) {
-      if (exclusive.length) owners.set(record.id, exclusive[0]);
+    if (!eligible.length) {
+      previousKey = undefined;
+      continue;
+    }
+    // Omitting the sole candidate of a required leaf cannot improve its progress
+    // or remove ambiguity without creating an unmet obligation. Prune only that
+    // dominated choice, keeping disjoint compulsory programmes inexpensive.
+    const necessary = (n: RequirementNode) =>
+      !optionalNodes.has(n.id) &&
+      candidatesByNode.get(n.id)!.length === 1 &&
+      (n.kind === "course" ||
+        n.kind === "project" ||
+        n.kind === "course_count" ||
+        (n.minCredits ?? 0) > 0);
+    const requiredReuse = eligible.filter((n) => n.allowReuse && necessary(n));
+    const optionalReuse = eligible.filter((n) => n.allowReuse && !necessary(n));
+    const ownerChoices: (string | null)[] = [...exclusive];
+    if (
+      !exclusive.length ||
+      eligible.some((n) => !n.allowReuse && !necessary(n))
+    )
+      ownerChoices.push(null);
+    // Count reusable subsets before constructing them: a single highly reusable
+    // record can itself exceed the synchronous exact-search budget.
+    const reuseChoices = 2 ** optionalReuse.length;
+    if (ownerChoices.length * reuseChoices > searchLimit)
+      throw new Error("requirement allocation search limit exceeded");
+    const choices: Permission[] = ownerChoices.flatMap((owner) =>
+      Array.from({ length: reuseChoices }, (_, omittedMask) => {
+        const selected = optionalReuse.filter(
+          (_, i) => !(omittedMask & (2 ** i)),
+        );
+        return {
+          nodes: new Set([
+            ...(owner === null ? [] : [owner]),
+            ...requiredReuse.map((n) => n.id),
+            ...selected.map((n) => n.id),
+          ]),
+          omissions:
+            Number(owner === null && exclusive.length > 0) +
+            optionalReuse.length -
+            selected.length,
+        };
+      }),
+    );
+    if (choices.length === 1) {
+      permissions.set(record.id, choices[0]);
       previousKey = undefined;
       continue;
     }
@@ -505,29 +583,9 @@ export function evaluateRequirements(
       eligible.some((n) => n.allowReuse) ? record.id : null,
     ]);
     if (key === previousKey) competing.at(-1)!.records.push(record);
-    else competing.push({ records: [record], owners: exclusive });
+    else competing.push({ records: [record], choices });
+    checkSearchSize();
     previousKey = key;
-  }
-  // Bound synchronous browser work before searching, not after returning a
-  // plausible partial result. Untrusted/custom packs may have exponentially
-  // many distinct competing signatures. Callers already handle domain errors;
-  // an over-budget tree must remain unevaluated instead of claiming a deficit.
-  const evaluationSize =
-    nodes.length +
-    [...candidatesByNode.values()].reduce((sum, list) => sum + list.length, 0);
-  const searchLimit = Math.max(
-    1,
-    Math.min(4096, Math.floor(250_000 / evaluationSize)),
-  );
-  let distributions = 1;
-  for (const group of competing) {
-    let choices = 1;
-    for (let i = 1; i < group.owners.length; i++) {
-      choices = Math.round((choices * (group.records.length + i)) / i);
-      if (choices * distributions > searchLimit)
-        throw new Error("requirement allocation search limit exceeded");
-    }
-    distributions *= choices;
   }
   // The objective is global progress, then compulsory-course progress, then
   // earned/current/planned evidence. Stable IDs and course ordering break ties,
@@ -540,7 +598,13 @@ export function evaluateRequirements(
     }
     collect(result);
     return [
-      rank[result.status],
+      // Dropping uncertain/over-maximum evidence must not turn unresolved
+      // ambiguity into an apparently ordinary missing requirement.
+      result.status === "needs_clarification"
+        ? 1
+        : result.status === "missing"
+          ? 0
+          : rank[result.status],
       -result.remaining,
       -descendants.reduce((sum, r) => sum + r.remainingCourses, 0),
       -result.remainingToEarn,
@@ -548,6 +612,10 @@ export function evaluateRequirements(
         .filter((r) => r.node.kind === "course" || r.node.kind === "project")
         .reduce((sum, r) => sum + rank[r.status], 0),
       descendants.reduce((sum, r) => sum + rank[r.status], 0),
+      -[...permissions.values()].reduce(
+        (sum, choice) => sum + choice.omissions,
+        0,
+      ),
       result.earned,
       result.inProgress,
       result.planned,
@@ -557,7 +625,7 @@ export function evaluateRequirements(
   let bestScore: number[] = [];
   function search(index: number): void {
     if (index === competing.length) {
-      const result = visit(root, new Set(), owners);
+      const result = visit(root, new Set(), permissions);
       const candidateScore = score(result);
       const difference = candidateScore.findIndex((n, i) => n !== bestScore[i]);
       if (
@@ -571,14 +639,14 @@ export function evaluateRequirements(
     }
     const group = competing[index];
     // Enumerate counts, not permutations of equivalent records: m records and
-    // k eligible owners have C(m+k-1,k-1) distributions, instead of k**m.
+    // k permission subsets have C(m+k-1,k-1) distributions, instead of k**m.
     // Different eligibility/credit groups multiply. The preflight rejects
     // excessive work explicitly; every accepted search is exhaustive.
     function distribute(ownerIndex: number, start: number): void {
-      const last = ownerIndex === group.owners.length - 1;
+      const last = ownerIndex === group.choices.length - 1;
       for (let count = group.records.length - start; count >= 0; count--) {
         for (let i = start; i < start + count; i++)
-          owners.set(group.records[i].id, group.owners[ownerIndex]);
+          permissions.set(group.records[i].id, group.choices[ownerIndex]);
         if (last) search(index + 1);
         else distribute(ownerIndex + 1, start + count);
         if (last) break;

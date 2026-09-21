@@ -52,6 +52,205 @@ const evaluate = (
 it("exports a pure requirements evaluator", () =>
   expect(typeof engine.evaluateRequirements).toBe("function"));
 describe("allocation and progress", () => {
+  it.each([
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0],
+  ])(
+    "leaves surplus evidence unused for record permutation %s,%s,%s",
+    (...order) => {
+      const records = [course("A", 3), course("B", 6), course("C", 3)];
+      const children = [
+        { ...pool("first", ["A", "B"], 6), maxCredits: 6 },
+        { ...pool("second", ["B", "C"], 3), maxCredits: 3 },
+      ];
+      for (const siblings of [children, [...children].reverse()]) {
+        const result = evaluate(
+          all(...siblings),
+          order.map((i) => records[i]),
+        );
+        expect(result).toMatchObject({
+          status: "complete",
+          earned: 9,
+          remaining: 0,
+        });
+        expect(
+          Object.fromEntries(
+            result.children.map((c) => [
+              c.node.id,
+              c.allocations.map((a) => a.code),
+            ]),
+          ),
+        ).toEqual({ first: ["B"], second: ["C"] });
+        expect(evaluate(all(...siblings), records.slice(1)).status).toBe(
+          "complete",
+        );
+      }
+    },
+  );
+  it("can omit competing surplus evidence instead of forcing it into either pool", () => {
+    const result = evaluate(
+      all(
+        { ...pool("first", ["A", "B"], 6), maxCredits: 6 },
+        { ...pool("second", ["A", "C"], 3), maxCredits: 3 },
+      ),
+      [course("A", 9), course("B", 6), course("C", 3)],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 9 });
+    expect(result.allocations.map((a) => a.code)).toEqual(["B", "C"]);
+  });
+  it("can omit evidence from a reusable pool while another requirement still needs it", () => {
+    const result = evaluate(
+      all(
+        { ...pool("reusable", ["A", "B"], 6), maxCredits: 6, allowReuse: true },
+        pool("required", ["A"], 3),
+      ),
+      [course("A", 3), course("B", 6)],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 9 });
+    expect(result.children[0].allocations.map((a) => a.code)).toEqual(["B"]);
+    expect(result.children[1].allocations.map((a) => a.code)).toEqual(["A"]);
+  });
+  it("can select a smaller automatic alternative to respect its ancestor maximum", () => {
+    const root = {
+      ...all({
+        ...base,
+        id: "choice",
+        kind: "one_of" as const,
+        children: [
+          { ...pool("larger", ["A"], 9), kind: "course" as const },
+          { ...pool("smaller", ["B"], 6), kind: "course" as const },
+        ],
+      }),
+      minCredits: 6,
+      maxCredits: 6,
+    };
+    expect(evaluate(root, [course("A", 9), course("B", 6)])).toMatchObject({
+      status: "complete",
+      earned: 6,
+    });
+  });
+  it.each(["allocation", "substitution"] as const)(
+    "keeps explicit %s evidence binding when it prevents an exact fit",
+    (kind) => {
+      const result = evaluate(
+        all(
+          { ...pool("first", ["A", "B"], 6), maxCredits: 6 },
+          { ...pool("second", ["B", "C"], 3), maxCredits: 3 },
+        ),
+        [course("A", 3), course("B", 6), course("C", 3)],
+        {
+          overrides: [
+            {
+              kind,
+              courseId: "A",
+              nodeId: "first",
+              reason: "Binding approved evidence",
+            },
+          ],
+        },
+      );
+      expect(result.status).toBe("needs_clarification");
+      expect(result.children[0]).toMatchObject({
+        status: "needs_clarification",
+        earned: 9,
+      });
+      expect(result.children[0].allocations[0]).toMatchObject({
+        courseId: "A",
+        override: { kind, reason: "Binding approved evidence" },
+      });
+    },
+  );
+  it("keeps true maximum and unknown-credit ambiguity instead of hiding all automatic evidence", () => {
+    expect(
+      evaluate({ ...pool("max", ["A", "B"], 6), maxCredits: 6 }, [
+        course("A", 9),
+        course("B", 12),
+      ]),
+    ).toMatchObject({ status: "needs_clarification" });
+    expect(
+      evaluate(pool("unknown", ["A", "B"]), [
+        { ...course("A"), ects: null },
+        { ...course("B"), ects: null },
+      ]),
+    ).toMatchObject({ status: "needs_clarification" });
+  });
+  it("selects a sufficient equivalent while leaving surplus attempts unused", () => {
+    const result = evaluate(
+      all(
+        { ...pool("required", ["A", "B"], 6), kind: "course", maxCredits: 6 },
+        { ...pool("other", ["A", "C"], 3), maxCredits: 3 },
+      ),
+      [course("A", 9), course("B", 6), course("C", 3)],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 9 });
+    expect(result.children[0].allocations.map((a) => a.code)).toEqual(["B"]);
+  });
+  it("finds an exact fractional subset without splitting a record", () => {
+    const result = evaluate(
+      all(
+        { ...pool("first", ["A", "B"], 4.5), maxCredits: 4.5 },
+        { ...pool("second", ["B", "C"], 1.5), maxCredits: 1.5 },
+      ),
+      [course("A", 1.5), course("B", 4.5), course("C", 1.5)],
+    );
+    expect(result).toMatchObject({ status: "complete", earned: 6 });
+    expect(result.allocations.map((a) => [a.code, a.credits])).toEqual([
+      ["B", 4.5],
+      ["C", 1.5],
+    ]);
+  });
+  it("accounts for the unused option in the competing-signature preflight", () => {
+    const records = Array.from({ length: 8 }, (_, i) => course(`C${i}`, i + 1));
+    const codes = records.map((record) => record.code);
+    expect(() =>
+      evaluate(
+        all(pool("first", codes, 18), pool("second", codes, 18)),
+        records,
+      ),
+    ).toThrow("requirement allocation search limit exceeded");
+  });
+  it("bounds subset searches for single-eligible records and for reusable leaves", () => {
+    const records = Array.from({ length: 13 }, (_, i) =>
+      course(`C${i}`, i + 1),
+    );
+    expect(() =>
+      evaluate(
+        pool(
+          "single",
+          records.map((record) => record.code),
+        ),
+        records,
+      ),
+    ).toThrow("requirement allocation search limit exceeded");
+    const repeated = Array.from({ length: 13 }, (_, i) => ({
+      ...pool(`reuse-${i}`),
+      allowReuse: true,
+    }));
+    expect(() =>
+      evaluate(all(...repeated), [course("A"), course("B")]),
+    ).toThrow("requirement allocation search limit exceeded");
+  });
+  it("prunes only dominated omissions for a large disjoint compulsory programme", () => {
+    const records = Array.from({ length: 100 }, (_, i) => course(`C${i}`));
+    const result = evaluate(
+      all(
+        ...records.map((record) => ({
+          ...pool(record.code, [record.code]),
+          kind: "course" as const,
+        })),
+      ),
+      records,
+    );
+    expect(result).toMatchObject({
+      status: "complete",
+      earned: 600,
+      remaining: 0,
+    });
+  });
   it.each([false, true])(
     "resolves competing credit pools independently of sibling order, reverse=%s",
     (reverse) => {
