@@ -246,12 +246,25 @@ describe("candidate generation and hard constraints", () => {
     expect(suggestion.uncertainty).toContain("calendar");
     expect(suggestion.rank[0]).toBe(0);
   });
-  it("never treats non-cancelled meetings outside the offered term as a proven clash repair", () => {
+  it.each([false, true])(
+    "keeps multi-term offerings uncertain outside dated evidence with cancelled=%s",
+    (cancelled) => {
+      const input = setup();
+      input.catalogue[0].course.offering!.terms = ["AS-2026", "SS-2027"];
+      input.catalogue[0].course.offering!.meetings[0].cancelled = cancelled;
+      const suggestion = generateSuggestions(input).suggestions.find(
+        (item) => item.after.semester === "SS-2027",
+      )!;
+      expect(suggestion.uncertainty).toContain("calendar");
+      expect(suggestion.rank[0]).toBe(0);
+    },
+  );
+  it("accepts dated cancellation evidence for the offered semester", () => {
     const input = setup();
-    input.catalogue[0].course.offering!.terms = ["SS-2027"];
+    input.catalogue[0].course.offering!.meetings[0].cancelled = true;
     const suggestion = generateSuggestions(input).suggestions[0];
-    expect(suggestion.uncertainty).toContain("calendar");
-    expect(suggestion.rank[0]).toBe(0);
+    expect(suggestion.uncertainty).not.toContain("calendar");
+    expect(suggestion.rank[0]).toBe(1);
   });
   it("checks cross-semester overlaps at a boundary rather than isolating the semester calendars", () => {
     const input = setup();

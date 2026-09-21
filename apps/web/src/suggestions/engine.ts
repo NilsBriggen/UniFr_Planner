@@ -117,18 +117,7 @@ function calendarState(plan: Plan, preferences: Preferences) {
   const scenario = activeScenario(plan);
   const calendars = scenario.courses
     .filter((c) => c.semester && c.status !== "completed")
-    .map((course) => {
-      const calendar = calendarFor([course], course.semester!, "en");
-      // A term label without any matching active/cancelled occurrence is not
-      // sufficient evidence that an empty calendar is genuinely compatible.
-      if (
-        !calendar.events.length &&
-        !calendar.cancelled.length &&
-        !calendar.unresolved.length
-      )
-        calendar.unresolved.push(course.id);
-      return calendar;
-    });
+    .map((course) => calendarFor([course], course.semester!, "en"));
   const events = calendars.flatMap((c) => c.events);
   const conflicts = detectConflicts(
     events,

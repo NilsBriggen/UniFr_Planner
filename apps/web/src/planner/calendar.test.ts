@@ -7,6 +7,7 @@ import {
   localInstant,
 } from "./calendar";
 import type { Meeting } from "../api/client";
+import type { Selection } from "./domain";
 import ICAL from "ical.js";
 
 const meeting = (
@@ -27,6 +28,133 @@ const meeting = (
 const range = { start: "2026-09-01", end: "2026-12-31" };
 const events = (id: string, meetings: Meeting[]) =>
   expandMeetings(id, id, meetings, range);
+
+const selectedCourse = (meetings: Meeting[]): Selection => ({
+  id: "c",
+  code: "c",
+  titles: { en: "Course" },
+  ects: 6,
+  status: "planned",
+  semester: "SS-2027",
+  pinned: false,
+  offering: {
+    source_id: "1",
+    terms: ["AS-2026", "SS-2027"],
+    meetings,
+    meeting_state: "resolved",
+    source_url: "https://www.unifr.ch",
+    snapshot_id: "snapshot",
+    development_fixture: false,
+  },
+});
+
+describe("selected semester completeness", () => {
+  it.each([
+    ["active meeting in another term", [meeting()]],
+    [
+      "cancelled meeting in another term",
+      [meeting(undefined, undefined, { cancelled: true })],
+    ],
+    [
+      "undated cancellation",
+      [
+        meeting(undefined, undefined, {
+          starts_at: null,
+          ends_at: null,
+          cancelled: true,
+        }),
+      ],
+    ],
+    ["no source meetings", []],
+    [
+      "unknown meeting time",
+      [
+        meeting(undefined, undefined, {
+          starts_at: null,
+          ends_at: null,
+          unresolved: true,
+        }),
+      ],
+    ],
+  ])(
+    "keeps %s unresolved and prevents a complete export",
+    (_name, meetings) => {
+      const result = calendarFor([selectedCourse(meetings)], "SS-2027", "en");
+      expect(result.events).toEqual([]);
+      expect(result.cancelled).toEqual([]);
+      expect(result.unresolved.map((id) => id.split(":")[0])).toEqual(["c"]);
+      expect(() => exportCalendar(result, "2026-09-01T00:00:00Z")).toThrow(
+        /unresolved/,
+      );
+    },
+  );
+
+  it.each([false, true])(
+    "exports complete in-term evidence with cancelled=%s",
+    (cancelled) => {
+      const result = calendarFor(
+        [
+          selectedCourse([
+            meeting("2027-03-01T10:00:00+01:00", "2027-03-01T11:00:00+01:00", {
+              cancelled,
+            }),
+          ]),
+        ],
+        "SS-2027",
+        "en",
+      );
+      expect(result.unresolved).toEqual([]);
+      expect(result.events).toHaveLength(cancelled ? 0 : 1);
+      expect(result.cancelled).toHaveLength(cancelled ? 1 : 0);
+      const exported = new ICAL.Component(
+        ICAL.parse(exportCalendar(result, "2026-09-01T00:00:00Z")),
+      ).getAllSubcomponents("vevent");
+      expect(exported).toHaveLength(1);
+      expect(exported[0].getFirstPropertyValue("status")).toBe(
+        cancelled ? "CANCELLED" : "CONFIRMED",
+      );
+      expect(exported[0].getFirstPropertyValue("dtstart")?.toString()).toBe(
+        "2027-03-01T09:00:00Z",
+      );
+    },
+  );
+
+  it("does not hide one missing course behind another course's dated meeting", () => {
+    const known = {
+      ...selectedCourse([
+        meeting("2027-03-01T10:00:00+01:00", "2027-03-01T11:00:00+01:00"),
+      ]),
+      id: "known",
+    };
+    const result = calendarFor(
+      [known, selectedCourse([meeting()])],
+      "SS-2027",
+      "en",
+    );
+    expect(result.events).toHaveLength(1);
+    expect(result.unresolved).toEqual(["c"]);
+    expect(() => exportCalendar(result, "2026-09-01T00:00:00Z")).toThrow(
+      /unresolved/,
+    );
+  });
+
+  it("does not require meetings for completed or explicitly unscheduled selections", () => {
+    const course = selectedCourse([]);
+    const result = calendarFor(
+      [
+        { ...course, status: "completed" },
+        { ...course, id: "unscheduled", status: "unscheduled", semester: null },
+        { ...course, id: "other-term", semester: "AS-2026" },
+      ],
+      "SS-2027",
+      "en",
+    );
+    expect(result).toEqual({ events: [], cancelled: [], unresolved: [] });
+    expect(exportCalendar(result, "2026-09-01T00:00:00Z")).toContain(
+      "END:VCALENDAR",
+    );
+  });
+});
 
 describe("actual-date calendar", () => {
   it.each([

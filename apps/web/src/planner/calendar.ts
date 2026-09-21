@@ -378,6 +378,15 @@ export function calendarFor(
       course.offering.meetings,
       termRange(term),
     );
+    // A term label alone cannot establish a complete calendar. The source
+    // model has no explicit "no meetings required" evidence; require an
+    // active or cancelled occurrence in this term, or retain uncertainty.
+    if (
+      !expanded.events.length &&
+      !expanded.cancelled.length &&
+      !expanded.unresolved.length
+    )
+      expanded.unresolved.push(course.id);
     result.events.push(...expanded.events);
     result.cancelled.push(...expanded.cancelled);
     result.unresolved.push(...expanded.unresolved);
