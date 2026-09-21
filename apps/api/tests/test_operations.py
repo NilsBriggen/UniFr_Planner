@@ -18,6 +18,38 @@ def ops():
     return operations
 
 
+@pytest.mark.parametrize("failure", [ValueError, PermissionError, ConnectionError])
+def test_monitor_exception_alerts_even_when_persistence_fails_and_deduplicates(
+    monkeypatch, tmp_path, failure
+):
+    from unifr_api import scheduler
+    from unifr_api.config import Settings
+
+    class ThreePulses:
+        count = 0
+
+        def is_set(self):
+            return self.count == 3
+
+        def wait(self, seconds):
+            self.count += 1
+
+    def fail(*args):
+        raise failure("must-never-disclose-secret")
+
+    sent = []
+    monkeypatch.setattr(scheduler, "monitor", fail)
+    monkeypatch.setattr(scheduler, "put_state", fail)
+    monkeypatch.setattr(
+        scheduler, "send_alert", lambda hook, body: sent.append(body) or "delivered"
+    )
+    scheduler.pulse(None, Settings(operations_dir=tmp_path), ThreePulses())
+    assert sent == [
+        {"event": "monitor_failed", "alerts": ["monitor_failed"], "reason": failure.__name__}
+    ]
+    assert not scheduler.healthy(tmp_path)
+
+
 def test_admin_is_disabled_and_does_not_disclose_state(monkeypatch):
     monkeypatch.delenv("UNIFR_ADMIN_TOKEN", raising=False)
     response = TestClient(app).get("/api/v1/admin/operations")
@@ -132,6 +164,75 @@ def test_monitor_reports_disk_db_and_missing_backup_as_failure():
     )
     assert set(result["alerts"]) == {"disk_low", "database_large", "backup_missing_or_stale"}
     assert result["outcome"] == "failure"
+
+
+@pytest.mark.parametrize("damage", ["checksum", "missing_sidecar", "database"])
+def test_actual_monitor_failure_delivers_to_receiver_without_database(tmp_path, damage):
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from threading import Event, Thread
+    from unifr_api.config import Settings
+    from unifr_api.scheduler import pulse
+
+    stop = Event()
+    received = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            received.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
+            self.send_response(204)
+            self.end_headers()
+            stop.set()
+
+        def log_message(self, *args):
+            pass
+
+    if damage != "database":
+        (tmp_path / "daily").mkdir()
+        (tmp_path / "daily" / "2026-09-21.dump").write_bytes(b"corrupt archive")
+        if damage == "checksum":
+            (tmp_path / "daily" / "2026-09-21.sha256").write_text("incorrect")
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    receiver = Thread(target=server.serve_forever, daemon=True)
+    receiver.start()
+    engine = create_engine(
+        "postgresql+psycopg://unavailable@127.0.0.1:1/unavailable",
+        connect_args={"connect_timeout": 1},
+    )
+    worker = Thread(
+        target=pulse,
+        args=(
+            engine,
+            Settings(
+                backup_dir=tmp_path,
+                operations_dir=tmp_path,
+                alert_hook=f"http://127.0.0.1:{server.server_port}/",
+            ),
+            stop,
+        ),
+        daemon=True,
+    )
+    try:
+        worker.start()
+        worker.join(timeout=5)
+        assert not worker.is_alive()
+        assert len(received) == 1
+        assert received[0]["event"] == "monitor_failed"
+        assert (
+            received[0]["reason"]
+            == {
+                "checksum": "ValueError",
+                "missing_sidecar": "FileNotFoundError",
+                "database": "OperationalError",
+            }[damage]
+        )
+        assert not (tmp_path / "heartbeat.json").exists()
+    finally:
+        stop.set()
+        worker.join(timeout=2)
+        server.shutdown()
+        server.server_close()
+        receiver.join()
+        engine.dispose()
 
 
 def backup_module():

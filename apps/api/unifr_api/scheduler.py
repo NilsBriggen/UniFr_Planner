@@ -61,6 +61,9 @@ def monitor(engine: Engine, settings: Settings) -> dict[str, Any]:
 
 def pulse(engine: Engine, settings: Settings, stop: Event) -> None:
     """Independent heartbeat stays alive during long imports and dies on DB failure."""
+    failure_reason: str | None = None
+    next_failure_alert = 0.0
+    failure_delivery = "disabled"
     while not stop.is_set():
         try:
             result = monitor(engine, settings)
@@ -108,8 +111,27 @@ def pulse(engine: Engine, settings: Settings, stop: Event) -> None:
             temporary = settings.operations_dir / ".heartbeat.json"
             temporary.write_text(json.dumps(at))
             temporary.replace(settings.operations_dir / "heartbeat.json")
+            failure_reason = None
         except Exception as error:
-            event("monitor_failed", reason=type(error).__name__)
+            reason = type(error).__name__
+            event("monitor_failed", reason=reason)
+            # Database/backup failure must not make its own notification depend on
+            # that failed resource. Keep a bounded in-process retry/dedup window;
+            # a restart intentionally attempts a fresh alert.
+            if reason != failure_reason or time.monotonic() >= next_failure_alert:
+                try:
+                    failure_delivery = send_alert(
+                        settings.alert_hook,
+                        {"event": "monitor_failed", "alerts": ["monitor_failed"], "reason": reason},
+                    )
+                except Exception:
+                    failure_delivery = "failed"
+                    event("alert_delivery_failed")
+                failure_reason = reason
+                next_failure_alert = time.monotonic() + (
+                    30 if failure_delivery == "failed" else 300
+                )
+            event("monitor_failure_alert", delivery=failure_delivery)
             try:
                 put_state(
                     engine,
@@ -117,7 +139,8 @@ def pulse(engine: Engine, settings: Settings, stop: Event) -> None:
                     {
                         "outcome": "failure",
                         "alerts": ["monitor_failed"],
-                        "reason": type(error).__name__,
+                        "reason": reason,
+                        "delivery": failure_delivery,
                     },
                 )
             except Exception:

@@ -10,15 +10,22 @@ explicit protected environment file.
 Copy the variable names from `deploy/production.env.example` to a root-owned file outside the
 checkout, such as `/etc/unifr-planner.env`, and set its mode to `0600`. Use the full deployed Git
 commit as `RELEASE_ID`; production images are tagged and labelled with it and their base images are
-digest-pinned. Generate independent high-entropy values for `POSTGRES_PASSWORD` and
-`UNIFR_ADMIN_TOKEN` (at least 32 characters). Do not reuse a student account password or put either
-value in a URL, repository file, shell transcript, or browser storage.
+digest-pinned. Generate independent high-entropy hexadecimal values for `POSTGRES_PASSWORD`,
+`API_DB_PASSWORD`, `SCHEDULER_DB_PASSWORD`, and `UNIFR_ADMIN_TOKEN` (at least 32 characters).
+Hexadecimal passwords can be interpolated safely into the internal connection URLs. Do not reuse
+a student account password or print populated connection URLs or credentials in a shell transcript.
 
 `UNIFR_ACCOUNT_ORIGINS` is a JSON array containing only the exact public HTTPS origin(s).
 `SITE_ADDRESS` is the public hostname handled by Caddy, without `http://`; `TLS_EMAIL` is the ACME
-contact. Ports 80 and 443 must reach the host for public certificate issuance. The API deliberately
-does not trust proxy headers; Caddy removes the standardized `Forwarded` header and supplies its
-own `X-Forwarded-*` values. Student sessions remain secure, HTTP-only, strict same-site cookies.
+contact. Ports 80 and 443 must reach the host for public certificate issuance. Caddy overwrites
+`X-Forwarded-For` with its socket peer and `X-Forwarded-Proto` with the actual scheme and removes
+`Forwarded`. Uvicorn trusts only Caddy's fixed `172.30.85.2` address on the dedicated internal
+`172.30.85.0/29` proxy network. Only Caddy and API attach to that network; Caddy uses its unique
+`api-proxy` alias. API has no published port. Other peers' forwarding headers are ignored, keeping
+account IP limits distinct without allowing header spoofing. Reserve that subnet on the host; if
+it conflicts, change the subnet, Caddy address, and exact Uvicorn trust address together and rerun
+the boundary tests. Do not put another proxy in front without separately designing its trust
+boundary. Student sessions remain secure, HTTP-only, strict same-site cookies.
 
 Validate and deploy the exact checkout:
 
@@ -33,6 +40,18 @@ All long-running application containers use a read-only root filesystem, drop Li
 and run non-root. The one-shot volume initializer runs as root only to assign the persistent Caddy,
 backup, and scheduler volumes to uid 10001. PostgreSQL uses its official image user. Logs use the
 bounded Docker JSON driver (three 10 MiB files per service).
+
+The PostgreSQL bootstrap credential exists only in the database and one-shot `migrate` service.
+That service runs Alembic as the object owner and then provisions the two independent runtime
+roles transactionally and idempotently. `unifr_api` can read application tables and perform DML
+on account tables. `unifr_scheduler` can read all application tables for complete backups and
+perform DML on catalogue/operations tables. Neither role owns objects, inherits roles, creates
+databases/roles/tables/temporary tables, bypasses RLS, or replicates. Schema CREATE and database
+PUBLIC privileges are revoked. Existing privileged or object-owning runtime names fail closed
+instead of being silently repurposed. Re-running `migrate` refreshes explicit grants after each
+migration and safely rotates runtime passwords; recreate runtime containers after changing them.
+Runtime services never receive the bootstrap password. Keep that protected environment file and
+its credentials available for disaster recovery; database archives omit role definitions.
 
 ## Schedule and fail-closed catalogue behavior
 
@@ -88,16 +107,22 @@ Restore into a new, empty database rather than overwriting the live database in 
      exec db sh -c 'createdb -U "$POSTGRES_USER" -O "$POSTGRES_USER" unifr_recovery'
    ```
 
-3. Restore through the scheduler image, whose PostgreSQL client matches the server major version:
+3. Restore through the migration service with the bootstrap credential. Runtime roles deliberately
+   cannot create the restored objects. Its backup volume is mounted read-only:
 
    ```sh
    docker compose --env-file /etc/unifr-planner-recovery.env -f compose.production.yaml \
-     run --rm --no-deps scheduler python -m unifr_api.backups restore \
+     run --rm --no-deps migrate python -m unifr_api.backups restore \
      --archive /backups/daily/YYYY-MM-DD.dump
    ```
 
-4. Compare catalogue head/counts and account-plan counts with the source, then switch the protected
-   production env file to the recovery database and recreate API/scheduler only after approval.
+4. Run `docker compose --env-file /etc/unifr-planner-recovery.env -f compose.production.yaml
+   run --rm --no-deps migrate` to apply any pending migration and grant the runtime roles access
+   to restored objects (the archive intentionally excludes ACLs).
+5. Compare canonical content digests and identities of the account plans and published catalogue,
+   then reopen the recovered plan through the application connected to the recovered database.
+   Switch the protected production env file to the recovery database and recreate API/scheduler
+   after checking recovery; preserve the source database until this succeeds.
 
 The restore command verifies both checksum and archive contents and refuses any target containing a
 table, view, materialized view, sequence, foreign table, or partition. Keep the original database
@@ -127,6 +152,13 @@ accepted only for loopback positive controls. A delivery failure is recorded and
 condition remains actionable. With no hook, alerts remain visible as `disabled` in the protected
 status rather than silently disappearing. Test a new recipient with synthetic payloads before using
 it for production; never point local acceptance at a real recipient.
+
+Monitor exceptions (including unreadable/corrupt backups and unavailable PostgreSQL) attempt the
+hook before persisting their failure record. Only the exception class is transmitted. Each
+delivery has a 10-second timeout; failed exception deliveries retry at most every 30 seconds,
+and delivered/disabled failures deduplicate for five minutes in memory. A changed failure class,
+recovery followed by failure, or process restart triggers a fresh attempt. Heartbeat is not
+refreshed on failure, so container health also becomes unhealthy if the database stays unavailable.
 
 ## Verification boundary
 

@@ -10,7 +10,6 @@ x-api: &api
   security_opt: [no-new-privileges:true]
   tmpfs: [/tmp]
   environment: &environment
-    UNIFR_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-unifr}:${POSTGRES_PASSWORD:?Set PostgreSQL password}@db:5432/${POSTGRES_DB:-unifr}
     UNIFR_ACCOUNT_ORIGINS: ${UNIFR_ACCOUNT_ORIGINS:?Set exact HTTPS origins JSON array}
     UNIFR_ADMIN_TOKEN: ${UNIFR_ADMIN_TOKEN:?Set separate random operator token}
     UNIFR_BACKUP_DIR: /backups
@@ -56,11 +55,25 @@ services:
       ]
   migrate:
     <<: *api
-    command: [alembic, upgrade, head]
+    command: [python, -m, unifr_api.provision]
+    environment:
+      UNIFR_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-unifr}:${POSTGRES_PASSWORD:?Set PostgreSQL password}@db:5432/${POSTGRES_DB:-unifr}
+      API_DB_PASSWORD: ${API_DB_PASSWORD:?Set independent API database password}
+      SCHEDULER_DB_PASSWORD: ${SCHEDULER_DB_PASSWORD:?Set independent scheduler database password}
+    volumes: [backups:/backups:ro]
     depends_on:
       db: { condition: service_healthy }
   api:
     <<: *api
+    environment:
+      <<: *environment
+      UNIFR_DATABASE_URL: postgresql+psycopg://unifr_api:${API_DB_PASSWORD:?Set independent API database password}@db:5432/${POSTGRES_DB:-unifr}
+    command: ["uvicorn", "unifr_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log", "--proxy-headers", "--forwarded-allow-ips", "172.30.85.2"]
+    networks:
+      default:
+      proxy:
+        aliases: [api-proxy]
+        ipv4_address: 172.30.85.3
     restart: unless-stopped
     depends_on:
       migrate: { condition: service_completed_successfully }
@@ -77,6 +90,9 @@ services:
       retries: 10
   scheduler:
     <<: *api
+    environment:
+      <<: *environment
+      UNIFR_DATABASE_URL: postgresql+psycopg://unifr_scheduler:${SCHEDULER_DB_PASSWORD:?Set independent scheduler database password}@db:5432/${POSTGRES_DB:-unifr}
     restart: unless-stopped
     command: [python, -m, unifr_api.scheduler]
     volumes: [backups:/backups, operations:/operations]
@@ -117,6 +133,10 @@ services:
       dockerfile: deploy/Caddy.Dockerfile
       args: { RELEASE_ID: "${RELEASE_ID:?Set immutable release revision}" }
     restart: unless-stopped
+    networks:
+      default:
+      proxy:
+        ipv4_address: 172.30.85.2
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
@@ -145,6 +165,11 @@ services:
       timeout: 5s
       retries: 5
     logging: *logging
+networks:
+  proxy:
+    internal: true
+    ipam:
+      config: [{subnet: 172.30.85.0/29}]
 volumes:
   postgres-data:
   backups:
