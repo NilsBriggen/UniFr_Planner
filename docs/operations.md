@@ -162,6 +162,38 @@ refreshed on failure, so container health also becomes unhealthy if the database
 
 ## Verification boundary
 
+For the **disposable local fixture stack**, use the guarded deployed browser runner:
+
+```bash
+python scripts/run-deployed-acceptance.py /absolute/path/to/local-acceptance.env --check-only
+python scripts/run-deployed-acceptance.py /absolute/path/to/local-acceptance.env
+python scripts/test_deployed_acceptance.py
+```
+
+The environment file must select `HTTP_BIND=127.0.0.1`, `HTTP_PORT=4173`,
+`HTTPS_BIND=127.0.0.1`, `SITE_ADDRESS=http://127.0.0.1:8080`, and
+`UNIFR_ACCOUNT_ORIGINS=["http://127.0.0.1:4173"]`. Keep its administrator token private;
+the runner reads it through Compose without printing it. All running API, web, and Caddy images
+must identify the current Git HEAD. The runner overrides `RELEASE_ID` with that HEAD for inspection
+and execution; it never builds or recreates services.
+
+Before any counter reset, the runner verifies a local Docker daemon, loopback-only published
+Caddy ports, the actual containers' Compose project/repository/file labels, matching live
+configuration, and a routed available catalogue with `development_fixture=true`. It refuses
+unverified targets, redirects, non-fixture catalogues, and public deployments. `--check-only`
+performs those checks without resetting counters or starting browser tests. Run it exclusively
+against disposable acceptance data and without another acceptance process sharing the stack.
+
+The complete suite currently performs 34 credential operations from Docker's shared client address,
+exceeding the unchanged security limit of 30 per address per 15 minutes. Therefore the runner
+executes every desktop test and then every phone test with two workers and no retries. Before
+each project, it rechecks the target and deletes **only `account_rate_limit` rows**, reporting the
+row count. Account, plan, and catalogue records are not reset. This preserves real rate limits,
+proxy trust, and browser assertions while isolating the two projects' credential budgets. A
+failed check or browser test stops the run with a nonzero exit status; no later reset masks the
+failure. Artifacts are kept separately by project in a printed temporary directory, or at the
+explicit `--output /absolute/path` destination. Both projects must pass for acceptance.
+
 Local acceptance can prove image builds, health/readiness, Caddy routing, secure headers, scheduler
 records, a real PostgreSQL dump/clean restore, browser workflows, structured logs, and a loopback
 alert receiver. It does not prove public DNS propagation, firewall/NAT reachability, ACME issuance,
