@@ -1,6 +1,6 @@
 # Explainable suggestions
 
-Open **Suggestions** from the degree plan. The current live catalogue is unavailable: the interface explicitly offers a separate fictional example, with codes prefixed `DEMO-`, rather than treating a real plan as having no alternatives. Example plans are created only by the student's button action, with new identifiers. Other plans show **no candidate data**. A known candidate set blocked by pins or prerequisites shows **no safe suggestion**, with exclusion reasons.
+Open **Suggestions** from the degree plan. Real plans load every page of one consistent published catalogue snapshot and adapt its offerings into candidates. A changing, incomplete, duplicate or unavailable catalogue fails closed instead of mixing snapshots. The separate fictional example remains opt-in, uses codes prefixed `DEMO-`, and is never presented as current UniFr data. Example plans are created only by the student's button action, with new identifiers. A known candidate set blocked by pins or prerequisites shows **no safe suggestion**, with exclusion reasons.
 
 ## Pure engine contract
 
@@ -33,8 +33,12 @@ Opening or closing a comparison is read-only. Applying creates a revision holdin
 
 Both apply and undo compare the current stored plan to the expected revision inside the write transaction. Stale comparisons, later edits and other-tab changes cannot be overwritten. An unavailable browser store or failed transaction leaves the prior saved plan intact and displays an error. The ordinary guest-plan save workflow remains unchanged.
 
+## Published-catalogue adapter
+
+The browser adapter retains each offering's snapshot, source ID, source URL, terms, meetings, languages and ECTS. It treats only an explicit source statement equivalent to “no prerequisites” as an empty prerequisite list; absent or free-form prerequisite prose remains unknown and excludes the candidate. The catalogue does not currently publish structured equivalence relationships, so the adapter supplies none rather than inferring them from titles or prose. Source changes are detected from stable course/offering identities and normalized scheduling content. They flag affected choices without silently replacing the student's saved offering.
+
 ## Verification and boundaries
 
 Engine tests cover a real dated collision repair, all hard constraints, source-supported routes, unknown calendars, requirement loss and overrides, all ranking criteria and deterministic ties, exact state restoration, and stale guards. Storage tests cover atomic revision persistence, reload and concurrent-tab protection. Playwright exercises German, French and English at desktop/phone widths, keyboard comparison/apply, warning acknowledgment, reload/Undo, absence-of-data versus all-pinned states, and Axe WCAG checks.
 
-No live source claims, official recognition decisions, accounts, synchronization or operations are introduced. Live ingestion will need an adapter supplying verified equivalence, prerequisite and offering evidence before this engine can suggest changes for real plans.
+The adapter uses only the application's already-published, validated snapshot; it does not turn rejected or partial live ingestion into candidate data. Suggestions can be applied to guest or synchronized account plans, but they do not make official recognition decisions. Candidates with unknown prerequisites, equivalence, dates or credits remain excluded or visibly uncertain. Broader suggestions require additional structured source evidence rather than inference.

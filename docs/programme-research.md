@@ -99,14 +99,21 @@ covered by completed/current/planned work; `remainingToEarn` excludes only
 completed work. Unscheduled courses never contribute. Unknown credits and
 excesses over explicit bounds produce clarification rather than completion.
 
-Allocation order is deterministic: completed before current before planned,
-then code order; compulsory course/project leaves reserve their eligible course
-before broader pools. Explicit user allocations take priority. Whole courses
-are allocated once across the selected tree unless a rule permits reuse; even
-then ancestor credit totals deduplicate them. Alternative branches are evaluated
-independently; only one branch contributes. General overlapping elective pools
-use declared order, not a global optimisation solver; personal allocations can
-resolve a contested eligible course. This is not a recommendations engine.
+Allocation is deterministic: explicit user allocations take priority, then
+completed before current before planned and code order break equivalent choices.
+Whole courses are allocated once across the selected tree unless a rule permits
+reuse; even then ancestor credit totals deduplicate them. Alternative branches
+are evaluated independently and only one branch contributes. When automatic
+course eligibility overlaps between sibling leaves or pools, the engine resolves
+their ownership together rather than letting presentation order consume a course
+needed by a narrower rule. Records with identical eligibility, status and credit
+evidence are grouped so common symmetric pools remain small. To avoid freezing
+the browser on an unusually ambiguous custom pack, exact allocation is accepted
+only when its deterministic preflight is at most 4,096 distributions and 250,000
+estimated node/candidate visits; larger searches fail visibly with
+`requirement allocation search limit exceeded` and never return a partial result.
+Personal allocations can disambiguate such a pack. This is still evaluation, not
+a recommendations engine.
 
 Published templates are recursively frozen copies. Exact `(code, version,
 cohort)` resolution is required; no latest-version fallback exists. Corrections

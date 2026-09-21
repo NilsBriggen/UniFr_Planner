@@ -75,23 +75,27 @@ periods, including information that cannot currently be scheduled.
 
 ## Persistence and editing
 
-Database `unifr-planner`, version 2, has `plans` (key path `id`) and `preferences`
-(key `activeId`). Version 1 contains only the `plans` store; the upgrade adds
-preferences without deleting old records. Reading validates every record and
-performs the documented JSON migration. Each unreadable or oversized record is
-reported and left untouched; the other valid plans still load. A visible warning
-persists while valid plans remain usable, and an unreadable active selection
-falls back to a valid plan. No record is automatically repaired or deleted.
-Stored legacy records are rewritten as v1 JSON
-only on an explicit subsequent save.
+Database `unifr-planner`, version 3, has `plans` (key path `id`), `preferences`
+(key `activeId`) and `revisions` (keyed by plan ID). Version 1 contains only the
+`plans` store; version 2 adds preferences; version 3 adds the latest reversible
+suggestion revision. Each upgrade preserves existing records. Reading validates
+every plan and both sides of every stored revision and performs the documented
+JSON migration. Each unreadable or oversized record is reported and left
+untouched; the other valid plans still load. A visible warning persists while
+valid plans remain usable, and an unreadable active selection falls back to a
+valid plan. No record is automatically repaired or deleted. Stored legacy plans
+are rewritten as v1 JSON only on an explicit subsequent save.
 
-Plan and active-plan selection are saved in one IndexedDB transaction. The UI
-reports success only after transaction completion, and retains the previous
-committed state after failure. Controls are disabled during writes. Scenario
-duplication makes an independent validated copy of courses, pins and unavailable
-periods. All allocation/status/pin controls use native keyboard/touch controls;
-no drag interaction is required. Plans should be edited in one tab at a time;
-there is no cross-tab merging or conflict-resolution protocol in this version.
+Plan and active-plan selection are saved in one IndexedDB transaction. Applying
+or undoing a suggestion atomically updates the plan, active selection and latest
+revision after comparing the stored plan with the expected before/after value;
+a stale other-tab edit is rejected instead of overwritten. The UI reports
+success only after transaction completion, and retains the previous committed
+state after failure. Controls are disabled during writes. Scenario duplication
+makes an independent validated copy of courses, pins and unavailable periods.
+All allocation/status/pin controls use native keyboard/touch controls; no drag
+interaction is required. Ordinary edits still have no automatic cross-tab merge;
+the stale guard applies specifically to suggestion apply/undo transactions.
 
 Completed/current/planned/unscheduled ECTS remain separate. Unknown ECTS are
 counted and never treated as known zero. Workload is an estimate of 25–30 hours
