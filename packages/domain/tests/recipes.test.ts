@@ -868,3 +868,37 @@ it("does not broaden replacement codes from original authoritative catalogue ass
     codes(resolveRecipeEligibility(composeDegree(r, selection()), courses)),
   ).toEqual(["X"]);
 });
+it("does not display or apply a rule targeting an unselected component variant", () => {
+  const r = registry();
+  r.programmes[1].variants.push({
+    ...r.programmes[1].variants[0],
+    id: "30",
+    ects: 30,
+    requirements: pool("small", ["B"], 30),
+  });
+  r.combinationRules = [
+    rule([
+      {
+        kind: "replace_requirements",
+        component: "b",
+        variantId: "30",
+        requirements: pool("replacement", ["C"], 30),
+      },
+    ]),
+  ];
+  r.combinationRules[0].reviewStatus = "needs_clarification";
+  const result = composeDegree(r, selection());
+  expect(result.appliedRules).toEqual([]);
+  expect(
+    result.issues.some((issue) => issue.includes("combination rule")),
+  ).toBe(false);
+  r.combinationRules[0].actions = [
+    {
+      kind: "replace_requirements",
+      component: "b",
+      variantId: "60",
+      requirements: pool("replacement", ["C"], 60),
+    },
+  ];
+  expect(composeDegree(r, selection()).appliedRules).toEqual(["r"]);
+});

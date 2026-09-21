@@ -147,7 +147,7 @@ for (const language of ["de", "fr", "en"] as const) {
     const serverPlan = initial.plans[0];
 
     const other = await browser.newContext({
-      baseURL: "http://127.0.0.1:4173",
+      baseURL: testInfo.project.use.baseURL,
     });
     try {
       const second = await other.newPage();

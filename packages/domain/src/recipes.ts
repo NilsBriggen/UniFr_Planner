@@ -750,6 +750,15 @@ export function composeDegree(
       (!r.when.majorVariant || main?.variant.id === r.when.majorVariant) &&
       (r.when.components ?? []).every((id) =>
         components.some((c) => c.programme.id === id),
+      ) &&
+      r.actions.some(
+        (action) =>
+          !("component" in action) ||
+          components.some(
+            (c) =>
+              c.programme.id === action.component &&
+              (!action.variantId || c.variant.id === action.variantId),
+          ),
       )
     );
   });

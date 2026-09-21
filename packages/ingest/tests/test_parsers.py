@@ -192,7 +192,7 @@ def test_truncated_rich_text_formatting_does_not_hide_complete_course_sections(t
     fragment = f'<{tag} lang="EN-US" style="font-family: &quot;Verdana&quot;,&qu'
     raw = original.replace(
         "</tbody>",
-        '<tr><td>Bibliography</td><td>Reading list ' + fragment + '</td></tr></tbody>',
+        "<tr><td>Bibliography</td><td>Reading list " + fragment + "</td></tr></tbody>",
         1,
     )
     before, after = p.parse_detail(original, entry), p.parse_detail(raw, entry)
@@ -214,7 +214,7 @@ def test_rich_text_recovery_does_not_repair_missing_course_structure(damage):
     if damage == "table-end":
         raw = raw.replace("</table>", "", 1)
     elif damage == "document-end":
-        raw = raw[:raw.index("</article>")]
+        raw = raw[: raw.index("</article>")]
     else:
         raw = raw.replace('<span style="broken', '<table style="broken')
     with pytest.raises(ValueError, match="[Ii]ncomplete detail"):

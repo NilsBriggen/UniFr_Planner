@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import { accountMessages } from "../src/accounts/messages";
 import { plannerMessages } from "../src/planner/messages";
+import { recipeMessages } from "../src/requirements/recipeMessages";
 import { requirementMessages } from "../src/requirements/messages";
 import { suggestionMessages } from "../src/suggestions/messages";
 import { activeScenario, type Plan } from "../src/planner/domain";
@@ -46,6 +47,7 @@ async function createStudentPlan(page: Page) {
     }),
   ).toBeVisible();
   await page.goto("/requirements");
+  await page.getByText(recipeMessages.en.legacy, { exact: true }).click();
   await page.getByLabel(r.cohort, { exact: true }).selectOption("2026");
   for (const code of ["CS-120", "BI-CS-60"]) {
     await page
