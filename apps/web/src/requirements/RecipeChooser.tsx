@@ -1,0 +1,462 @@
+import {
+  inheritedStructures,
+  majorProgrammes,
+  slotOptions,
+} from "./recipeOptions";
+import { useState } from "react";
+import { recipeRegistry } from "../../../../packages/domain/src/registry";
+import {
+  composeDegree,
+  type SelectedComponent,
+  type ResolvedDegree,
+} from "../../../../packages/domain/src/recipes";
+import { Button } from "../components";
+import type { Language } from "../i18n";
+import type { Plan } from "../planner/domain";
+import { usePlans } from "../planner/context";
+import { bindDegreeSelection } from "./adapter";
+import { recipeMessages } from "./recipeMessages";
+
+export default function RecipeChooser({
+  plan,
+  language,
+}: {
+  plan: Plan;
+  language: Language;
+}) {
+  const t = recipeMessages[language],
+    { busy, save } = usePlans();
+  const original = plan.degreeSelection?.components.find(
+    (c) => c.slotId === "major",
+  );
+  const originalProgramme = recipeRegistry.programmes.find(
+    (p) => p.id === original?.programmeId,
+  );
+  const [degree, setDegree] = useState(originalProgramme?.degree ?? "bachelor");
+  const [faculty, setFaculty] = useState(originalProgramme?.faculty ?? "");
+  const [main, setMain] = useState(original?.programmeId ?? "");
+  const [variant, setVariant] = useState(original?.variantId ?? "");
+  const [structure, setStructure] = useState(
+    plan.degreeSelection?.structureId ?? "",
+  );
+  const [semester, setSemester] = useState(
+    original?.startSemester ?? plan.semesters[0],
+  );
+  const [choices, setChoices] = useState<Record<string, SelectedComponent>>(
+    Object.fromEntries(
+      plan.degreeSelection?.components.map((c) => [c.slotId, c]) ?? [],
+    ),
+  );
+  const [preview, setPreview] = useState<ResolvedDegree | null>(() => {
+    try {
+      return plan.degreeSelection
+        ? composeDegree(recipeRegistry, plan.degreeSelection)
+        : null;
+    } catch {
+      return null;
+    }
+  });
+  const [error, setError] = useState("");
+  const major = recipeRegistry.programmes.find((p) => p.id === main);
+  const track = major?.variants.find((v) => v.id === variant);
+  const structures = major && track ? inheritedStructures(major, track) : [];
+  const layout = recipeRegistry.structures.find((s) => s.id === structure);
+  const hasEvidence = plan.scenarios.some(
+    (s) =>
+      s.requirementEvidence &&
+      (s.requirementEvidence.overrides.length ||
+        s.requirementEvidence.completedChecklist.length),
+  );
+  const changed =
+    !preview ||
+    JSON.stringify(preview.selection) !== JSON.stringify(plan.degreeSelection);
+  function invalidate() {
+    setPreview(null);
+    setError("");
+  }
+  function resetComponents() {
+    setChoices({});
+    setStructure("");
+    invalidate();
+  }
+  async function commit() {
+    if (!preview) return;
+    try {
+      if (!(await save(bindDegreeSelection(plan, preview.selection))))
+        setError(t.failed);
+    } catch (e) {
+      setError(`${t.failed} ${e instanceof Error ? e.message : ""}`);
+    }
+  }
+  return (
+    <section aria-label={t.title} className="recipe-chooser">
+      <h2>{t.title}</h2>
+      {plan.requirements && <p>{t.migration}</p>}
+      <form
+        className="planner-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          try {
+            const majorSlot = layout?.slots.find((s) => s.role === "major");
+            if (!majorSlot) throw new Error(t.error);
+            const selection = {
+              structureId: structure,
+              components: [
+                {
+                  slotId: majorSlot.id,
+                  programmeId: main,
+                  variantId: variant,
+                  startSemester: semester,
+                  recipeVersion: recipeRegistry.edition,
+                },
+                ...Object.values(choices).filter(
+                  (c) => c.slotId !== majorSlot.id,
+                ),
+              ],
+            };
+            setPreview(composeDegree(recipeRegistry, selection));
+            setError("");
+          } catch (e) {
+            setPreview(null);
+            setError(`${t.error} ${e instanceof Error ? e.message : ""}`);
+          }
+        }}
+      >
+        <label>
+          {t.degree}
+          <select
+            aria-label={t.degree}
+            value={degree}
+            disabled={busy}
+            onChange={(e) => {
+              setDegree(e.target.value as "bachelor" | "master");
+              setMain("");
+              setVariant("");
+              resetComponents();
+            }}
+          >
+            <option value="bachelor">Bachelor</option>
+            <option value="master">Master</option>
+          </select>
+        </label>
+        <label>
+          {t.faculty}
+          <select
+            aria-label={t.faculty}
+            value={faculty}
+            disabled={busy}
+            onChange={(e) => {
+              setFaculty(e.target.value);
+              setMain("");
+              setVariant("");
+              resetComponents();
+            }}
+          >
+            <option value="">{t.choose}</option>
+            {Object.entries(t.faculties).map(([key, label]) => (
+              <option key={key} value={key}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          {t.main}
+          <select
+            aria-label={t.main}
+            value={main}
+            required
+            disabled={busy}
+            onChange={(e) => {
+              setMain(e.target.value);
+              setVariant("");
+              resetComponents();
+            }}
+          >
+            <option value="">{t.choose}</option>
+            {majorProgrammes(degree, faculty).map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.titles?.[language] ?? p.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        {major && (
+          <label>
+            {t.variant}
+            <select
+              aria-label={t.variant}
+              value={variant}
+              required
+              disabled={busy}
+              onChange={(e) => {
+                setVariant(e.target.value);
+                resetComponents();
+              }}
+            >
+              <option value="">{t.choose}</option>
+              {major.variants
+                .filter((v) => v.role === "major")
+                .map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.ects} ECTS · {v.id}
+                  </option>
+                ))}
+            </select>
+          </label>
+        )}
+        {track && (
+          <label>
+            {t.structure}
+            <select
+              aria-label={t.structure}
+              value={structure}
+              required
+              disabled={busy}
+              onChange={(e) => {
+                setStructure(e.target.value);
+                setChoices({});
+                invalidate();
+              }}
+            >
+              <option value="">{t.choose}</option>
+              {structures.map((id) => {
+                const s = recipeRegistry.structures.find((s) => s.id === id)!;
+                return (
+                  <option key={id} value={id}>
+                    {s.slots
+                      .map(
+                        (slot) =>
+                          `${t[slot.role]} ${slot.ects} ECTS${slot.optional ? ` (${t.optional})` : ""}${slot.countsTowardDegree === false ? ` (${t.additional})` : ""}`,
+                      )
+                      .join(" + ")}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+        )}
+        <label>
+          {t.major} · {t.semester}
+          <input
+            aria-label={`${t.major} · ${t.semester}`}
+            value={semester}
+            pattern="(AS|SS)-20[0-9]{2}"
+            maxLength={7}
+            required
+            disabled={busy}
+            onChange={(e) => {
+              setSemester(e.target.value);
+              invalidate();
+            }}
+            placeholder="AS-2026"
+          />
+        </label>
+        {major &&
+          layout?.slots
+            .filter((s) => s.role !== "major")
+            .map((slot) => {
+              const label = `${t[slot.role]} · ${slot.ects} ECTS${layout.slots.filter((s) => s.role === slot.role).length > 1 ? ` · ${slot.id}` : ""}`;
+              const selected = choices[slot.id];
+              return (
+                <fieldset key={slot.id}>
+                  <legend>
+                    {label} · {slot.optional ? t.optional : t.required}
+                    {slot.countsTowardDegree === false
+                      ? ` · ${t.additional}`
+                      : ""}
+                  </legend>
+                  <label>
+                    {label}
+                    <select
+                      aria-label={label}
+                      value={
+                        selected
+                          ? `${selected.programmeId}/${selected.variantId}`
+                          : ""
+                      }
+                      required={!slot.optional}
+                      disabled={busy}
+                      onChange={(e) => {
+                        const [programmeId, variantId] =
+                          e.target.value.split("/");
+                        setChoices((current) => {
+                          const next = { ...current };
+                          if (!programmeId) delete next[slot.id];
+                          else
+                            next[slot.id] = {
+                              slotId: slot.id,
+                              programmeId,
+                              variantId,
+                              startSemester:
+                                current[slot.id]?.startSemester ?? semester,
+                              recipeVersion: recipeRegistry.edition,
+                            };
+                          return next;
+                        });
+                        invalidate();
+                      }}
+                    >
+                      <option value="">
+                        {slot.optional ? t.none : t.choose}
+                      </option>
+                      {slotOptions(slot, major).map(
+                        ({ programme: p, variant: v }) => (
+                          <option
+                            key={`${p.id}/${v.id}`}
+                            value={`${p.id}/${v.id}`}
+                          >
+                            {p.titles?.[language] ?? p.title} · {v.ects} ECTS
+                            {!major.combinationPolicy ||
+                            major.combinationPolicy === "unknown"
+                              ? ` · ${t.unknown}`
+                              : ""}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+                  {selected && (
+                    <label>
+                      {label} · {t.semester}
+                      <input
+                        aria-label={`${label} · ${t.semester}`}
+                        value={selected.startSemester}
+                        required
+                        pattern="(AS|SS)-20[0-9]{2}"
+                        maxLength={7}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setChoices({
+                            ...choices,
+                            [slot.id]: {
+                              ...selected,
+                              startSemester: e.target.value,
+                            },
+                          });
+                          invalidate();
+                        }}
+                      />
+                    </label>
+                  )}
+                </fieldset>
+              );
+            })}
+        <Button type="submit" disabled={busy || !layout}>
+          {t.preview}
+        </Button>
+      </form>
+      {error && <p role="alert">{error}</p>}
+      {preview && (
+        <section aria-label={t.preview}>
+          <h3>{t.preview}</h3>
+          <p>
+            {t.counted}: {preview.targetEcts} ECTS
+          </p>
+          <p>
+            {t.additional}: {preview.additionalEcts} ECTS
+          </p>
+          {preview.status === "prohibited" ? (
+            <p role="alert">{t.prohibited}</p>
+          ) : (
+            preview.status === "needs_clarification" && <p>{t.incomplete}</p>
+          )}
+          <h4>{t.pinned}</h4>
+          <ul>
+            {preview.selection.components.map((c) => {
+              const p = recipeRegistry.programmes.find(
+                (p) => p.id === c.programmeId,
+              )!;
+              return (
+                <li key={c.slotId}>
+                  {p.titles?.[language] ?? p.title} · {c.variantId} ·{" "}
+                  {c.startSemester} · {c.recipeVersion}
+                </li>
+              );
+            })}
+          </ul>
+          {preview.appliedRules.length > 0 && (
+            <>
+              <h4>{t.rules}</h4>
+              <ul>
+                {preview.appliedRules.map((id) => (
+                  <li key={id}>
+                    {recipeRegistry.combinationRules.find((r) => r.id === id)
+                      ?.explanation ?? id}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {preview.issues.length > 0 && (
+            <>
+              <h4>{t.gaps}</h4>
+              <ul>
+                {preview.issues.map((issue, i) => (
+                  <li key={i}>{issue}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          <details>
+            <summary>{t.sources}</summary>
+            <ul>
+              {[
+                ...new Set(
+                  preview.selection.components.flatMap(
+                    (c) =>
+                      recipeRegistry.programmes.find(
+                        (p) => p.id === c.programmeId,
+                      )?.sourceIds ?? [],
+                  ),
+                ),
+              ].map((id) => {
+                const source = recipeRegistry.sources.find((s) => s.id === id);
+                return source ? (
+                  <li key={id}>
+                    <a href={source.url}>{source.title}</a>
+                  </li>
+                ) : null;
+              })}
+            </ul>
+          </details>
+          {hasEvidence && changed && (
+            <>
+              <p>{t.evidence}</p>
+              <Button
+                disabled={busy}
+                onClick={async () => {
+                  if (
+                    !(await save({
+                      ...plan,
+                      scenarios: plan.scenarios.map((s) => ({
+                        ...s,
+                        requirementEvidence: {
+                          overrides: [],
+                          completedChecklist: [],
+                        },
+                      })),
+                    }))
+                  )
+                    setError(t.failed);
+                }}
+              >
+                {t.clear}
+              </Button>
+            </>
+          )}
+          <Button
+            disabled={
+              busy ||
+              preview.status === "prohibited" ||
+              (hasEvidence && changed)
+            }
+            onClick={() => void commit()}
+          >
+            {t.save}
+          </Button>
+        </section>
+      )}
+    </section>
+  );
+}

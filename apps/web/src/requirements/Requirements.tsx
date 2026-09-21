@@ -12,12 +12,16 @@ import { activeScenario, updateScenario, type Plan } from "../planner/domain";
 import { SaveStatus } from "../planner/Planner";
 import {
   bindProgramme,
+  evaluateAdditionalRequirements,
+  resolvedPlanDegree,
   evaluatePlanRequirements,
   requirementTree,
   setRequirementEvidence,
 } from "./adapter";
 import { requirementMessages } from "./messages";
 import "./requirements.css";
+import RecipeChooser from "./RecipeChooser";
+import { recipeMessages } from "./recipeMessages";
 
 function Progress({
   result,
@@ -67,6 +71,16 @@ function ResultNode({
           </span>
         </summary>
         <p>{n.explanation[language]}</p>
+        {result.explanations.length > 0 && (
+          <div>
+            <strong>{recipeMessages[language].prerequisite}</strong>
+            <ul>
+              {result.explanations.map((explanation, i) => (
+                <li key={i}>{explanation[language]}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <Progress result={result} language={language} />
         {result.remainingCourses > 0 && (
           <p>
@@ -137,13 +151,18 @@ function PlanRequirements({
       overrides: [],
       completedChecklist: [],
     };
+  let additional: RequirementResult | null = null;
   let result: RequirementResult | null = null,
     failed = false;
   let nodes: ReturnType<typeof flattenRequirements> = [];
   try {
     const tree = requirementTree(plan);
     if (tree) nodes = flattenRequirements(tree);
+    const degree = resolvedPlanDegree(plan);
+    if (degree?.additionalRoot)
+      nodes = [...nodes, ...flattenRequirements(degree.additionalRoot)];
     result = evaluatePlanRequirements(plan);
+    additional = evaluateAdditionalRequirements(plan);
   } catch {
     failed = true;
   }
@@ -193,49 +212,55 @@ function PlanRequirements({
     <>
       <p>{t.limits}</p>
       {(error || failed) && <p role="alert">{t.error}</p>}
-      <form className="planner-form" onSubmit={add}>
-        <label>
-          {t.cohort}
-          <select
-            aria-label={t.cohort}
-            value={cohort}
-            disabled={busy || !!plan.requirements}
-            onChange={(e) => setCohort(Number(e.target.value))}
-          >
-            {![2024, 2025, 2026].includes(cohort) && (
-              <option value={cohort}>{cohort}</option>
-            )}
-            {[2024, 2025, 2026].map((y) => (
-              <option key={y}>{y}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {t.programme}
-          <select
-            aria-label={t.programme}
-            name="template"
-            key={`${cohort}-${available.length}`}
-            disabled={busy || !available.length}
-          >
-            {available.map((p) => (
-              <option key={p.code} value={`${p.code}@${p.version}`}>
-                {p.title[language]} · {p.version}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button
-          type="submit"
-          disabled={
-            busy ||
-            !available.length ||
-            (plan.requirements?.templates.length ?? 0) >= 3
-          }
-        >
-          {t.add}
-        </Button>
-      </form>
+      <RecipeChooser plan={plan} language={language} />
+      {!plan.degreeSelection && (
+        <details open={!!plan.requirements}>
+          <summary>{recipeMessages[language].legacy}</summary>
+          <form className="planner-form" onSubmit={add}>
+            <label>
+              {t.cohort}
+              <select
+                aria-label={t.cohort}
+                value={cohort}
+                disabled={busy || !!plan.requirements}
+                onChange={(e) => setCohort(Number(e.target.value))}
+              >
+                {![2024, 2025, 2026].includes(cohort) && (
+                  <option value={cohort}>{cohort}</option>
+                )}
+                {[2024, 2025, 2026].map((y) => (
+                  <option key={y}>{y}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {t.programme}
+              <select
+                aria-label={t.programme}
+                name="template"
+                key={`${cohort}-${available.length}`}
+                disabled={busy || !available.length}
+              >
+                {available.map((p) => (
+                  <option key={p.code} value={`${p.code}@${p.version}`}>
+                    {p.title[language]} · {p.version}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Button
+              type="submit"
+              disabled={
+                busy ||
+                !available.length ||
+                (plan.requirements?.templates.length ?? 0) >= 3
+              }
+            >
+              {t.add}
+            </Button>
+          </form>
+        </details>
+      )}
       {plan.requirements && (
         <p>
           {t.pinned}:{" "}
@@ -267,6 +292,14 @@ function PlanRequirements({
           <ul className="requirement-tree" aria-label={t.title}>
             <ResultNode result={result} language={language} />
           </ul>
+          {additional && (
+            <section aria-label={recipeMessages[language].additional}>
+              <h2>{recipeMessages[language].additional}</h2>
+              <ul className="requirement-tree">
+                <ResultNode result={additional} language={language} />
+              </ul>
+            </section>
+          )}
           <section aria-label={t.override}>
             <h2>{t.override}</h2>
             <p>{t.overrideHelp}</p>

@@ -145,7 +145,7 @@ describe("IndexedDB plan persistence", () => {
     });
     db.close();
     expect(await new PlanStore(factory).load()).toEqual({
-      plans: [plan()],
+      plans: [{ ...plan(), schemaVersion: 1 }],
       activeId: "plan",
     });
   });

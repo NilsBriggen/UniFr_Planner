@@ -105,3 +105,136 @@ it("combines major and minor without silently migrating and validates imported e
   };
   expect(() => parsePlan(JSON.stringify(invalid))).toThrow();
 });
+
+const recipeSelection = {
+  structureId: "ba-120-60",
+  components: [
+    {
+      slotId: "major",
+      programmeId: "bachelor-digitinf-informatics",
+      variantId: "major-120",
+      startSemester: "AS-2026",
+      recipeVersion: "2026-27.1",
+    },
+    {
+      slotId: "minor",
+      programmeId: "bachelor-digitinf-businessinformatics",
+      variantId: "minor-60",
+      startSemester: "SS-2027",
+      recipeVersion: "2026-27.1",
+    },
+  ],
+};
+it("pins an explicitly composed recipe and keeps component semesters through reopening", () => {
+  const plan = adapter.bindDegreeSelection(makePlan(), recipeSelection);
+  expect(plan.schemaVersion).toBe(2);
+  expect(plan.targetEcts).toBe(180);
+  expect(plan.requirements).toBeUndefined();
+  const reopened = parsePlan(JSON.stringify(plan));
+  expect(reopened.degreeSelection).toEqual(recipeSelection);
+  expect(adapter.resolvedPlanDegree(reopened)?.appliedRules).not.toHaveLength(
+    0,
+  );
+  expect(adapter.evaluatePlanRequirements(reopened)?.status).toBe(
+    "needs_clarification",
+  );
+  expect(() =>
+    adapter.bindDegreeSelection(plan, {
+      ...recipeSelection,
+      components: recipeSelection.components.map((c) => ({
+        ...c,
+        recipeVersion: "missing",
+      })),
+    }),
+  ).toThrow();
+});
+it("refuses migration with evidence in any scenario until explicitly cleared", () => {
+  const legacy = adapter.bindProgramme(makePlan(), {
+    code: "CS-120",
+    version: "2024.1",
+    cohort: 2024,
+  });
+  legacy.scenarios[0].requirementEvidence = {
+    overrides: [],
+    completedChecklist: ["old-duty"],
+  };
+  expect(() => adapter.bindDegreeSelection(legacy, recipeSelection)).toThrow(
+    /evidence/i,
+  );
+  expect(legacy.requirements?.templates[0].code).toBe("CS-120");
+  expect(legacy.scenarios[0].requirementEvidence.completedChecklist).toEqual([
+    "old-duty",
+  ]);
+});
+it("separates additional requirements from the degree target and preserves v1 evidence verbatim", () => {
+  const plan = adapter.bindDegreeSelection(makePlan(), {
+    structureId: "ba-180-extra-30",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-ius-law",
+        variantId: "major-180",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+      {
+        slotId: "extra",
+        programmeId: "bachelor-digitinf-businessinformatics",
+        variantId: "minor-30",
+        startSemester: "SS-2027",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  });
+  expect(plan.targetEcts).toBe(180);
+  expect(adapter.resolvedPlanDegree(plan)?.additionalEcts).toBe(30);
+  expect(adapter.evaluateAdditionalRequirements(plan)?.node.minCredits).toBe(
+    30,
+  );
+  const legacy = {
+    ...adapter.bindProgramme(makePlan(), {
+      code: "CS-120",
+      version: "2024.1",
+      cohort: 2024,
+    }),
+    schemaVersion: 1 as const,
+  };
+  const before = adapter.evaluatePlanRequirements(legacy);
+  const reopened = parsePlan(JSON.stringify(legacy));
+  expect(reopened).toEqual(legacy);
+  expect(adapter.evaluatePlanRequirements(reopened)).toEqual(before);
+});
+
+it("rejects known prohibited combinations without changing the saved plan", () => {
+  const original = makePlan();
+  expect(() =>
+    adapter.bindDegreeSelection(original, {
+      ...recipeSelection,
+      components: [
+        recipeSelection.components[0],
+        {
+          ...recipeSelection.components[1],
+          programmeId: "bachelor-digitinf-informatics",
+        },
+      ],
+    }),
+  ).toThrow();
+  expect(original.degreeSelection).toBeUndefined();
+  expect(original.scenarios[0].courses).toEqual([]);
+});
+it("does not add credits for an empty optional minor", () => {
+  const plan = adapter.bindDegreeSelection(makePlan(), {
+    structureId: "ma-90-optional-minor-30",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "master-digitinf-informatics",
+        variantId: "major-90",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  });
+  expect(plan.targetEcts).toBe(90);
+  expect(adapter.resolvedPlanDegree(plan)?.additionalEcts).toBe(0);
+});

@@ -3,8 +3,73 @@
   "type": "object",
   "properties": {
     "schemaVersion": {
-      "type": "number",
-      "const": 1
+      "anyOf": [
+        {
+          "type": "number",
+          "const": 1
+        },
+        {
+          "type": "number",
+          "const": 2
+        }
+      ]
+    },
+    "degreeSelection": {
+      "type": "object",
+      "properties": {
+        "structureId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "components": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "slotId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "programmeId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "variantId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "startSemester": {
+                "type": "string",
+                "pattern": "^(AS|SS)-20\\d{2}$"
+              },
+              "recipeVersion": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              }
+            },
+            "required": [
+              "slotId",
+              "programmeId",
+              "variantId",
+              "startSemester",
+              "recipeVersion"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "structureId",
+        "components"
+      ],
+      "additionalProperties": false
     },
     "id": {
       "type": "string",
@@ -121,6 +186,37 @@
                     {
                       "type": "object",
                       "properties": {
+                        "assignments": {
+                          "maxItems": 100,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "programme": {
+                                "type": "string",
+                                "maxLength": 1000
+                              },
+                              "version": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "paths": {
+                                "maxItems": 100,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                }
+                              }
+                            },
+                            "required": [
+                              "programme",
+                              "version",
+                              "paths"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
                         "source_id": {
                           "type": "string",
                           "minLength": 1,

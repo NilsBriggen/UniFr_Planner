@@ -30,6 +30,16 @@ export const selectionSchema = z.strictObject({
   pinned: z.boolean(),
   offering: z
     .strictObject({
+      assignments: z
+        .array(
+          z.strictObject({
+            programme: z.string().max(1000),
+            version: z.string().max(200),
+            paths: z.array(z.string().max(2000)).max(100),
+          }),
+        )
+        .max(100)
+        .optional(),
       source_id: text,
       terms: z.array(z.string().max(30)).max(30),
       meetings: z.array(meetingSchema).max(1000),
@@ -66,7 +76,24 @@ const scenarioSchema = z.strictObject({
 });
 export const planSchema = z
   .strictObject({
-    schemaVersion: z.literal(1),
+    schemaVersion: z.union([z.literal(1), z.literal(2)]),
+    degreeSelection: z
+      .strictObject({
+        structureId: text,
+        components: z
+          .array(
+            z.strictObject({
+              slotId: text,
+              programmeId: text,
+              variantId: text,
+              startSemester: term,
+              recipeVersion: text,
+            }),
+          )
+          .min(1)
+          .max(20),
+      })
+      .optional(),
     id,
     name: text,
     programme: text,
@@ -88,6 +115,14 @@ export const planSchema = z
     const invalid = (message: string) =>
       ctx.addIssue({ code: "custom", message });
     const unique = (values: string[]) => new Set(values).size === values.length;
+    if (plan.degreeSelection) {
+      if (plan.schemaVersion !== 2 || plan.requirements)
+        invalid(
+          "recipe selection requires schema v2 without legacy requirements",
+        );
+      if (!unique(plan.degreeSelection.components.map((c) => c.slotId)))
+        invalid("duplicate degree slot");
+    }
     if (!unique(plan.semesters) || !unique(plan.scenarios.map((s) => s.id)))
       invalid("duplicate identifier");
     if (!plan.scenarios.some((s) => s.id === plan.activeScenarioId))
@@ -179,7 +214,7 @@ export function createPlan(input: {
   const [season, year] = input.startTerm.split("-");
   const first = Number(year) * 2 + (season === "AS" ? 1 : 0);
   return planSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     id: input.id,
     name: input.name,
     programme: input.programme,
@@ -290,6 +325,7 @@ export function fromOffering(
     semester: null,
     pinned: false,
     offering: {
+      assignments: offering.assignments,
       source_id: offering.source_id,
       terms: offering.terms,
       meetings: offering.meetings,

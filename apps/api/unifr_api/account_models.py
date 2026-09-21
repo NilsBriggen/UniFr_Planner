@@ -69,6 +69,14 @@ def validate_plan(value: dict[str, Any]) -> dict[str, Any]:
     unique([s["id"] for s in value["scenarios"]])
     if value["activeScenarioId"] not in [s["id"] for s in value["scenarios"]]:
         raise ValueError("Missing active scenario")
+    if "degreeSelection" in value:
+        if value["schemaVersion"] != 2 or "requirements" in value:
+            raise ValueError("Recipe selection requires v2 without legacy requirements")
+        selection = value["degreeSelection"]
+        trim(selection, "structureId")
+        for component in selection["components"]:
+            trim(component, "slotId", "programmeId", "variantId", "recipeVersion")
+        unique([c["slotId"] for c in selection["components"]])
     if "requirements" in value:
         for template in value["requirements"]["templates"]:
             trim(template, "code", "version")

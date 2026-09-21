@@ -5,25 +5,259 @@
     "name": "Parity degree",
     "programme": "CS",
     "targetEcts": 180,
-    "semesters": ["AS-2026"],
+    "semesters": [
+      "AS-2026"
+    ],
     "activeScenarioId": "s",
-    "scenarios": [{"id": "s", "name": "Main", "courses": [], "unavailable": [], "travelMinutes": 0}]
+    "scenarios": [
+      {
+        "id": "s",
+        "name": "Main",
+        "courses": [],
+        "unavailable": [],
+        "travelMinutes": 0
+      }
+    ]
   },
   "cases": [
-    {"name": "duplicate timetable and curriculum code aliases", "valid": false, "patch": {
-      "scenarios": [{"id": "s", "name": "Main", "travelMinutes": 0, "unavailable": [], "courses": [
-        {"id": "manual", "code": "SIN.01023", "titles": {"en": "Programming"}, "ects": 6, "status": "completed", "semester": "AS-2026", "pinned": false, "offering": null},
-        {"id": "imported", "code": "UE-SIN.01023", "titles": {"en": "Programming"}, "ects": 6, "status": "completed", "semester": "AS-2026", "pinned": false, "offering": null}
-      ]}]
-    }},
-    {"name": "valid baseline", "valid": true, "patch": {}},
-    {"name": "semester trailing newline", "valid": false, "patch": {"semesters": ["AS-2026\n"]}},
-    {"name": "semester trailing CRLF", "valid": false, "patch": {"semesters": ["AS-2026\r\n"]}},
-    {"name": "busy period below browser millisecond", "valid": false, "patch": {
-      "scenarios": [{"id": "s", "name": "Main", "courses": [], "travelMinutes": 0, "unavailable": [{"id": "b", "label": "Busy", "start": "2026-09-18T10:00:00.000000Z", "end": "2026-09-18T10:00:00.000001Z"}]}]
-    }},
-    {"name": "busy period crosses a browser millisecond", "valid": true, "patch": {
-      "scenarios": [{"id": "s", "name": "Main", "courses": [], "travelMinutes": 0, "unavailable": [{"id": "b", "label": "Busy", "start": "2026-09-18T10:00:00.000999Z", "end": "2026-09-18T10:00:00.001000Z"}]}]
-    }}
+    {
+      "name": "duplicate timetable and curriculum code aliases",
+      "valid": false,
+      "patch": {
+        "scenarios": [
+          {
+            "id": "s",
+            "name": "Main",
+            "travelMinutes": 0,
+            "unavailable": [],
+            "courses": [
+              {
+                "id": "manual",
+                "code": "SIN.01023",
+                "titles": {
+                  "en": "Programming"
+                },
+                "ects": 6,
+                "status": "completed",
+                "semester": "AS-2026",
+                "pinned": false,
+                "offering": null
+              },
+              {
+                "id": "imported",
+                "code": "UE-SIN.01023",
+                "titles": {
+                  "en": "Programming"
+                },
+                "ects": 6,
+                "status": "completed",
+                "semester": "AS-2026",
+                "pinned": false,
+                "offering": null
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "valid baseline",
+      "valid": true,
+      "patch": {}
+    },
+    {
+      "name": "semester trailing newline",
+      "valid": false,
+      "patch": {
+        "semesters": [
+          "AS-2026\n"
+        ]
+      }
+    },
+    {
+      "name": "semester trailing CRLF",
+      "valid": false,
+      "patch": {
+        "semesters": [
+          "AS-2026\r\n"
+        ]
+      }
+    },
+    {
+      "name": "busy period below browser millisecond",
+      "valid": false,
+      "patch": {
+        "scenarios": [
+          {
+            "id": "s",
+            "name": "Main",
+            "courses": [],
+            "travelMinutes": 0,
+            "unavailable": [
+              {
+                "id": "b",
+                "label": "Busy",
+                "start": "2026-09-18T10:00:00.000000Z",
+                "end": "2026-09-18T10:00:00.000001Z"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "busy period crosses a browser millisecond",
+      "valid": true,
+      "patch": {
+        "scenarios": [
+          {
+            "id": "s",
+            "name": "Main",
+            "courses": [],
+            "travelMinutes": 0,
+            "unavailable": [
+              {
+                "id": "b",
+                "label": "Busy",
+                "start": "2026-09-18T10:00:00.000999Z",
+                "end": "2026-09-18T10:00:00.001000Z"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "recipe v2 independent semesters",
+      "valid": true,
+      "patch": {
+        "schemaVersion": 2,
+        "degreeSelection": {
+          "structureId": "ba-120-60",
+          "components": [
+            {
+              "slotId": "major",
+              "programmeId": "cs",
+              "variantId": "major-120",
+              "startSemester": "AS-2026",
+              "recipeVersion": "2026-27.1"
+            },
+            {
+              "slotId": "minor",
+              "programmeId": "bi",
+              "variantId": "minor-60",
+              "startSemester": "SS-2027",
+              "recipeVersion": "2026-27.1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "recipe forbidden on v1",
+      "valid": false,
+      "patch": {
+        "schemaVersion": 1,
+        "degreeSelection": {
+          "structureId": "ba-120-60",
+          "components": [
+            {
+              "slotId": "major",
+              "programmeId": "cs",
+              "variantId": "major-120",
+              "startSemester": "AS-2026",
+              "recipeVersion": "2026-27.1"
+            },
+            {
+              "slotId": "minor",
+              "programmeId": "bi",
+              "variantId": "minor-60",
+              "startSemester": "SS-2027",
+              "recipeVersion": "2026-27.1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "recipe conflicts with legacy requirements",
+      "valid": false,
+      "patch": {
+        "schemaVersion": 2,
+        "degreeSelection": {
+          "structureId": "ba-120-60",
+          "components": [
+            {
+              "slotId": "major",
+              "programmeId": "cs",
+              "variantId": "major-120",
+              "startSemester": "AS-2026",
+              "recipeVersion": "2026-27.1"
+            },
+            {
+              "slotId": "minor",
+              "programmeId": "bi",
+              "variantId": "minor-60",
+              "startSemester": "SS-2027",
+              "recipeVersion": "2026-27.1"
+            }
+          ]
+        },
+        "requirements": {
+          "cohort": 2026,
+          "templates": [
+            {
+              "code": "CS-120",
+              "version": "2026.1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate recipe slots",
+      "valid": false,
+      "patch": {
+        "schemaVersion": 2,
+        "degreeSelection": {
+          "structureId": "ba-120-60",
+          "components": [
+            {
+              "slotId": "major",
+              "programmeId": "cs",
+              "variantId": "major-120",
+              "startSemester": "AS-2026",
+              "recipeVersion": "2026-27.1"
+            },
+            {
+              "slotId": "major",
+              "programmeId": "cs",
+              "variantId": "major-120",
+              "startSemester": "AS-2026",
+              "recipeVersion": "2026-27.1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "empty recipe revision",
+      "valid": false,
+      "patch": {
+        "schemaVersion": 2,
+        "degreeSelection": {
+          "structureId": "ba-120-60",
+          "components": [
+            {
+              "slotId": "major",
+              "programmeId": "cs",
+              "variantId": "major-120",
+              "startSemester": "AS-2026",
+              "recipeVersion": ""
+            }
+          ]
+        }
+      }
+    }
   ]
 }

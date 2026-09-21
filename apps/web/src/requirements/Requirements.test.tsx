@@ -6,6 +6,7 @@ import { IDBFactory } from "fake-indexeddb";
 import App from "../App";
 import { PlanStore } from "../planner/storage";
 import { createPlan } from "../planner/domain";
+import { recipeMessages } from "./recipeMessages";
 import { bindProgramme } from "./adapter";
 
 it("can clear stale checklist-only evidence and restore evaluation", async () => {
@@ -119,6 +120,11 @@ for (const [
       </MemoryRouter>,
     );
     await screen.findByRole("heading", { name: heading });
+    await userEvent.click(
+      await screen.findByText(
+        recipeMessages[language as keyof typeof recipeMessages].legacy,
+      ),
+    );
     await userEvent.click(await screen.findByRole("button", { name: bind }));
     await screen.findByRole("list", { name: heading });
     const ruleDisclosure = screen
@@ -162,3 +168,113 @@ for (const [
       saved.plans[0].scenarios[0].requirementEvidence?.overrides[0].reason,
     ).toBe("Advisor reference 12");
   });
+
+it("offers seven faculty groups, major-only recipes, and saves a preview with independent minor semester", async () => {
+  localStorage.setItem("unifr.language", "en");
+  await new PlanStore(indexedDB).save(
+    createPlan({
+      id: "recipe",
+      scenarioId: "s",
+      name: "Recipe degree",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+  );
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const faculty = await screen.findByRole("combobox", { name: "Faculty" });
+  expect(within(faculty).getAllByRole("option")).toHaveLength(8);
+  await userEvent.selectOptions(faculty, "science-medicine");
+  await userEvent.selectOptions(
+    screen.getByRole("combobox", { name: "Main programme" }),
+    "bachelor-digitinf-informatics",
+  );
+  await userEvent.selectOptions(
+    screen.getByRole("combobox", { name: "Variant / track" }),
+    "major-120",
+  );
+  await userEvent.selectOptions(
+    screen.getByRole("combobox", { name: "Degree structure" }),
+    "ba-120-60",
+  );
+  await userEvent.selectOptions(
+    screen.getByRole("combobox", { name: "Minor · 60 ECTS" }),
+    "bachelor-digitinf-businessinformatics/minor-60",
+  );
+  await userEvent.clear(
+    screen.getByRole("textbox", {
+      name: "Minor · 60 ECTS · Starting semester",
+    }),
+  );
+  await userEvent.type(
+    screen.getByRole("textbox", {
+      name: "Minor · 60 ECTS · Starting semester",
+    }),
+    "SS-2027",
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Preview degree" }));
+  expect(await screen.findByText("Applied exceptions")).toBeVisible();
+  expect(screen.getByText("Review gaps")).toBeVisible();
+  await userEvent.click(
+    screen.getByRole("button", { name: "Save degree selection" }),
+  );
+  await screen.findByRole("list", { name: "Study requirements" });
+  const saved = (await new PlanStore(indexedDB).load()).plans[0];
+  expect(saved.degreeSelection?.components[1].startSemester).toBe("SS-2027");
+  expect(saved.targetEcts).toBe(180);
+});
+it("shows pinned recipe gaps after reopening and keeps additions outside degree progress", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const { bindDegreeSelection } = await import("./adapter");
+  const plan = bindDegreeSelection(
+    createPlan({
+      id: "extra",
+      scenarioId: "s",
+      name: "Law with addition",
+      programme: "Law",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    {
+      structureId: "ba-180-extra-30",
+      components: [
+        {
+          slotId: "major",
+          programmeId: "bachelor-ius-law",
+          variantId: "major-180",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+        {
+          slotId: "extra",
+          programmeId: "bachelor-digitinf-businessinformatics",
+          variantId: "minor-30",
+          startSemester: "SS-2027",
+          recipeVersion: "2026-27.1",
+        },
+      ],
+    },
+  );
+  await new PlanStore(indexedDB).save(plan);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(await screen.findByText("Review gaps")).toBeVisible();
+  expect(
+    screen.getByRole("region", {
+      name: "Additional requirements outside the degree",
+    }),
+  ).toBeVisible();
+  expect(screen.getByText("Credits toward the degree: 180 ECTS")).toBeVisible();
+  expect(
+    screen.getByText("Additional requirements outside the degree: 30 ECTS"),
+  ).toBeVisible();
+});

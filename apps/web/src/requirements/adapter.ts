@@ -1,6 +1,17 @@
+import {
+  composeDegree,
+  type DegreeSelection,
+  type ResolvedDegree,
+} from "../../../../packages/domain/src/recipes";
+import { recipeRegistry } from "../../../../packages/domain/src/registry";
+import {
+  evaluateRecipeRequirements,
+  resolveRecipeEligibility,
+} from "../../../../packages/domain/src/eligibility";
 import { programmeTemplates } from "../../../../packages/domain/src/programmes";
 import {
   evaluateRequirements,
+  flattenRequirements,
   resolveTemplate,
   type RequirementNode,
 } from "../../../../packages/domain/src/requirements";
@@ -16,6 +27,10 @@ export function bindProgramme(
   plan: Plan,
   ref: { code: string; version: string; cohort: number },
 ): Plan {
+  if (plan.degreeSelection)
+    throw new Error(
+      "Clear the recipe selection before choosing an archived programme.",
+    );
   resolveTemplate(programmeTemplates, ref);
   if (plan.requirements && plan.requirements.cohort !== ref.cohort)
     throw new Error("explicit cohort migration required");
@@ -31,6 +46,9 @@ export function bindProgramme(
   });
 }
 export function requirementTree(plan: Plan): RequirementNode | null {
+  const degree = resolvedPlanDegree(plan);
+  if (degree)
+    return resolveRecipeEligibility(degree, activeScenario(plan).courses);
   if (!plan.requirements) return null;
   const children = plan.requirements.templates.map((ref) => {
     const template = resolveTemplate(programmeTemplates, {
@@ -64,7 +82,87 @@ export function requirementTree(plan: Plan): RequirementNode | null {
     reviewStatus: "needs_clarification",
   };
 }
+export function resolvedPlanDegree(plan: Plan): ResolvedDegree | null {
+  return plan.degreeSelection
+    ? composeDegree(recipeRegistry, plan.degreeSelection)
+    : null;
+}
+export function bindDegreeSelection(
+  plan: Plan,
+  selection: DegreeSelection,
+): Plan {
+  const degree = composeDegree(recipeRegistry, selection);
+  if (degree.status === "prohibited") throw new Error(degree.issues.join("; "));
+  if (
+    JSON.stringify(plan.degreeSelection) !== JSON.stringify(selection) &&
+    plan.scenarios.some(
+      (s) =>
+        s.requirementEvidence &&
+        (s.requirementEvidence.overrides.length ||
+          s.requirementEvidence.completedChecklist.length),
+    )
+  )
+    throw new Error(
+      "Clear requirement evidence in all scenarios before changing programmes. Courses and timetable remain available.",
+    );
+  const { requirements: _legacy, ...rest } = plan;
+  void _legacy;
+  return planSchema.parse({
+    ...rest,
+    schemaVersion: 2,
+    degreeSelection: selection,
+    targetEcts: degree.targetEcts,
+  });
+}
+function recipeEvidence(
+  plan: Plan,
+  degree: ResolvedDegree,
+  root: RequirementNode,
+) {
+  const evidence = activeScenario(plan).requirementEvidence;
+  if (!evidence) return undefined;
+  const all = new Set(
+    [
+      ...flattenRequirements(degree.root),
+      ...(degree.additionalRoot
+        ? flattenRequirements(degree.additionalRoot)
+        : []),
+    ].map((n) => n.id),
+  );
+  if (
+    [
+      ...evidence.overrides.map((o) => o.nodeId),
+      ...evidence.completedChecklist,
+    ].some((id) => !all.has(id))
+  )
+    throw new Error(
+      "Unknown requirement evidence. Clear stale evidence before continuing.",
+    );
+  const ids = new Set(flattenRequirements(root).map((n) => n.id));
+  return {
+    overrides: evidence.overrides.filter((o) => ids.has(o.nodeId)),
+    completedChecklist: evidence.completedChecklist.filter((id) => ids.has(id)),
+  };
+}
+export function evaluateAdditionalRequirements(plan: Plan) {
+  const degree = resolvedPlanDegree(plan);
+  return degree?.additionalRoot
+    ? evaluateRecipeRequirements(
+        degree,
+        activeScenario(plan).courses,
+        recipeEvidence(plan, degree, degree.additionalRoot),
+        degree.additionalRoot,
+      )
+    : null;
+}
 export function evaluatePlanRequirements(plan: Plan) {
+  const degree = resolvedPlanDegree(plan);
+  if (degree)
+    return evaluateRecipeRequirements(
+      degree,
+      activeScenario(plan).courses,
+      recipeEvidence(plan, degree, degree.root),
+    );
   const root = requirementTree(plan);
   if (!root) return null;
   const scenario = activeScenario(plan);
@@ -84,5 +182,6 @@ export function setRequirementEvidence(
   }));
   // Refuse stale node/course references instead of silently dropping an override.
   evaluatePlanRequirements(next);
+  evaluateAdditionalRequirements(next);
   return next;
 }

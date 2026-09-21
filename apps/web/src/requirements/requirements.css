@@ -70,3 +70,23 @@
     padding-inline-start: 0.4rem;
   }
 }
+.recipe-chooser {
+  margin-block: 1.5rem;
+  overflow-wrap: anywhere;
+}
+.recipe-chooser fieldset {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--border, #d2d7dc);
+  padding: 1rem;
+}
+.recipe-chooser fieldset label {
+  display: block;
+  margin-block: 0.5rem;
+}
+.recipe-chooser .planner-form > * {
+  min-width: 0;
+}
+.recipe-chooser h4 {
+  margin-block-end: 0.5rem;
+}

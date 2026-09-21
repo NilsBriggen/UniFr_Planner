@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { createPlan } from "../src/planner/domain";
 import { requirementMessages } from "../src/requirements/messages";
+import { recipeMessages } from "../src/requirements/recipeMessages";
 import { plannerMessages } from "../src/planner/messages";
 
 for (const language of ["de", "fr", "en"] as const)
@@ -114,6 +115,9 @@ for (const language of ["de", "fr", "en"] as const)
       page.getByRole("heading", { name: plan.name, exact: true }),
     ).toBeVisible();
     await page.goto("/requirements");
+    await page
+      .getByText(recipeMessages[language].legacy, { exact: true })
+      .click();
     await page.getByRole("button", { name: t.add, exact: true }).click();
     const tree = page.getByRole("list", { name: t.title, exact: true });
     await expect(tree).toBeVisible();
