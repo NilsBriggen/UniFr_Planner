@@ -180,3 +180,42 @@ def test_structurally_complete_single_session_is_valid():
     offering = p.parse_detail(str(soup), entry)
     assert len(offering.meetings) == 1
     assert not offering.meetings[0].unresolved
+
+
+@pytest.mark.parametrize("tag", ["span", "font", "a"])
+def test_truncated_rich_text_formatting_does_not_hide_complete_course_sections(tag):
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    original = fixture("detail.html")
+    # Observed in course 134176's bibliography: the CMS cut a style attribute,
+    # but emitted the cell/table endings and every later course section intact.
+    fragment = f'<{tag} lang="EN-US" style="font-family: &quot;Verdana&quot;,&qu'
+    raw = original.replace(
+        "</tbody>",
+        '<tr><td>Bibliography</td><td>Reading list ' + fragment + '</td></tr></tbody>',
+        1,
+    )
+    before, after = p.parse_detail(original, entry), p.parse_detail(raw, entry)
+    assert after.meetings == before.meetings
+    assert after.assignments == before.assignments
+    assert after.ects == before.ects
+    assert after.detail_hash == p.digest(raw)
+
+
+@pytest.mark.parametrize("damage", ["table-end", "document-end", "structural-tag"])
+def test_rich_text_recovery_does_not_repair_missing_course_structure(damage):
+    p = parser()
+    entry = p.parse_listing(fixture("listing.html"), 1).entries[1]
+    raw = fixture("detail.html").replace(
+        "</tbody>",
+        '<tr><td>Bibliography</td><td>Text <span style="broken</td></tr></tbody>',
+        1,
+    )
+    if damage == "table-end":
+        raw = raw.replace("</table>", "", 1)
+    elif damage == "document-end":
+        raw = raw[:raw.index("</article>")]
+    else:
+        raw = raw.replace('<span style="broken', '<table style="broken')
+    with pytest.raises(ValueError, match="[Ii]ncomplete detail"):
+        p.parse_detail(raw, entry)

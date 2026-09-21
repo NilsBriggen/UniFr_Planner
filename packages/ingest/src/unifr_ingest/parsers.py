@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 from datetime import datetime
+from html import escape
 from html.parser import HTMLParser
 from zoneinfo import ZoneInfo
 from urllib.parse import urljoin
@@ -136,8 +137,18 @@ def parse_listing(raw: str, number: int, page_size: int = 12) -> ListingPage:
 
 
 def parse_detail(raw: str, entry: ListingEntry) -> Offering:
-    DetailStructure().validate(raw)
-    soup = BeautifulSoup(raw, "html.parser")
+    # The source CMS sometimes truncates rich-text formatting inside a cell
+    # (observed in a bibliography). An unfinished quoted attribute would swallow
+    # otherwise complete later sections. Escape only unfinished inline tags at
+    # an explicit cell boundary; never invent structural tags or missing bytes.
+    markup = re.sub(
+        r"<(?:a|abbr|b|br|em|font|i|small|span|strong|sub|sup|u)\b[^<>]*(?=</td\s*>)",
+        lambda match: escape(match[0]),
+        raw,
+        flags=re.IGNORECASE,
+    )
+    DetailStructure().validate(markup)
+    soup = BeautifulSoup(markup, "html.parser")
     main = soup.select_one("main") or soup
     advertised = {
         str(tag["data-tabcordion-toggler"]) for tag in main.select("[data-tabcordion-toggler]")

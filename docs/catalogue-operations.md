@@ -48,6 +48,10 @@ and scheduled runs. No scheduled service was enabled during implementation.
    An unpublished ECTS is `None`; unknown time is an explicit unresolved meeting.
    Source language labels are retained in listing provenance and mapped to ISO codes in
    offerings for filtering and suggestions; unspecified “Bilingual”/“Other” remain unknown.
+   Incomplete inline formatting tags at an explicit table-cell ending are escaped before
+   parsing (observed in a CMS-truncated bibliography). This cannot restore truncated prose;
+   original bytes remain cached and hashed. Missing cell/table/document boundaries still
+   reject the detail instead of being silently repaired.
    Timetable `UE-` teaching-unit prefixes are preserved in catalogue data. The degree evaluator
    matches only the exact numeric academic-code namespace (e.g. `UE-SIN.01023` / `SIN.01023`),
    never titles or distinct course numbers. Both spellings cannot count as separate courses.
