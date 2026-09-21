@@ -1,6 +1,30 @@
 .planner-page {
   max-width: 1800px;
 }
+.setup-page {
+  max-width: 980px;
+}
+.setup-intro {
+  max-width: 65ch;
+  color: var(--color-muted);
+}
+.setup-form {
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 28px;
+  margin: 24px 0 12px;
+}
+.setup-form .planner-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+.setup-submit {
+  grid-column: 1 / -1;
+  justify-self: start;
+  margin-top: 8px;
+}
 .planner-page label,
 .import-plan label {
   display: grid;
@@ -69,7 +93,10 @@
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 20px;
   border-block: 1px solid var(--color-line);
-  padding: 24px 0;
+  padding: 24px;
+  background: white;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
 }
 .plan-summary dt {
   font-size: 0.8125rem;
@@ -78,7 +105,8 @@
 }
 .plan-summary dd {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
   color: var(--color-blue);
 }
 .semester-board {
@@ -93,6 +121,7 @@
   border-top: 3px solid var(--color-blue);
   padding: 20px;
   min-width: 0;
+  border-radius: 6px;
 }
 .semester-heading h2 {
   margin-bottom: 0;
@@ -229,6 +258,16 @@
   }
 }
 @media (max-width: 680px) {
+  .setup-form {
+    padding: 20px;
+  }
+  .setup-form .planner-fields {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .setup-submit {
+    width: 100%;
+  }
   .planner-controls,
   .planner-controls form {
     display: grid;

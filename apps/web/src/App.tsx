@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   Link,
   NavLink,
@@ -25,14 +25,35 @@ const languages = [
   { code: "en", name: "English" },
 ] as const;
 const navigation = [
-  { path: "/plan", key: "plan", icon: "▦" },
-  { path: "/semester/HS-2026", key: "semester", icon: "▤" },
-  { path: "/catalogue", key: "catalogue", icon: "⌕" },
-  { path: "/requirements", key: "requirements", icon: "☑" },
-  { path: "/settings", key: "settings", icon: "⚙" },
+  {
+    path: "/plan",
+    key: "plan",
+    icon: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
+  },
+  {
+    path: "/semester/AS-2026",
+    key: "semester",
+    icon: "M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M7 3v4 M17 3v4 M3 11h18 M7 15h3 M14 15h3",
+  },
+  {
+    path: "/catalogue",
+    key: "catalogue",
+    icon: "M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
+  },
+  {
+    path: "/requirements",
+    key: "requirements",
+    icon: "M9 5h12 M9 12h12 M9 19h12 M2 5l2 2 3-4 M2 12l2 2 3-4 M2 19l2 2 3-4",
+  },
+  {
+    path: "/settings",
+    key: "settings",
+    icon: "M4 7h16 M4 17h16 M9 4v6 M15 14v6",
+  },
 ] as const;
 
 function Home({ t }: { t: Messages }) {
+  const { plan } = usePlans();
   return (
     <>
       <section className="hero">
@@ -40,14 +61,15 @@ function Home({ t }: { t: Messages }) {
         <h1>{t.headline}</h1>
         <p className="intro">{t.intro}</p>
         <div className="actions">
-          <Link className="button primary" to="/setup">
-            {t.start}
+          <Link className="button primary" to={plan ? "/plan" : "/setup"}>
+            {plan ? t.resume : t.start}
             <span aria-hidden="true">→</span>
           </Link>
           <Link className="text-link" to="/catalogue">
             {t.explore}
           </Link>
         </div>
+        <p className="guest-note">{plan ? plan.name : t.guestIntro}</p>
       </section>
       <section className="steps" aria-labelledby="steps-heading">
         <h2 id="steps-heading">{t.steps}</h2>
@@ -127,8 +149,8 @@ function Semester({ t }: { t: Messages }) {
         </span>
         <h2>{view === "agenda" ? t.emptyAgenda : t.emptyDay}</h2>
         <p>{t.emptyBody}</p>
-        <Link className="button" to="/catalogue">
-          {t.explore}
+        <Link className="button primary" to="/setup">
+          {t.start}
         </Link>
       </div>
     </section>
@@ -146,6 +168,14 @@ function AppShell() {
   });
   const t = messages[language];
   const location = useLocation();
+  const previousPath = useRef(location.pathname);
+  useEffect(() => {
+    if (previousPath.current !== location.pathname) {
+      document.getElementById("main")?.focus({ preventScroll: true });
+      window.scrollTo({ top: 0 });
+      previousPath.current = location.pathname;
+    }
+  }, [location.pathname]);
   useEffect(() => {
     document.documentElement.lang = language;
     try {
@@ -175,6 +205,7 @@ function AppShell() {
           <label className="plan-switcher">
             <span>{t.planLabel}</span>
             <select
+              aria-label={t.planLabel}
               disabled={!plans.ready || plans.busy || !plans.plans.length}
               value={plans.plan?.id ?? "empty"}
               onChange={(e) => void plans.select(e.target.value)}
@@ -209,13 +240,26 @@ function AppShell() {
             <NavLink
               key={key}
               to={
-                key === "semester" && plans.plan
-                  ? `/semester/${plans.plan.semesters[0]}`
+                key === "semester"
+                  ? location.pathname.startsWith("/semester/")
+                    ? location.pathname
+                    : `/semester/${plans.plan?.semesters[0] ?? `AS-${new Date().getFullYear()}`}`
                   : path
               }
             >
               <span className="nav-icon" aria-hidden="true">
-                {icon}
+                <svg
+                  viewBox="0 0 24 24"
+                  width="22"
+                  height="22"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d={icon} />
+                </svg>
               </span>
               <span>
                 {key === "semester"

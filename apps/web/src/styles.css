@@ -10,6 +10,8 @@
   --color-muted: #545b61;
   --color-line: #dce0e3;
   --color-canvas: #f6f7f8;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 * {
   box-sizing: border-box;
@@ -136,6 +138,10 @@ p {
   color: var(--color-blue);
   text-decoration: none;
   font-weight: 600;
+  border-radius: 5px;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 .button:hover {
   background: #edf1f4;
@@ -152,30 +158,33 @@ p {
 }
 .layout {
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
+  grid-template-columns: 208px minmax(0, 1fr);
   min-height: calc(100dvh - 112px);
 }
 .navigation {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--color-line);
-  padding: 20px 8px;
-  gap: 8px;
+  padding: 28px 12px;
+  gap: 6px;
+  align-self: start;
+  position: sticky;
+  top: 0;
 }
 .navigation a {
-  min-height: 76px;
+  min-height: 52px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-  font-size: 0.75rem;
-  padding: 8px 2px;
+  justify-content: flex-start;
+  gap: 12px;
+  text-align: left;
+  font-size: 0.8125rem;
+  padding: 12px 10px;
   line-height: 1.3;
   text-decoration: none;
   overflow-wrap: anywhere;
   border-left: 3px solid transparent;
+  border-radius: 4px;
 }
 .navigation a.active {
   background: #edf1f4;
@@ -188,20 +197,39 @@ p {
 .nav-icon {
   font-size: 24px;
   line-height: 1;
+  display: flex;
+  flex-shrink: 0;
 }
 .canvas {
   min-width: 0;
   display: flex;
   flex-direction: column;
   background: var(--color-canvas);
+  border-left: 1px solid var(--color-line);
 }
 main {
   flex: 1;
 }
 .hero {
-  padding: 64px clamp(28px, 6vw, 96px) 48px;
+  padding: 80px clamp(28px, 5vw, 80px) 64px;
   background: white;
   border-bottom: 1px solid var(--color-line);
+}
+.hero h1 {
+  max-width: 16ch;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 600;
+  margin-bottom: 28px;
+  text-wrap: balance;
+}
+.hero .eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 3px;
+  background: var(--color-orange);
+  vertical-align: middle;
+  margin-right: 12px;
 }
 .eyebrow {
   font-size: 0.75rem;
@@ -241,7 +269,7 @@ main {
   margin: 16px 0 0;
 }
 .steps {
-  padding: 40px clamp(28px, 6vw, 96px);
+  padding: 40px clamp(28px, 5vw, 80px);
 }
 .steps ol {
   list-style: none;
@@ -257,7 +285,7 @@ main {
 }
 .step-number {
   color: var(--color-blue);
-  font-size: 0.875rem;
+  font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
   display: block;
   margin-bottom: 16px;
@@ -285,7 +313,22 @@ footer p {
   max-width: 85ch;
 }
 .page {
-  padding: 48px clamp(28px, 6vw, 96px);
+  padding: 40px clamp(24px, 4vw, 64px);
+}
+.page > .eyebrow {
+  margin-bottom: 12px;
+}
+.page > h1 {
+  margin-bottom: 20px;
+}
+input,
+select,
+textarea {
+  border-radius: 4px;
+}
+input::placeholder {
+  color: #68747d;
+  opacity: 1;
 }
 .page h1 {
   font-size: clamp(2rem, 3vw, 2.5rem);
@@ -361,6 +404,17 @@ input {
   margin-bottom: 24px;
 }
 @media (max-width: 1000px) {
+  .layout {
+    grid-template-columns: 112px minmax(0, 1fr);
+  }
+  .navigation a {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    padding: 12px 2px;
+    font-size: 0.75rem;
+  }
   .header {
     padding: 20px 24px;
   }
@@ -387,13 +441,25 @@ input {
   .header-tools {
     width: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
   }
   .plan-switcher {
+    display: grid;
+    flex: 1 1 140px;
+    min-width: 0;
+    max-width: calc(100% - 144px);
+  }
+  .plan-switcher span {
     display: none;
   }
+  .plan-switcher select {
+    width: 100%;
+    min-width: 0;
+    text-overflow: ellipsis;
+  }
   .guest-status {
-    display: block;
-    font-size: 0.75rem;
+    display: none;
   }
   .languages {
     margin-left: auto;
@@ -405,6 +471,7 @@ input {
   .navigation {
     position: fixed;
     bottom: 0;
+    top: auto;
     left: 0;
     right: 0;
     z-index: 5;
@@ -431,12 +498,23 @@ input {
     font-size: 22px;
   }
   .canvas {
+    border-left: 0;
     min-height: calc(100dvh - 108px);
     padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
   .hero,
   .page {
-    padding: 36px 24px;
+    padding: 32px 20px;
+  }
+  .hero h1 {
+    font-size: clamp(2.25rem, 10vw, 3.5rem);
+  }
+  .hero .button {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .hero .actions {
+    align-items: stretch;
   }
   .intro {
     font-size: 1.0625rem;

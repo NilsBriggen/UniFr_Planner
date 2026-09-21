@@ -99,27 +99,39 @@ export function Setup({ language }: { language: Language }) {
     }
   }
   return (
-    <section className="page planner-page">
+    <section className="page planner-page setup-page">
       <p className="eyebrow">UniFr Planner</p>
       <h1>{messages[language].setup}</h1>
-      <SaveStatus language={language} />
-      <p>{t.programmeHelp}</p>
-      <form onSubmit={(e) => void submit(e)}>
+      <p className="setup-intro">{t.programmeHelp}</p>
+      <form className="setup-form" onSubmit={(e) => void submit(e)}>
         <fieldset className="planner-fields" disabled={!ready || busy}>
           <label>
             {t.planName}
-            <input name="name" required maxLength={200} />
+            <input
+              name="name"
+              required
+              maxLength={200}
+              placeholder={t.planExample}
+            />
           </label>
           <label>
             {t.programme}
-            <input name="programme" required maxLength={200} />
+            <input
+              name="programme"
+              required
+              maxLength={200}
+              placeholder={t.programmeExample}
+            />
           </label>
           <label>
             {t.startTerm}
             <select name="season" defaultValue="AS">
-              <option value="AS">AS / HS</option>
-              <option value="SS">SS / FS</option>
+              <option value="AS">{t.autumn}</option>
+              <option value="SS">{t.spring}</option>
             </select>
+          </label>
+          <label>
+            {t.startYear}
             <input
               aria-label={`${t.startTerm} · ${language === "de" ? "Jahr" : language === "fr" ? "Année" : "Year"}`}
               name="year"
@@ -152,13 +164,13 @@ export function Setup({ language }: { language: Language }) {
               required
             />
           </label>
-          <Button className="primary" type="submit">
+          <Button className="primary setup-submit" type="submit">
             {t.create}
           </Button>
         </fieldset>
       </form>
+      <SaveStatus language={language} />
       {error && <p role="alert">{t.actionError}</p>}
-      <p className="planner-help">{t.localHelp}</p>
       <Link className="text-link" to="/plan">
         {t.import}
       </Link>

@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
+
+// jsdom has no layout/scrolling; navigation scrolling is exercised in Playwright.
+window.scrollTo = vi.fn();
 
 // Node 24 exposes a disabled global localStorage unless a CLI path is supplied,
 // which prevents Vitest's jsdom environment from installing its own Storage.

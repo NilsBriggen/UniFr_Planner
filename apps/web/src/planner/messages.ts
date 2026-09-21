@@ -4,12 +4,17 @@ const en = {
   programme: "Programme",
   startTerm: "First semester",
   semesterCount: "Number of semesters",
-  target: "Target ECTS",
+  target: "Degree target (ECTS)",
+  planExample: "My Bachelor’s degree",
+  programmeExample: "Computer Science + Business Informatics",
+  autumn: "Autumn semester",
+  spring: "Spring semester",
+  startYear: "Entry year",
   create: "Create local plan",
   localHelp:
     "Your plans stay in this browser. Export a JSON backup to keep them safe when changing devices or clearing browser data.",
   programmeHelp:
-    "Enter your programme as a personal label. Degree requirement validation will be available later.",
+    "Give your plan a name and set its duration. After creating it, choose the applicable programme and cohort in Degree requirements.",
   saved: "Saved on this device",
   unreadable:
     "Some saved plans could not be opened. They remain on this device; other plans are available.",
@@ -100,12 +105,17 @@ const de: PlannerMessages = {
   programme: "Studiengang",
   startTerm: "Erstes Semester",
   semesterCount: "Anzahl Semester",
-  target: "ECTS-Ziel",
+  target: "Studienziel (ECTS)",
+  planExample: "Mein Bachelorstudium",
+  programmeExample: "Informatik + Wirtschaftsinformatik",
+  autumn: "Herbstsemester",
+  spring: "Frühlingssemester",
+  startYear: "Eintrittsjahr",
   create: "Lokalen Plan erstellen",
   localHelp:
     "Deine Pläne bleiben in diesem Browser. Exportiere eine JSON-Sicherung vor einem Gerätewechsel oder dem Löschen von Browserdaten.",
   programmeHelp:
-    "Trage deinen Studiengang als persönliche Bezeichnung ein. Die Prüfung von Studienanforderungen folgt später.",
+    "Benenne deinen Plan und lege seine Dauer fest. Wähle danach unter Studienanforderungen den passenden Studiengang und Jahrgang aus.",
   saved: "Auf diesem Gerät gespeichert",
   unreadable:
     "Einige gespeicherte Pläne konnten nicht geöffnet werden. Sie bleiben auf diesem Gerät; andere Pläne sind verfügbar.",
@@ -196,12 +206,17 @@ const fr: PlannerMessages = {
   programme: "Programme",
   startTerm: "Premier semestre",
   semesterCount: "Nombre de semestres",
-  target: "Objectif ECTS",
+  target: "Objectif du cursus (ECTS)",
+  planExample: "Mon bachelor",
+  programmeExample: "Informatique + informatique de gestion",
+  autumn: "Semestre d’automne",
+  spring: "Semestre de printemps",
+  startYear: "Année d’entrée",
   create: "Créer un plan local",
   localHelp:
     "Vos plans restent dans ce navigateur. Exportez une sauvegarde JSON avant de changer d’appareil ou d’effacer les données du navigateur.",
   programmeHelp:
-    "Indiquez votre programme comme libellé personnel. La vérification des exigences du cursus sera disponible ultérieurement.",
+    "Nommez votre plan et définissez sa durée. Choisissez ensuite le programme et la cohorte applicables dans Exigences du cursus.",
   saved: "Enregistré sur cet appareil",
   unreadable:
     "Certains plans enregistrés n’ont pas pu être ouverts. Ils restent sur cet appareil ; les autres plans sont disponibles.",

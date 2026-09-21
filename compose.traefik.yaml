@@ -1,0 +1,23 @@
+# Apply after compose.production.yaml on the existing briggen.dev server.
+# Traefik terminates HTTPS; Caddy accepts only its exact Docker address.
+services:
+  caddy:
+    ports: !reset []
+    environment:
+      TRAEFIK_IP: ${TRAEFIK_IP:?Set the inspected Traefik proxy-network address}
+    volumes:
+      - ./deploy/Caddy.traefik:/etc/caddy/Caddyfile:ro
+    networks:
+      ingress:
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: proxy
+      traefik.http.routers.unifr.rule: Host(`${PUBLIC_HOST:?Set public hostname}`)
+      traefik.http.routers.unifr.entrypoints: websecure
+      traefik.http.routers.unifr.tls.certresolver: letsencrypt
+      traefik.http.services.unifr.loadbalancer.server.port: "8080"
+      com.centurylinklabs.watchtower.enable: "false"
+networks:
+  ingress:
+    external: true
+    name: proxy

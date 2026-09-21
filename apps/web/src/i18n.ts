@@ -16,6 +16,9 @@ export const messages = {
     intro:
       "Behalte dein Studium im Blick. Plane deine Semester, entdecke Kurse und finde Platz für das, was dir wichtig ist.",
     start: "Planung starten",
+    resume: "Meinen Plan öffnen",
+    guestIntro:
+      "Ohne Konto starten. Dein Plan wird auf diesem Gerät gespeichert.",
     explore: "Kurskatalog öffnen",
     guest: "Pläne auf diesem Gerät",
     planLabel: "Aktueller Plan",
@@ -33,7 +36,7 @@ export const messages = {
     step3Body: "Erworbene und geplante ECTS getrennt im Blick behalten.",
     empty: "Hier entsteht dein Studienplan.",
     emptyBody:
-      "Die Anwendung wird vorbereitet. Kurse und Studienanforderungen sind noch nicht verfügbar.",
+      "Erstelle zuerst deinen Studienplan. Danach kannst du Kurse auswählen und ihre Termine hier vergleichen.",
     agenda: "Agenda",
     day: "Tag",
     date: "Datum",
@@ -66,6 +69,9 @@ export const messages = {
     intro:
       "Gardez une vue d’ensemble de vos études. Organisez vos semestres, découvrez les cours et faites place à vos priorités.",
     start: "Commencer mon plan",
+    resume: "Retrouver mon plan",
+    guestIntro:
+      "Commencez sans compte. Votre plan est enregistré sur cet appareil.",
     explore: "Ouvrir le catalogue",
     guest: "Plans sur cet appareil",
     planLabel: "Plan actuel",
@@ -84,7 +90,7 @@ export const messages = {
     step3Body: "Distinguer les crédits ECTS acquis des crédits planifiés.",
     empty: "Votre plan d’études prend forme ici.",
     emptyBody:
-      "L’application est en préparation. Les cours et les exigences du cursus ne sont pas encore disponibles.",
+      "Créez d’abord votre plan d’études. Vous pourrez ensuite choisir des cours et comparer leurs horaires ici.",
     agenda: "Agenda",
     day: "Jour",
     date: "Date",
@@ -116,6 +122,8 @@ export const messages = {
     intro:
       "See the bigger picture of your studies. Shape your semesters, discover courses and make room for what matters to you.",
     start: "Start planning",
+    resume: "Continue my plan",
+    guestIntro: "Start without an account. Your plan is saved on this device.",
     explore: "Open course catalogue",
     guest: "Plans on this device",
     planLabel: "Current plan",
@@ -133,7 +141,7 @@ export const messages = {
     step3Body: "Keep earned and planned ECTS credits clearly separated.",
     empty: "Your degree plan starts here.",
     emptyBody:
-      "The application is being prepared. Courses and degree requirements are not available yet.",
+      "Create your degree plan first. Then choose courses and compare their meeting times here.",
     agenda: "Agenda",
     day: "Day",
     date: "Date",

@@ -1,5 +1,54 @@
 # Production operations
 
+## Existing briggen.dev server
+
+This host already uses Traefik for HTTPS. Deploy UniFr Planner as a separate project under
+`/opt/unifr-planner`, with its protected environment at `/etc/unifr-planner.env`. Add
+`compose.traefik.yaml` after the production file:
+
+```sh
+docker compose --env-file /etc/unifr-planner.env \
+  -f compose.production.yaml -f compose.traefik.yaml config -q
+docker compose --env-file /etc/unifr-planner.env \
+  -f compose.production.yaml -f compose.traefik.yaml up -d --build --wait
+```
+
+Set `PUBLIC_HOST=unifr.briggen.dev`, `UNIFR_ACCOUNT_ORIGINS=["https://unifr.briggen.dev"]`,
+and `SITE_ADDRESS=unifr.briggen.dev`. The existing Traefik `letsencrypt` resolver owns certificate
+issuance. Inspect its current `proxy` network IPv4 address and set `TRAEFIK_IP` to that exact
+address before deployment. Never copy a remembered container IP without inspecting it.
+
+The override publishes no host ports. Only the gateway joins the external `proxy` network;
+database, API, and web stay on the project's internal networks. `Caddy.traefik` rejects all peers
+except that exact Traefik address. It reads client addresses from the right of the forwarded
+chain, strips `Forwarded`, and supplies one resolved client address and HTTPS scheme to the API.
+Uvicorn still trusts only the project's Caddy address. If Traefik is recreated with a different
+IP, update `TRAEFIK_IP` and recreate Caddy; the old address fails closed until corrected.
+
+Use a Git archive of the committed revision and immutable image tags for releases. Keep the
+previous release directory and protected environment backup for rollback. Take a verified database
+backup before upgrading an existing installation. Do not copy local acceptance accounts or demo
+catalogue rows into the server. On a new database request an initial catalogue run through the
+scheduler; subsequent runs are at 05:00 Zurich. Catalogue availability depends on the complete
+public source crawl passing validation. Guest planning,
+manual completed-course entry, programme evaluation, and optional accounts remain available while
+the first catalogue is loading.
+
+Verify the public `/api/health` and `/api/ready`, HTTPS certificate, fresh-browser plan creation,
+account sync, and all service health checks after deployment. Keep production smoke accounts
+separate and delete only the specific account created by the smoke test. Never use the disposable
+fixture acceptance runner against the public deployment.
+
+The proxy regression control runs the shipped configuration in isolated Docker containers and
+checks independent client addresses, forged forwarding chains, HTTPS forwarding, and refusal of
+untrusted peers. Run it with an already built API/Caddy revision:
+
+```sh
+uv run python scripts/test-traefik-boundary.py --release <built-git-revision>
+```
+
+Run this separately from browser tests, because Docker network changes can interrupt Chromium.
+
 The production installation is a single Docker Compose project containing PostgreSQL, a
 one-shot migration, the API, the scheduler/monitor, the static web server, and the public Caddy
 gateway. `compose.yaml` remains the development stack; use `compose.production.yaml` only with an

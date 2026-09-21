@@ -4,6 +4,8 @@
 .catalogue-provenance .notice {
   margin: 16px 0;
   max-width: none;
+  padding: 16px 20px;
+  border-radius: 6px;
 }
 .catalogue-provenance .notice h2 {
   font-size: 1rem;
@@ -89,12 +91,14 @@
   list-style: none;
   padding: 0;
   display: grid;
-  gap: 16px;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .course-results > li {
   border: 1px solid var(--color-line);
   padding: 16px 24px 24px;
   background: white;
+  border-radius: 6px;
 }
 .course-results h2 {
   margin-bottom: 8px;
@@ -109,6 +113,10 @@
   width: fit-content;
   max-width: 100%;
   overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.course-results h2 a:hover {
+  text-decoration: underline;
 }
 .course-code {
   font-size: 0.75rem;
@@ -237,6 +245,9 @@
   flex-shrink: 0;
 }
 @media (max-width: 680px) {
+  .course-results {
+    grid-template-columns: 1fr;
+  }
   .search-bar {
     flex-wrap: wrap;
   }
