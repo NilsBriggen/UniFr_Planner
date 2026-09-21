@@ -9,6 +9,11 @@ from unifr_api.catalogue_routes import router as catalogue_router
 from unifr_api.account_routes import router as account_router
 from unifr_api.account_security import AccountError
 from unifr_api.config import Settings
+from unifr_api.admin_routes import router as admin_router
+from unifr_api.operations import event
+from uuid import uuid4
+import time
+from starlette.middleware.base import RequestResponseEndpoint
 
 
 class AccountBoundary:
@@ -72,7 +77,26 @@ class AccountBoundary:
 app = FastAPI(title="UniFr Planner API", version="0.1.0")
 app.include_router(catalogue_router)
 app.include_router(account_router)
+app.include_router(admin_router)
 app.add_middleware(AccountBoundary)
+
+
+@app.middleware("http")
+async def request_log(request: Request, call_next: RequestResponseEndpoint) -> Response:
+    identifier = str(uuid4())
+    start = time.monotonic()
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = identifier
+    route = request.scope.get("route")
+    event(
+        "http_request",
+        request_id=identifier,
+        method=request.method,
+        route=getattr(route, "path", "unmatched"),
+        status=response.status_code,
+        duration_ms=round((time.monotonic() - start) * 1000),
+    )
+    return response
 
 
 @app.exception_handler(AccountError)

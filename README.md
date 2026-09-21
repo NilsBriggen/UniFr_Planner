@@ -1,5 +1,12 @@
 # UniFr_Planner
+
+Development setup is documented in [`docs/development.md`](docs/development.md). The recoverable,
+observable self-hosted release procedure is in [`docs/operations.md`](docs/operations.md); populate
+the variables from [`deploy/production.env.example`](deploy/production.env.example) in a protected
+file outside the repository.
+
 ## Scraping
+
 The timetable is server-rendered HTML, so you can fetch each page with `requests` and parse the course cards with BeautifulSoup. The visible page currently has 44 pages, but `jour=2` filters to Monday—omit it for the unfiltered index.
 
 ```bash

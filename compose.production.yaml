@@ -1,0 +1,153 @@
+name: unifr-production
+x-api: &api
+  image: unifr-planner-api:${RELEASE_ID:?Set immutable release revision}
+  build:
+    context: .
+    dockerfile: apps/api/Dockerfile
+    args: { RELEASE_ID: "${RELEASE_ID:?Set immutable release revision}" }
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: [/tmp]
+  environment: &environment
+    UNIFR_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-unifr}:${POSTGRES_PASSWORD:?Set PostgreSQL password}@db:5432/${POSTGRES_DB:-unifr}
+    UNIFR_ACCOUNT_ORIGINS: ${UNIFR_ACCOUNT_ORIGINS:?Set exact HTTPS origins JSON array}
+    UNIFR_ADMIN_TOKEN: ${UNIFR_ADMIN_TOKEN:?Set separate random operator token}
+    UNIFR_BACKUP_DIR: /backups
+    UNIFR_OPERATIONS_DIR: /operations
+    UNIFR_SOURCE_DOCUMENTS: ${UNIFR_SOURCE_DOCUMENTS:-[]}
+    UNIFR_ALERT_HOOK: ${UNIFR_ALERT_HOOK:-}
+    UNIFR_DATABASE_LIMIT_BYTES: ${UNIFR_DATABASE_LIMIT_BYTES:-10737418240}
+    UNIFR_DISK_MINIMUM_BYTES: ${UNIFR_DISK_MINIMUM_BYTES:-1073741824}
+  logging: &logging
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+services:
+  db:
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-unifr}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set PostgreSQL password}
+      POSTGRES_DB: ${POSTGRES_DB:-unifr}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    logging: *logging
+  volume-init:
+    <<: *api
+    user: "0:0"
+    cap_add: [CHOWN, DAC_OVERRIDE]
+    command:
+      [
+        python,
+        -c,
+        "import os; [os.chown(p,10001,10001) for p in ['/backups','/operations','/data','/config']]",
+      ]
+    volumes:
+      [
+        backups:/backups,
+        operations:/operations,
+        caddy-data:/data,
+        caddy-config:/config,
+      ]
+  migrate:
+    <<: *api
+    command: [alembic, upgrade, head]
+    depends_on:
+      db: { condition: service_healthy }
+  api:
+    <<: *api
+    restart: unless-stopped
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          CMD,
+          python,
+          -c,
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/ready', timeout=4)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  scheduler:
+    <<: *api
+    restart: unless-stopped
+    command: [python, -m, unifr_api.scheduler]
+    volumes: [backups:/backups, operations:/operations]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      volume-init: { condition: service_completed_successfully }
+    healthcheck:
+      test: [CMD, python, -m, unifr_api.scheduler, --health]
+      interval: 30s
+      timeout: 5s
+      retries: 4
+      start_period: 15s
+  web:
+    image: unifr-planner-web:${RELEASE_ID:?Set immutable release revision}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: production
+      args: { RELEASE_ID: "${RELEASE_ID:?Set immutable release revision}" }
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      XDG_CONFIG_HOME: /tmp/caddy-config
+      XDG_DATA_HOME: /tmp/caddy-data
+    tmpfs: [/tmp]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+  caddy:
+    image: unifr-planner-caddy:${RELEASE_ID:?Set immutable release revision}
+    build:
+      context: .
+      dockerfile: deploy/Caddy.Dockerfile
+      args: { RELEASE_ID: "${RELEASE_ID:?Set immutable release revision}" }
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set public HTTPS hostname}
+      TLS_EMAIL: ${TLS_EMAIL:?Set ACME contact email}
+    ports:
+      [
+        "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-80}:8080",
+        "${HTTPS_BIND:-0.0.0.0}:${HTTPS_PORT:-443}:8443",
+      ]
+    volumes:
+      [
+        "./deploy/Caddy.production:/etc/caddy/Caddyfile:ro",
+        caddy-data:/data,
+        caddy-config:/config,
+      ]
+    tmpfs: [/tmp]
+    depends_on:
+      volume-init: { condition: service_completed_successfully }
+      api: { condition: service_healthy }
+      web: { condition: service_healthy }
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+volumes:
+  postgres-data:
+  backups:
+  operations:
+  caddy-data:
+  caddy-config:

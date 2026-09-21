@@ -15,6 +15,7 @@ import { PlanBoard, Setup } from "./planner/Planner";
 import Requirements from "./requirements/Requirements";
 import Suggestions from "./suggestions/Suggestions";
 import Accounts from "./accounts/Accounts";
+import Operations from "./Operations";
 const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
 
 const languages = [
@@ -268,7 +269,7 @@ function AppShell() {
               />
               <Route
                 path="/admin"
-                element={<EmptyPage title={t.admin} body={t.adminBody} t={t} />}
+                element={<Operations title={t.admin} language={language} />}
               />
               <Route
                 path="*"

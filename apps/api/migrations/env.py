@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from unifr_api.config import Settings
 from unifr_api.catalogue import metadata
 from unifr_api import account_repository  # noqa: F401 -- register account tables
+from unifr_api import operations  # noqa: F401 -- register operations tables
 
 url = Settings().database_url
 if context.is_offline_mode():
