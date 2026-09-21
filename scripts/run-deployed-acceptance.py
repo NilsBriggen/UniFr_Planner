@@ -10,10 +10,26 @@ import subprocess
 import sys
 import tempfile
 from urllib.request import HTTPRedirectHandler, ProxyHandler, build_opener
+from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
 ORIGIN = "http://127.0.0.1:4173"  # Also fixed by the existing browser contexts.
 COMPOSE_FILE = ROOT / "compose.production.yaml"
+RESET_SQL = """
+LOCK TABLE public.catalogue_head, public.catalogue_snapshot IN SHARE MODE;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM public.catalogue_head AS head
+        JOIN public.catalogue_snapshot AS snapshot ON snapshot.id = head.snapshot_id
+        WHERE head.id = 1 AND snapshot.id LIKE 'development-fixture-%'
+    ) THEN
+        RAISE EXCEPTION 'Acceptance reset requires a development fixture in this database';
+    END IF;
+END $$;
+WITH removed AS (DELETE FROM public.account_rate_limit RETURNING 1)
+SELECT count(*) FROM removed;
+"""
 
 
 class Refused(Exception):
@@ -50,9 +66,15 @@ def run(envfile: Path, output: Path, *, check_only=False):
     checked(bool(re.fullmatch(r"[0-9a-f]{40}", sha)), "Cannot identify current HEAD")
     environment["RELEASE_ID"] = sha
 
-    def capture(command):
+    def capture(command, *, input=None):
         return subprocess.run(
-            command, cwd=ROOT, env=environment, check=True, capture_output=True, text=True
+            command,
+            cwd=ROOT,
+            env=environment,
+            check=True,
+            capture_output=True,
+            text=True,
+            input=input,
         ).stdout
 
     # A named Docker context can otherwise silently send all checks and writes remotely.
@@ -84,6 +106,22 @@ def run(envfile: Path, output: Path, *, check_only=False):
             "Caddy must serve the local HTTP fixture origin",
         )
         api_env = services["api"]["environment"]
+        db_env = services["db"]["environment"]
+        database = urlsplit(api_env["UNIFR_DATABASE_URL"])
+        database_name = unquote(database.path.removeprefix("/"))
+        checked(
+            database.scheme in {"postgresql", "postgresql+psycopg"}
+            and database.hostname == "db"
+            and database.port in {None, 5432}
+            and bool(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", database_name))
+            and not database.query
+            and not database.fragment,
+            "API must use the Compose PostgreSQL db service with an explicit database name",
+        )
+        checked(
+            database_name == db_env.get("POSTGRES_DB") and bool(db_env.get("POSTGRES_USER")),
+            "API database does not match the configured reset database",
+        )
         checked(
             json.loads(api_env["UNIFR_ACCOUNT_ORIGINS"]) == [ORIGIN],
             "Account origin must be exactly the local HTTP browser origin",
@@ -93,6 +131,7 @@ def run(envfile: Path, output: Path, *, check_only=False):
         checked(len(ids) == 4, "Expected exactly four running db/api/web/caddy containers")
         containers = json.loads(capture(["docker", "inspect", *ids]))
         found = set()
+        db_container_id = None
         for container in containers:
             labels = container["Config"]["Labels"]
             service = labels.get("com.docker.compose.service")
@@ -118,10 +157,23 @@ def run(envfile: Path, output: Path, *, check_only=False):
                 checked(
                     all(
                         live_env.get(key) == api_env[key]
-                        for key in ("UNIFR_ACCOUNT_ORIGINS", "UNIFR_ADMIN_TOKEN")
+                        for key in (
+                            "UNIFR_ACCOUNT_ORIGINS",
+                            "UNIFR_ADMIN_TOKEN",
+                            "UNIFR_DATABASE_URL",
+                        )
                     ),
                     "Running API configuration differs from the explicit environment file",
                 )
+            if service == "db":
+                checked(
+                    all(
+                        live_env.get(key) == db_env[key] for key in ("POSTGRES_DB", "POSTGRES_USER")
+                    )
+                    and live_env.get("POSTGRES_DB") == database_name,
+                    "Running reset database identity differs from the API database",
+                )
+                db_container_id = container["Id"]
             if service == "caddy":
                 checked(
                     live_env.get("SITE_ADDRESS") == "http://127.0.0.1:8080",
@@ -141,21 +193,21 @@ def run(envfile: Path, output: Path, *, check_only=False):
             status.get("availability") == "available" and status.get("development_fixture") is True,
             "Routed catalogue must explicitly identify an available development fixture",
         )
-        return api_env["UNIFR_ADMIN_TOKEN"]
+        return api_env["UNIFR_ADMIN_TOKEN"], db_container_id
 
     if check_only:
         preflight()
         print(f"Local fixture checks passed at {sha}; no counters reset or browsers run.")
         return
     for project in ("desktop", "phone"):
-        token = preflight()  # Recheck before each reset, including after the desktop run.
+        token, db_container_id = preflight()  # Recheck before each reset.
         output.mkdir(parents=True, exist_ok=True)
         # Literal shell program; no host values or credentials are interpolated into it.
-        reset = (
-            'exec psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc '
-            "'WITH removed AS (DELETE FROM account_rate_limit RETURNING 1) SELECT count(*) FROM removed;'"
-        )
-        count = capture(compose + ["exec", "-T", "db", "sh", "-c", reset]).strip()
+        reset = 'exec psql -X -v ON_ERROR_STOP=1 -h /var/run/postgresql -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB" --single-transaction -qAt -f -'
+        # Pin the inspected container, and hold catalogue locks through marker check + delete.
+        count = capture(
+            ["docker", "exec", "-i", db_container_id, "sh", "-c", reset], input=RESET_SQL
+        ).strip()
         checked(count.isdecimal(), "Limiter reset did not return a row count")
         print(f"{project}: removed {count} disposable account_rate_limit rows", flush=True)
         browser_env = {

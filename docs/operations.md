@@ -184,11 +184,25 @@ unverified targets, redirects, non-fixture catalogues, and public deployments. `
 performs those checks without resetting counters or starting browser tests. Run it exclusively
 against disposable acceptance data and without another acceptance process sharing the stack.
 
+The database binding is also checked: the expected API URL must name the Compose PostgreSQL
+`db` service on port 5432 with an explicit database and no connection-query overrides. The live
+API URL must match it exactly, and the inspected database container's `POSTGRES_DB` and
+`POSTGRES_USER` must match Compose. The API's database name must equal that exact reset database;
+its restricted runtime username need not equal the bootstrap user. A mismatch refuses both
+check-only and execution modes. Resets pin the inspected container ID rather than looking up a
+possibly replaced service again. Database names must use letters, numbers, underscores, or
+hyphens and begin with a letter or underscore, so `psql` cannot reinterpret them as connection
+options. The reset connects explicitly to that container's local PostgreSQL socket on port 5432.
+
 The complete suite currently performs 34 credential operations from Docker's shared client address,
 exceeding the unchanged security limit of 30 per address per 15 minutes. Therefore the runner
 executes every desktop test and then every phone test with two workers and no retries. Before
 each project, it rechecks the target and deletes **only `account_rate_limit` rows**, reporting the
-row count. Account, plan, and catalogue records are not reset. This preserves real rate limits,
+row count. In the same PostgreSQL transaction, before deletion, it locks `catalogue_head` and
+`catalogue_snapshot` against concurrent changes and requires current head 1 to join a snapshot
+whose ID starts with `development-fixture-`. An absent or changed marker aborts the transaction
+without deleting rows, even if the earlier HTTP probe passed. Account, plan, and catalogue
+records are not reset. This preserves real rate limits,
 proxy trust, and browser assertions while isolating the two projects' credential budgets. A
 failed check or browser test stops the run with a nonzero exit status; no later reset masks the
 failure. Artifacts are kept separately by project in a printed temporary directory, or at the

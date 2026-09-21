@@ -38,6 +38,13 @@ class AcceptanceRunnerTests(unittest.TestCase):
                     "environment": {
                         "UNIFR_ACCOUNT_ORIGINS": '["http://127.0.0.1:4173"]',
                         "UNIFR_ADMIN_TOKEN": "synthetic-private-token",
+                        "UNIFR_DATABASE_URL": "postgresql+psycopg://runtime:private-db-secret@db:5432/disposable_fixture",
+                    }
+                },
+                "db": {
+                    "environment": {
+                        "POSTGRES_DB": "disposable_fixture",
+                        "POSTGRES_USER": "bootstrap",
                     }
                 },
             },
@@ -73,6 +80,7 @@ class AcceptanceRunnerTests(unittest.TestCase):
         self.status = {"availability": "available", "development_fixture": True}
         self.commands = []
         self.fail_project = None
+        self.database_markers = [True, True]
 
     def bindings(self):
         return {
@@ -93,6 +101,8 @@ class AcceptanceRunnerTests(unittest.TestCase):
         elif command[:3] == ["docker", "context", "inspect"]:
             output = json.dumps("unix:///var/run/docker.sock")
         elif "exec" in command:
+            if "catalogue_head" in kwargs.get("input", "") and not self.database_markers.pop(0):
+                raise subprocess.CalledProcessError(3, command)
             output = "12\n"
         elif command[0] == "npm":
             if f"--project={self.fail_project}" in command:
@@ -125,9 +135,13 @@ class AcceptanceRunnerTests(unittest.TestCase):
         self.assertIn("--project=desktop", actions[1])
         self.assertIn("exec", actions[2])
         self.assertIn("--project=phone", actions[3])
-        self.assertIn("account_rate_limit", actions[0][-1])
-        self.assertNotIn("account_user", actions[0][-1])
-        self.assertNotIn("TRUNCATE", actions[0][-1])
+        reset_sql = next(
+            options["input"] for command, options in self.commands if "exec" in command
+        )
+        self.assertIn("account_rate_limit", reset_sql)
+        self.assertNotIn("account_user", reset_sql)
+        self.assertNotIn("TRUNCATE", reset_sql)
+        self.assertIn("db-id", actions[0])
         self.assertNotIn("synthetic-private-token", output)
         for command, kwargs in self.commands:
             self.assertNotIn("synthetic-private-token", " ".join(command))
@@ -249,6 +263,88 @@ class AcceptanceRunnerTests(unittest.TestCase):
             self.runner.NoRedirect().redirect_request(
                 None, None, 302, "Found", {}, "https://public.example"
             )
+
+    def test_database_identity_mismatches_refuse_before_reset_in_both_modes(self):
+        for check_only in (False, True):
+            for case in (
+                "db-name",
+                "db-user",
+                "api-live",
+                "wrong-host",
+                "wrong-path",
+                "empty-path",
+                "wrong-port",
+                "wrong-scheme",
+                "query-host",
+            ):
+                with self.subTest(check_only=check_only, case=case):
+                    self.setUp()
+                    if case == "db-name":
+                        self.containers[0]["Config"]["Env"] = [
+                            "POSTGRES_DB=important_original_database",
+                            "POSTGRES_USER=bootstrap",
+                        ]
+                    elif case == "db-user":
+                        self.containers[0]["Config"]["Env"] = [
+                            "POSTGRES_DB=disposable_fixture",
+                            "POSTGRES_USER=other-bootstrap",
+                        ]
+                    elif case == "api-live":
+                        self.containers[1]["Config"]["Env"][-1] = (
+                            "UNIFR_DATABASE_URL=postgresql+psycopg://runtime:private-db-secret@db:5432/other"
+                        )
+                    else:
+                        url = {
+                            "wrong-host": "postgresql+psycopg://runtime:secret@remote:5432/disposable_fixture",
+                            "wrong-path": "postgresql+psycopg://runtime:secret@db:5432/important_original_database",
+                            "empty-path": "postgresql+psycopg://runtime:secret@db:5432/",
+                            "wrong-port": "postgresql+psycopg://runtime:secret@db:9999/disposable_fixture",
+                            "wrong-scheme": "sqlite:///disposable_fixture",
+                            "query-host": "postgresql+psycopg://runtime:secret@db:5432/disposable_fixture?host=remote",
+                        }[case]
+                        self.config["services"]["api"]["environment"]["UNIFR_DATABASE_URL"] = url
+                        self.containers[1]["Config"]["Env"][-1] = "UNIFR_DATABASE_URL=" + url
+                    with self.assertRaises(self.runner.Refused):
+                        self.run_runner(check_only=check_only)
+                    self.assertEqual(self.mutations(), [])
+
+    def test_reset_checks_actual_database_marker_in_locked_transaction(self):
+        self.run_runner()
+        resets = [(c, options) for c, options in self.commands if "exec" in c]
+        for command, options in resets:
+            self.assertIn("--single-transaction", command[-1])
+            self.assertIn("-h /var/run/postgresql -p 5432", command[-1])
+            sql = options.get("input", "")
+            self.assertIn(
+                "LOCK TABLE public.catalogue_head, public.catalogue_snapshot IN SHARE MODE", sql
+            )
+            self.assertIn("JOIN public.catalogue_snapshot", sql)
+            self.assertIn("development-fixture-%", sql)
+            self.assertIn("RAISE EXCEPTION", sql)
+            self.assertLess(sql.index("RAISE EXCEPTION"), sql.index("DELETE FROM"))
+            self.assertEqual(sql.count("DELETE FROM"), 1)
+            self.assertIn("DELETE FROM public.account_rate_limit", sql)
+            self.assertNotIn("private-db-secret", sql)
+
+    def test_database_name_cannot_be_interpreted_as_libpq_connection_options(self):
+        database_name = "host=remote"
+        url = "postgresql+psycopg://runtime:secret@db:5432/host%3Dremote"
+        self.config["services"]["api"]["environment"]["UNIFR_DATABASE_URL"] = url
+        self.config["services"]["db"]["environment"]["POSTGRES_DB"] = database_name
+        self.containers[0]["Config"]["Env"][0] = "POSTGRES_DB=" + database_name
+        self.containers[1]["Config"]["Env"][-1] = "UNIFR_DATABASE_URL=" + url
+        with self.assertRaises(self.runner.Refused):
+            self.run_runner()
+        self.assertEqual(self.mutations(), [])
+
+    def test_missing_or_changed_database_marker_stops_before_browser(self):
+        for markers, expected_browsers in (([False], 0), ([True, False], 1)):
+            with self.subTest(markers=markers):
+                self.setUp()
+                self.database_markers = markers.copy()
+                with self.assertRaises(subprocess.CalledProcessError):
+                    self.run_runner()
+                self.assertEqual(sum(c[0] == "npm" for c, _ in self.commands), expected_browsers)
 
 
 if __name__ == "__main__":
