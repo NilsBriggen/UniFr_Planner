@@ -14,6 +14,7 @@ import { PlanProvider, usePlans } from "./planner/context";
 import { PlanBoard, Setup } from "./planner/Planner";
 import Requirements from "./requirements/Requirements";
 import Suggestions from "./suggestions/Suggestions";
+import SourceChanges from "./planner/SourceChanges";
 import Accounts from "./accounts/Accounts";
 import Operations from "./Operations";
 const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
@@ -228,6 +229,7 @@ function AppShell() {
         </nav>
         <div className="canvas">
           <main id="main" tabIndex={-1}>
+            <SourceChanges language={language} />
             <Routes>
               <Route path="/" element={<Home t={t} />} />
               <Route path="/setup" element={<Setup language={language} />} />

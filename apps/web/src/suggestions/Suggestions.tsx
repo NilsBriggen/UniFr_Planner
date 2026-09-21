@@ -15,6 +15,8 @@ import {
 } from "./engine";
 import { createExample, exampleRequirements, seededCatalogue } from "./seed";
 import { suggestionMessages } from "./messages";
+import { catalogueCandidates } from "../planner/published";
+import { catalogueMessages } from "../catalogue-i18n";
 import "./suggestions.css";
 
 function SelectionCard({
@@ -228,7 +230,15 @@ function Comparison({
 }
 export default function Suggestions({ language }: { language: Language }) {
   const t = suggestionMessages[language];
-  const { plan, save, ready, busy, apply, undo, revision } = usePlans();
+  const { plan, save, ready, busy, apply, undo, revision, published } =
+    usePlans();
+  const catalogue = useMemo(
+    () =>
+      published.catalogue && !published.error && !published.loading
+        ? catalogueCandidates(published.catalogue)
+        : [],
+    [published.catalogue, published.error, published.loading],
+  );
   const [selected, setSelected] = useState<string | null>(null);
   const [notice, setNotice] = useState<"applied" | "undone" | "stale" | null>(
     null,
@@ -248,7 +258,7 @@ export default function Suggestions({ language }: { language: Language }) {
       const isExample = plan.programme === "SUGGESTIONS-DEMO";
       const result: SuggestionResult = generateSuggestions({
         plan,
-        catalogue: isExample ? seededCatalogue : [],
+        catalogue: isExample ? seededCatalogue : catalogue,
         requirements: isExample
           ? exampleRequirements(plan)
           : evaluatePlanRequirements(plan),
@@ -258,7 +268,7 @@ export default function Suggestions({ language }: { language: Language }) {
     } catch {
       return { result: null, error: true };
     }
-  }, [plan, preferences]);
+  }, [plan, preferences, catalogue]);
   const result = evaluated.result;
   const suggestion = result?.suggestions.find((s) => s.id === selected);
   const staleRevision =
@@ -291,7 +301,19 @@ export default function Suggestions({ language }: { language: Language }) {
       <p className="intro">{t.intro}</p>
       <SaveStatus language={language} />
       <StatusNotice>
-        <p>{t.availability}</p>
+        <p>
+          {plan?.programme === "SUGGESTIONS-DEMO"
+            ? t.demo
+            : published.loading
+              ? catalogueMessages[language].loading
+              : published.error
+                ? catalogueMessages[language].transport
+                : published.catalogue?.status.development_fixture
+                  ? catalogueMessages[language].fixture
+                  : published.catalogue
+                    ? `${catalogueMessages[language].updated} · ${published.catalogue.status.snapshot_id}`
+                    : t.noData}
+        </p>
       </StatusNotice>
       <div className="actions">
         <Button

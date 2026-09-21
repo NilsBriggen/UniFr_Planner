@@ -8,6 +8,7 @@ import {
 } from "react";
 import type { Plan } from "./domain";
 import { PlanStore } from "./storage";
+import { usePublishedCatalogue } from "./usePublishedCatalogue";
 import {
   applySuggestion,
   type Revision,
@@ -15,6 +16,7 @@ import {
 } from "../suggestions/engine";
 
 type PlansContext = {
+  published: ReturnType<typeof usePublishedCatalogue>;
   plans: Plan[];
   plan?: Plan;
   ready: boolean;
@@ -28,6 +30,12 @@ type PlansContext = {
   undo: () => Promise<boolean>;
 };
 const Context = createContext<PlansContext>({
+  published: {
+    catalogue: undefined,
+    loading: false,
+    error: false,
+    refresh: () => {},
+  },
   plans: [],
   ready: false,
   busy: false,
@@ -50,6 +58,15 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const store = useRef<PlanStore | null>(null);
   const locked = useRef(false);
+  const published = usePublishedCatalogue(
+    state.plans.some(
+      (p) =>
+        p.programme !== "SUGGESTIONS-DEMO" &&
+        p.scenarios.some((s) =>
+          s.courses.some((c) => c.status !== "completed"),
+        ),
+    ),
+  );
   useEffect(() => {
     let active = true;
     try {
@@ -149,6 +166,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   return (
     <Context.Provider
       value={{
+        published,
         plans: state.plans,
         plan: state.plans.find((p) => p.id === state.activeId),
         ready,

@@ -7,12 +7,71 @@ import App from "../App";
 import { PlanStore } from "../planner/storage";
 import { createExample } from "./seed";
 import { suggestionMessages } from "./messages";
+import {
+  publishedCourses,
+  publishedPlan,
+  publishedStatus,
+} from "../planner/published-fixture";
 
 beforeEach(() => {
   vi.stubGlobal("indexedDB", new IDBFactory());
   localStorage.setItem("unifr.language", "en");
 });
 afterEach(() => vi.unstubAllGlobals());
+it("loads published alternatives for the selected CS plus BI plan and preserves the pinned course", async () => {
+  const plan = publishedPlan();
+  await new PlanStore(indexedDB).save(plan);
+  const courses = publishedCourses();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({
+        items: courses,
+        total: 2,
+        offset: 0,
+        limit: 100,
+        status: publishedStatus,
+      }),
+    ),
+  );
+  render(
+    <MemoryRouter initialEntries={["/suggestions"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  await userEvent.click(
+    (await screen.findAllByRole("button", { name: /Compare/ }))[0],
+  );
+  const comparison = screen.getByRole("region", {
+    name: "Compare this change",
+  });
+  expect(comparison).toHaveTextContent("alternative-programming");
+  expect(comparison).toHaveTextContent("1 → 0");
+  expect(comparison).toHaveTextContent("published-2");
+  await userEvent.click(within(comparison).getByRole("checkbox"));
+  courses[0].offerings[1].meetings[0].starts_at = "2026-09-21T12:00:00Z";
+  courses[0].offerings[1].meetings[0].ends_at = "2026-09-21T13:00:00Z";
+  await userEvent.click(
+    screen.getByRole("button", { name: "Check catalogue updates" }),
+  );
+  const refreshed = await screen.findByRole("region", {
+    name: "Compare this change",
+  });
+  expect(within(refreshed).getByRole("checkbox")).not.toBeChecked();
+  await userEvent.click(within(refreshed).getByRole("checkbox"));
+  await userEvent.click(
+    within(refreshed).getByRole("button", { name: "Apply this change" }),
+  );
+  await screen.findByText(
+    "Change saved. Your previous plan is available with Undo.",
+  );
+  const saved = (await new PlanStore(indexedDB).load()).plans[0];
+  expect(saved.scenarios[0].courses[1]).toEqual(plan.scenarios[0].courses[1]);
+  expect(saved.scenarios[0].courses[0].offering?.source_id).toBe(
+    "alternative-programming",
+  );
+  expect(saved.requirements).toEqual(plan.requirements);
+});
 for (const [language, remaining, courses] of [
   ["en", "Remaining ECTS", "Missing courses"],
   ["de", "Fehlende ECTS", "Fehlende Kurse"],

@@ -1,7 +1,10 @@
 import createClient from "openapi-fetch";
 import type { components, paths } from "./schema";
 
-export const api = createClient<paths>();
+export const api = createClient<paths>({
+  baseUrl: window.location.origin,
+  fetch: (request) => fetch(request),
+});
 export type Course = components["schemas"]["CourseDetail"];
 export type Offering = components["schemas"]["PublicOffering"];
 export type Meeting = components["schemas"]["Meeting"];
