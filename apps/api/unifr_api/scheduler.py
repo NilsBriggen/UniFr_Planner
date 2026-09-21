@@ -19,7 +19,6 @@ from .config import Settings
 from .operations import (
     assess_monitor,
     catalogue_job,
-    check_documents,
     event,
     put_state,
     runs,
@@ -27,6 +26,7 @@ from .operations import (
     state,
     tick,
 )
+from .programme_review import load_sources, review_sources
 from unifr_ingest.http import HttpCatalogueSource
 from unifr_ingest.sync import sync
 
@@ -170,7 +170,9 @@ def main() -> None:
 
     def execute(job: str) -> dict[str, Any]:
         if job == "documents":
-            return check_documents(settings.source_documents)
+            return review_sources(
+                load_sources(settings.recipe_source_manifest, settings.source_documents)
+            )
         repository = SqlCatalogueRepository(engine)
         result = catalogue_job(
             lambda: backup(settings.backup_dir, settings.database_url, datetime.now(timezone.utc)),

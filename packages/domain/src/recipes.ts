@@ -21,6 +21,7 @@ export type RecipeSource = {
   retrievedAt: string;
   revisionDate: string | null;
   sha256?: string;
+  contentSha256?: string;
   archive?: string;
   reviewStatus: ReviewStatus;
 };
@@ -193,7 +194,7 @@ function degree(value: string) {
 function gapList(gaps: string[]) {
   check(Array.isArray(gaps) && gaps.every(nonempty), "Invalid gaps");
 }
-function resolveVariants(
+export function resolveRecipeVariants(
   registry: RecipeRegistry,
 ): Map<string, ProgrammeVariant> {
   const raw = new Map<string, ProgrammeVariant>(
@@ -387,7 +388,7 @@ export function assertRecipeRegistry(registry: RecipeRegistry): void {
       );
     }
   }
-  const variants = resolveVariants(registry);
+  const variants = resolveRecipeVariants(registry);
   for (const p of registry.programmes)
     for (const raw of p.variants) {
       const v = variants.get(`${p.id}/${raw.id}`)!;
@@ -676,7 +677,7 @@ export function composeDegree(
       slot.optional || selection.components.some((c) => c.slotId === slot.id),
       `Missing required slot: ${slot.id}`,
     );
-  const variants = resolveVariants(registry),
+  const variants = resolveRecipeVariants(registry),
     issues: string[] = [];
   const components = selection.components.map((selected) => {
     check(

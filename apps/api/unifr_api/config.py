@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
+from typing import Any
 
 
 class Settings(BaseSettings):
@@ -9,7 +10,8 @@ class Settings(BaseSettings):
     admin_token: str = ""
     backup_dir: Path = Path("/backups")
     operations_dir: Path = Path("/operations")
-    source_documents: list[dict[str, str]] = []
+    source_documents: list[dict[str, Any]] = []
+    recipe_source_manifest: Path = Path("data/programmes/recipe-source-monitor.json")
     alert_hook: str = ""
     database_limit_bytes: int = 10_737_418_240
     disk_minimum_bytes: int = 1_073_741_824

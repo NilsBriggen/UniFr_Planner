@@ -1,0 +1,1708 @@
+{
+  "documents": [
+    {
+      "contentSha256": "69861c345e6bc2a644b310b707d4d8a949058e7b4ad6da23e71837890fdec849",
+      "id": "directory-bachelor-theo-theology",
+      "programmeIds": [
+        "bachelor-theo-theology"
+      ],
+      "sha256": "2437fa60549630e708404391c1bdd649c56c5fe7bb6996408c6a8abddb96ffcc",
+      "url": "https://studies.unifr.ch/en/bachelor/theo/theology"
+    },
+    {
+      "contentSha256": "fdd4a39efccf66741620200fb05effa816b31d42913486c89b6516ddc62d7a19",
+      "id": "directory-bachelor-theo-theologicalstudies",
+      "programmeIds": [
+        "bachelor-theo-theologicalstudies"
+      ],
+      "sha256": "b2deeb1601dd8adb4e7d92f2779eb945a8ef26f43c07fb9d6e4c1034743a6e97",
+      "url": "https://studies.unifr.ch/en/bachelor/theo/theologicalstudies"
+    },
+    {
+      "contentSha256": "075d63247c888b0477f825229d79b6366a72ca3f727f3b207dbff30e6ff12ae6",
+      "id": "directory-bachelor-theo-interreligiousstudies",
+      "programmeIds": [
+        "bachelor-theo-interreligiousstudies"
+      ],
+      "sha256": "77fb82db70d34e6e48b79b7ca8e418e1cf824ac7cec9592f0f3a07ab9978d471",
+      "url": "https://studies.unifr.ch/en/bachelor/theo/interreligiousstudies"
+    },
+    {
+      "contentSha256": "8ce3f7e0d72d0e067f45e7b1d5fb3ac8b1fab67dd90a2af6df57eba267bad35b",
+      "id": "directory-bachelor-ius-law",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "ef15bf92211c2454111bc0b9ebe2748d6cf6cba7691aa28ceb6e9f496c75f7d9",
+      "url": "https://studies.unifr.ch/en/bachelor/ius/law"
+    },
+    {
+      "contentSha256": "6bbd68fcdb538073e33d7da89a1fc24b0f3e5f0d49ec54750fe233873ffe7d8a",
+      "id": "directory-bachelor-ius-lawparttime",
+      "programmeIds": [
+        "bachelor-ius-lawparttime"
+      ],
+      "sha256": "446ed13590771e6a72fad331fb17fc61e80e3874597d334e1d6216bf9bef255b",
+      "url": "https://studies.unifr.ch/en/bachelor/ius/lawparttime"
+    },
+    {
+      "contentSha256": "a6e49ecfd64007301e44ff2184eee3b2c7a22809a35356b968a69bf53a879590",
+      "id": "directory-bachelor-eco-management",
+      "programmeIds": [
+        "bachelor-eco-management"
+      ],
+      "sha256": "58e9608a09c7bb1aed5a7c745cdd6cee58d53cfad5f97b50a2e63705f43ead6b",
+      "url": "https://studies.unifr.ch/en/bachelor/eco/management"
+    },
+    {
+      "contentSha256": "be3891212dc57646e699c6cc3fd42b61a2b40f1b4e47cb8939567e7b0546d9a3",
+      "id": "directory-bachelor-eco-economics",
+      "programmeIds": [
+        "bachelor-eco-economics"
+      ],
+      "sha256": "5feb1e6e98495eef4a395f614f794cf1dbdfc6e6d39c0fca1b2d52bb61137767",
+      "url": "https://studies.unifr.ch/en/bachelor/eco/economics"
+    },
+    {
+      "contentSha256": "0e758d05afceba6dc0d4d8a8a7dcdfdb64292b8e00e9d72cad22d236c7b7f56e",
+      "id": "directory-bachelor-eco-ecoius",
+      "programmeIds": [
+        "bachelor-eco-ecoius"
+      ],
+      "sha256": "e5265e924fd14abf5b5ca87e63def9367e453a4b6cea440589ad030e3d837075",
+      "url": "https://studies.unifr.ch/en/bachelor/eco/ecoius"
+    },
+    {
+      "contentSha256": "dd9d7269dd14a995e333a92664d65c8c7309aeb7683afb391711b45e63ab802b",
+      "id": "directory-bachelor-com-businesscommunication",
+      "programmeIds": [
+        "bachelor-com-businesscommunication"
+      ],
+      "sha256": "fdd535b32e61a0c5996e97a36c00912d527f7151c6aded2420162dd5dfead0b7",
+      "url": "https://studies.unifr.ch/en/bachelor/com/businesscommunication"
+    },
+    {
+      "contentSha256": "d0d80172040ad5dd8b309e41a2207341a57804f86c18a4ff49e462fa6c8add96",
+      "id": "directory-bachelor-com-mediacommunicationgerman",
+      "programmeIds": [
+        "bachelor-com-mediacommunicationgerman"
+      ],
+      "sha256": "434e6dd42286fd51a0730070e780c621c478194a6afef25cf0bc1bdc3765e12d",
+      "url": "https://studies.unifr.ch/en/bachelor/com/mediacommunicationgerman"
+    },
+    {
+      "contentSha256": "471fe05c2e57d2d705ca104b8cb399b00a44a618829ff005ff84e7e868ad5493",
+      "id": "directory-bachelor-com-mediacommunicationfrench",
+      "programmeIds": [
+        "bachelor-com-mediacommunicationfrench"
+      ],
+      "sha256": "e0d4ee2448fa954e82dfac88f2cb9438f4d8c13fad4da27723181f573ee3993b",
+      "url": "https://studies.unifr.ch/en/bachelor/com/mediacommunicationfrench"
+    },
+    {
+      "contentSha256": "8aac795b0039a7672c95e7b49f87f8639487b15af38393644163904a320cfd70",
+      "id": "directory-bachelor-phi-philosophy",
+      "programmeIds": [
+        "bachelor-phi-philosophy"
+      ],
+      "sha256": "c7678723620ff2fc0a34f83440977bf7bffd838867a0d240a2dcebbc4417b4ed",
+      "url": "https://studies.unifr.ch/en/bachelor/phi/philosophy"
+    },
+    {
+      "contentSha256": "80456056c4f6657c5d58f43ac3b1ba5aeeaa2b8d0565332b46d62d54cf4e279f",
+      "id": "directory-bachelor-lang-classics",
+      "programmeIds": [
+        "bachelor-lang-classics"
+      ],
+      "sha256": "3fdd610919dc819c3c924eda142e532ffcef7eef2b522970c1a3d293c2336efe",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/classics"
+    },
+    {
+      "contentSha256": "3d8e11f1e179d4a0e7b24818adec76d4bba35c7934d542018d9d8ebfe9c55188",
+      "id": "directory-bachelor-lang-english",
+      "programmeIds": [
+        "bachelor-lang-english"
+      ],
+      "sha256": "6093add59ed5ff8b5eaaccee60d52c4258b9d9525a9349c39797106cf18253eb",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/english"
+    },
+    {
+      "contentSha256": "c6006f6de29aa8e5d26eaca67e610ab8b7b4552f70bc0b07b03beed41e2119f5",
+      "id": "directory-bachelor-lang-french",
+      "programmeIds": [
+        "bachelor-lang-french"
+      ],
+      "sha256": "519dcff5b10e5a77094feacc2c58398e90f99460036af2a1c5df2098922cc2cc",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/french"
+    },
+    {
+      "contentSha256": "7b5be90a135997de733ab77516dc4b95cc00e206348f6face3cf8ad014f95f87",
+      "id": "directory-bachelor-lang-bilingualism",
+      "programmeIds": [
+        "bachelor-lang-bilingualism"
+      ],
+      "sha256": "d7d92e9c1a87975f2825eb1aed50729650b6740f5c8dc8500023cea516537077",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/bilingualism"
+    },
+    {
+      "contentSha256": "20fc48f33394f5386d3ce9c6f2d4bedf2e34ed8b63063b6e9afefd199cea6e8a",
+      "id": "directory-bachelor-lang-german",
+      "programmeIds": [
+        "bachelor-lang-german"
+      ],
+      "sha256": "763b2f7bb0fa51a9b1d9a9bcc29ec05067a0c237f18bf301fcc5d39aaf34346f",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/german"
+    },
+    {
+      "contentSha256": "039dd94f090c693638b97b158aeb4ede83d8f5e19b134d1216b081b66e9372bf",
+      "id": "directory-bachelor-lang-germanliterature",
+      "programmeIds": [
+        "bachelor-lang-germanliterature"
+      ],
+      "sha256": "9bad7f17bd19f37b11ef70eb87c76c0c1505046a4ee002b03d655c9f52bbc9c2",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/germanliterature"
+    },
+    {
+      "contentSha256": "0b17eef789a4b46e963112a19293118a0531b80434c623b5412ebc609316bf2f",
+      "id": "directory-bachelor-lang-greekstudies",
+      "programmeIds": [
+        "bachelor-lang-greekstudies"
+      ],
+      "sha256": "2f698f2334076b567692bd5ed385d2d66a806325991905ddc6c04171cedc01e9",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/greekstudies"
+    },
+    {
+      "contentSha256": "0dabe5bbfc922717cbd0d7528033bcabb589f445a552fad4b7eba3884ac572d6",
+      "id": "directory-bachelor-lang-italian",
+      "programmeIds": [
+        "bachelor-lang-italian"
+      ],
+      "sha256": "b63f19c60ccd5cd61836c9786e7d87f433c67a268d7e97d34cd37978418eef5a",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/italian"
+    },
+    {
+      "contentSha256": "818a6897ce091d5e6a3d4afe5734f7aad537b6357c5e9e4dd49db3429cc48239",
+      "id": "directory-bachelor-lang-latinstudies",
+      "programmeIds": [
+        "bachelor-lang-latinstudies"
+      ],
+      "sha256": "9ebf711cf0b0b79c540b9804271a432532a92db038a74ab979556b6a30304918",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/latinstudies"
+    },
+    {
+      "contentSha256": "e641fe8b9837a8ca217bd7a05377bc7930c2e457010f25124965b11f8fc01a2d",
+      "id": "directory-bachelor-lang-rhaetoromance",
+      "programmeIds": [
+        "bachelor-lang-rhaetoromance"
+      ],
+      "sha256": "e1aa361db132517bbd52c2fac3d9fd2a0bcf5412e9a3a450fc5f7a425d043d7d",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/rhaetoromance"
+    },
+    {
+      "contentSha256": "2cf94c67c8bb1e8b93d43d7eb29a68247849f14a93ddda9c14be545212d98c35",
+      "id": "directory-bachelor-lang-slavicstudies",
+      "programmeIds": [
+        "bachelor-lang-slavicstudies"
+      ],
+      "sha256": "1289aa90f199410827bba6a596f46a0f509095bdf1bfd5ff53ad7a840fb01c31",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/slavicstudies"
+    },
+    {
+      "contentSha256": "2da1267f402b91e4e1e814e173138728e3c7921a7bfa438bf9e57c2c03676041",
+      "id": "directory-bachelor-lang-spanish",
+      "programmeIds": [
+        "bachelor-lang-spanish"
+      ],
+      "sha256": "07dc7549c1a77f70906c119d8c530bf047528e4d7605f2fa47889b82449d892c",
+      "url": "https://studies.unifr.ch/en/bachelor/lang/spanish"
+    },
+    {
+      "contentSha256": "84911708e5afaf02718354562b975c28af6301edaa0ee7c4accf755c2ef1a70a",
+      "id": "directory-bachelor-multi-germanforeignlanguage",
+      "programmeIds": [
+        "bachelor-multi-germanforeignlanguage"
+      ],
+      "sha256": "b51f78915a0535a10c1b36be6216f10dcdad34c73c2b34798dd27e812374d326",
+      "url": "https://studies.unifr.ch/en/bachelor/multi/germanforeignlanguage"
+    },
+    {
+      "contentSha256": "56bd67144b3a0c56f9106b07a9a658c06e9545f93371c8a0f0e874391b57d1d1",
+      "id": "directory-bachelor-multi-frenchforeignlanguage",
+      "programmeIds": [
+        "bachelor-multi-frenchforeignlanguage"
+      ],
+      "sha256": "cbc2cc4ba242197b93624080d5f142cdd214e7b66340d993bf347c864e091703",
+      "url": "https://studies.unifr.ch/en/bachelor/multi/frenchforeignlanguage"
+    },
+    {
+      "contentSha256": "8492b929a754c995ae072c3907bb78af6bdedfbf4acf2141ae02275be970c210",
+      "id": "directory-bachelor-hist-history",
+      "programmeIds": [
+        "bachelor-hist-history"
+      ],
+      "sha256": "cafdb288afd0c5a4e9d370d8b82240085857e387cf8cff2b6ca61d80edf7f470",
+      "url": "https://studies.unifr.ch/en/bachelor/hist/history"
+    },
+    {
+      "contentSha256": "4bc345caf52bb93fa3c659cfc139beb41a137c69ee7f5fff59d8df2427d274a7",
+      "id": "directory-bachelor-hist-modernhistory",
+      "programmeIds": [
+        "bachelor-hist-modernhistory"
+      ],
+      "sha256": "d8b22847c6b2bbd68a314ae21940669098b0feb1e22054165ed911e76f21d437",
+      "url": "https://studies.unifr.ch/en/bachelor/hist/modernhistory"
+    },
+    {
+      "contentSha256": "cde265a9b5340e4d503c5dbaaa37159ca2233f2af1b5dfea911efb23ba72b666",
+      "id": "directory-bachelor-hist-contemporaryhistory",
+      "programmeIds": [
+        "bachelor-hist-contemporaryhistory"
+      ],
+      "sha256": "edf1547e4a14118c9359159d53be0316a78b9b2e62aa17cf275c8b4cbc93e9e1",
+      "url": "https://studies.unifr.ch/en/bachelor/hist/contemporaryhistory"
+    },
+    {
+      "contentSha256": "1bbb8cae2c7d5f5bea84c0b88869cb284debea6ee523a3fce3ce0407a5643b59",
+      "id": "directory-bachelor-artmus-arthistory",
+      "programmeIds": [
+        "bachelor-artmus-arthistory"
+      ],
+      "sha256": "2b90545bfab9fe123137274c71a6b407eb84320dfdcba2703eb935d4378f1f2a",
+      "url": "https://studies.unifr.ch/en/bachelor/artmus/arthistory"
+    },
+    {
+      "contentSha256": "2d6a85cd8b92a1658719c880ce6b94a5e006c037d15676e083ead7286ca951e4",
+      "id": "directory-bachelor-artmus-musicology",
+      "programmeIds": [
+        "bachelor-artmus-musicology"
+      ],
+      "sha256": "eb60f15192dcd6271bf2636841c122a1146ba6b3cf5f2b5d4ac384c5005c2033",
+      "url": "https://studies.unifr.ch/en/bachelor/artmus/musicology"
+    },
+    {
+      "contentSha256": "96e9fcb07de4e0f1c4ed3291f7dea3dc735b15d10995215f9c03e91bc85a4509",
+      "id": "directory-bachelor-soc-sociologyfrench",
+      "programmeIds": [
+        "bachelor-soc-sociologyfrench"
+      ],
+      "sha256": "c73ec186c89e6dc1b6c619f82beee12b7ec2f35f727f4715355bed07c79f031b",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/sociologyfrench"
+    },
+    {
+      "contentSha256": "24b0f540b054217d3a648ec40dff2de06efc790f928d984ab1da6b2af70b5e3a",
+      "id": "directory-bachelor-soc-sociologygerman",
+      "programmeIds": [
+        "bachelor-soc-sociologygerman"
+      ],
+      "sha256": "7e357aafacf1189bd855064298d2455f46c7ee378c09fa849d40a40e74dafa98",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/sociologygerman"
+    },
+    {
+      "contentSha256": "54108f55cc3a2f15f5140bf4aeeed4f1decda8bdbf5f1bd143b2102d9e8b0944",
+      "id": "directory-bachelor-soc-socialworkfrench",
+      "programmeIds": [
+        "bachelor-soc-socialworkfrench"
+      ],
+      "sha256": "5c6bcbf82f946b8ade973c2754d635d7f8653911d52a3754db8d720e91e3ff31",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/socialworkfrench"
+    },
+    {
+      "contentSha256": "523473f9e9145f10b4d68b33caf46e11100cf7a9c161a623156b696961ea470e",
+      "id": "directory-bachelor-soc-socialworkgerman",
+      "programmeIds": [
+        "bachelor-soc-socialworkgerman"
+      ],
+      "sha256": "3c656814a3896c7f4aa181134cc3b2659a7fedb61a6ad65dcae9898fb9de8f4a",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/socialworkgerman"
+    },
+    {
+      "contentSha256": "c077f2023ddc155e2b8125c1f207847c5bcfa42be0fe656851eeb0f220b77580",
+      "id": "directory-bachelor-soc-easterneuropeanstudies",
+      "programmeIds": [
+        "bachelor-soc-easterneuropeanstudies"
+      ],
+      "sha256": "9e7b21b6890efd690658c0069441f7ec3f7340f0d5a27fce24cc062bb1ad0770",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/easterneuropeanstudies"
+    },
+    {
+      "contentSha256": "09fb44258269717c69edd7f41d8765c0539bb8b53e07c0c39571d8090b88fad6",
+      "id": "directory-bachelor-soc-politicalscience",
+      "programmeIds": [
+        "bachelor-soc-politicalscience"
+      ],
+      "sha256": "e7d4aa75b535bce8c8b5c6887d196a087b5a3508eb93fb2defc6ae8905b4767f",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/politicalscience"
+    },
+    {
+      "contentSha256": "00bef33a8978a926c8b7e205a44c5fa455cc6e991d9b0e6a768571e3506d7d5d",
+      "id": "directory-bachelor-soc-religiousstudies",
+      "programmeIds": [
+        "bachelor-soc-religiousstudies"
+      ],
+      "sha256": "13b1ccf1fadb6ad61a93e74978e20417e6a6586cf2464791ba6576172cc3dacc",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/religiousstudies"
+    },
+    {
+      "contentSha256": "f8d972c399074c4460ce312c0274558102ecb32b4479cb34ff5d5ff0451a4139",
+      "id": "directory-bachelor-soc-socialanthropology",
+      "programmeIds": [
+        "bachelor-soc-socialanthropology"
+      ],
+      "sha256": "8f2d32d3f7871d2042eeb159736a4444c265e051f08df35f930bca2f66bf782c",
+      "url": "https://studies.unifr.ch/en/bachelor/soc/socialanthropology"
+    },
+    {
+      "contentSha256": "a7105ce6653e80ce7d399573aac7b9c90b246410077515e95d3116a688d7a62e",
+      "id": "directory-bachelor-pedpsy-specialeducation",
+      "programmeIds": [
+        "bachelor-pedpsy-specialeducation"
+      ],
+      "sha256": "d920ddff9c134c62fc3b6ba3afdaad5e10a9e2905d9753b838713eb018d8dce4",
+      "url": "https://studies.unifr.ch/en/bachelor/pedpsy/specialeducation"
+    },
+    {
+      "contentSha256": "5bd20059cbbbaefbf9ed8845cd0734aa0de13901ef19d0a2f3b653a3f330abcb",
+      "id": "directory-bachelor-pedpsy-speechtherapy",
+      "programmeIds": [
+        "bachelor-pedpsy-speechtherapy"
+      ],
+      "sha256": "6e027f1f719b913c32df8c3a5b508ea1e56e8895fc031ee86d1f1373cab2b036",
+      "url": "https://studies.unifr.ch/en/bachelor/pedpsy/speechtherapy"
+    },
+    {
+      "contentSha256": "b7c080064d780eb7a9469e6807825f6a9ca5bda86c8936e09af8e24ea7891a1b",
+      "id": "directory-bachelor-pedpsy-specialeduminor",
+      "programmeIds": [
+        "bachelor-pedpsy-specialeduminor"
+      ],
+      "sha256": "ca0a5210bf705335d26bf27d4b989f903b524232914e8117f220bfac548738cc",
+      "url": "https://studies.unifr.ch/en/bachelor/pedpsy/specialeduminor"
+    },
+    {
+      "contentSha256": "d671a4bf2d561f58baad69d47fa0b862ea5d4f6d9ed8281a4f8a60cd1469ab74",
+      "id": "directory-bachelor-pedpsy-educationalsciences",
+      "programmeIds": [
+        "bachelor-pedpsy-educationalsciences"
+      ],
+      "sha256": "c124e2ae76a8096d7e462a9de1bb5b82582c6cac8d5c49a9436f4a687e4783cf",
+      "url": "https://studies.unifr.ch/en/bachelor/pedpsy/educationalsciences"
+    },
+    {
+      "contentSha256": "6c84f57abd6d6a2802eac3b76c876b3b703808ee8152cb1570a96c43dfc7a41d",
+      "id": "directory-bachelor-pedpsy-educationpsychology",
+      "programmeIds": [
+        "bachelor-pedpsy-educationpsychology"
+      ],
+      "sha256": "10d196962c6c2b1950945ae4df9704e36ec18ba9e0592e4c2a1b8a10da6414d9",
+      "url": "https://studies.unifr.ch/en/bachelor/pedpsy/educationpsychology"
+    },
+    {
+      "contentSha256": "8072f24fced4cb005d16d9534fc6d38ebd09284baafa7ef1da58dbb744cc236b",
+      "id": "directory-bachelor-pedpsy-psychology",
+      "programmeIds": [
+        "bachelor-pedpsy-psychology"
+      ],
+      "sha256": "2a0c1c0946a8430f04d273f2ab5d3d9b52c8fdd6a944e2c163e88099b3f03952",
+      "url": "https://studies.unifr.ch/en/bachelor/pedpsy/psychology"
+    },
+    {
+      "contentSha256": "9c0ff08ec05d6e7044e9eb6f237acd693407927e618efb51fb9a182b974f2d49",
+      "id": "directory-bachelor-sci-biochemistry",
+      "programmeIds": [
+        "bachelor-sci-biochemistry"
+      ],
+      "sha256": "e5946eedfec506b0e54b84b3f39d9bed12ff25a9639609e73212669663d356a7",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/biochemistry"
+    },
+    {
+      "contentSha256": "3d50c967ab0519c9c0f22c6b5d7d9f4b2c56f50c89f1069a1aa0ac6cfa6b5bb8",
+      "id": "directory-bachelor-sci-biology",
+      "programmeIds": [
+        "bachelor-sci-biology"
+      ],
+      "sha256": "58bdf0eb923612d0558242799abab5c20c7e6f2a577fcdac9e6af001d002b4fe",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/biology"
+    },
+    {
+      "contentSha256": "5049db45c7bc3800b6554b01dc6c7937cd282afe45c6723dc9a6175c6d0e447a",
+      "id": "directory-bachelor-sci-chemistry",
+      "programmeIds": [
+        "bachelor-sci-chemistry"
+      ],
+      "sha256": "330ba59a3a3fc23ef5749a710746fe2b711bc5c57ccbefc4d0d7e11aed2d0581",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/chemistry"
+    },
+    {
+      "contentSha256": "55612439d18bc8ce45090247892ece0ff4fdadfc3f508201c5cde0bb80b3b930",
+      "id": "directory-bachelor-sci-earthsciences",
+      "programmeIds": [
+        "bachelor-sci-earthsciences"
+      ],
+      "sha256": "c3cc596d03b27ba0e0ea859db8a579a0816a2c3bf63b8696cc09b3c39eade5b3",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/earthsciences"
+    },
+    {
+      "contentSha256": "0ffcf0bcd8edca743f775aef054fcfd02973a92b1ac4262a6a62078dba8a56d1",
+      "id": "directory-bachelor-sci-environmentalsciences",
+      "programmeIds": [
+        "bachelor-sci-environmentalsciences"
+      ],
+      "sha256": "ee28e5505e9a680ff2ded42c6ae0eab71cf6e6d13461431f426eaa743aa99a58",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/environmentalsciences"
+    },
+    {
+      "contentSha256": "e787f897f81760bb096346ac313a22e479b3f7539e460f91106dd17962685d65",
+      "id": "directory-bachelor-sci-geography",
+      "programmeIds": [
+        "bachelor-sci-geography"
+      ],
+      "sha256": "8afb611b63f1e801b4a8bbb5f8d8d80073e4617341acb91af8f8db276181f7f8",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/geography"
+    },
+    {
+      "contentSha256": "3bdd7c1f4e95de914f08f753011d679c7620383823c6d3ce0ee387f0b09824ef",
+      "id": "directory-bachelor-sci-mathematics",
+      "programmeIds": [
+        "bachelor-sci-mathematics"
+      ],
+      "sha256": "ae2aa809e69e4c30e9c95a3b07bcf23461d55a6d593f44465dc36385ef1a7c02",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/mathematics"
+    },
+    {
+      "contentSha256": "2158e7fbe6c00839d9e5b8b0c45b75dc046d2e79369b457c39572a7e75038d11",
+      "id": "directory-bachelor-sci-physics",
+      "programmeIds": [
+        "bachelor-sci-physics"
+      ],
+      "sha256": "34a82aebf0012771ef4c1c76b302edd54242ada08b6122d217d08f551789e2c9",
+      "url": "https://studies.unifr.ch/en/bachelor/sci/physics"
+    },
+    {
+      "contentSha256": "97be6288dad6ac13afc1e49bcc7d36d77eacbbebcc3b46d2b6f30963564fb647",
+      "id": "directory-bachelor-medspo-humanmedicine",
+      "programmeIds": [
+        "bachelor-medspo-humanmedicine"
+      ],
+      "sha256": "bdf36e7f551c60514072c3fc9ca26971101c5b1ce27fff73504c844aaed907ab",
+      "url": "https://studies.unifr.ch/en/bachelor/medspo/humanmedicine"
+    },
+    {
+      "contentSha256": "da50cca40e18dd10f01b639bb58f1f44dbe2e35b8f72ce5bc7e61bf11eea751a",
+      "id": "directory-bachelor-medspo-biomedicalsciences",
+      "programmeIds": [
+        "bachelor-medspo-biomedicalsciences"
+      ],
+      "sha256": "55c945ed099e60d09712b05a1d5f3f25a53e3bce5fa5d6e89b07fda33428da14",
+      "url": "https://studies.unifr.ch/en/bachelor/medspo/biomedicalsciences"
+    },
+    {
+      "contentSha256": "b1ee5d49e1c6b9e985280527abca70211bbd8c03f95bff0512415343a964c9dc",
+      "id": "directory-bachelor-medspo-sportsciences",
+      "programmeIds": [
+        "bachelor-medspo-sportsciences"
+      ],
+      "sha256": "30e2074f0dd375030e317ee22b04b599405f89e98035f8bccf7cbdd1b2c1ea17",
+      "url": "https://studies.unifr.ch/en/bachelor/medspo/sportsciences"
+    },
+    {
+      "contentSha256": "c95f9134613c376156eaa30fad3c3927eef62cf75a3171221ba80a4b0d41bdcf",
+      "id": "directory-bachelor-digitinf-businessinformatics",
+      "programmeIds": [
+        "bachelor-digitinf-businessinformatics"
+      ],
+      "sha256": "742780a7c46d807f4d0c16502e26fd6b993609b6aea39909f295d00d32bf22a0",
+      "url": "https://studies.unifr.ch/en/bachelor/digitinf/businessinformatics"
+    },
+    {
+      "contentSha256": "2ae0cd521b17747514e807ba6aaaa7eeb1a53e9dbce2ac4c648a4326e59f749a",
+      "id": "directory-bachelor-digitinf-informatics",
+      "programmeIds": [
+        "bachelor-digitinf-informatics"
+      ],
+      "sha256": "b8bab44db07b830966480f830b0527bd317257511933d8d590dc24c8d6abe716",
+      "url": "https://studies.unifr.ch/en/bachelor/digitinf/informatics"
+    },
+    {
+      "contentSha256": "1e71907dfefd9634347d877bce04134c28231529f5392be86f49706489489fce",
+      "id": "directory-bachelor-teach-teacheredu0",
+      "programmeIds": [
+        "bachelor-teach-teacheredu0"
+      ],
+      "sha256": "65c0b85841f686f2086054fe5ac542fcb9fe3f9b1b91786af4f1b47b37d84cd7",
+      "url": "https://studies.unifr.ch/en/bachelor/teach/teacheredu0"
+    },
+    {
+      "contentSha256": "d027b23be6e5b191df99ba7e25182536237f1a19643f134202a7209580dc65d1",
+      "id": "directory-bachelor-teach-teacheredu1",
+      "programmeIds": [
+        "bachelor-teach-teacheredu1"
+      ],
+      "sha256": "51c9e62396ae7e144787396cb3450b0a729202628e549de428ec22183a4bcefb",
+      "url": "https://studies.unifr.ch/en/bachelor/teach/teacheredu1"
+    },
+    {
+      "contentSha256": "eddb1417b62154833f96dd6f68fedcff5abfbb273ca5f87fc44db53b59cc5733",
+      "id": "directory-master-theo-theology",
+      "programmeIds": [
+        "master-theo-theology"
+      ],
+      "sha256": "88953bb462371fc9bbfc4a67e0cfe61535ac9ec29bbc86c885b8d99877e78ce9",
+      "url": "https://studies.unifr.ch/en/master/theo/theology"
+    },
+    {
+      "contentSha256": "a9cbd15ae0c9071547f3c46225d7273d671f97bbe311379f572388391d2ecf93",
+      "id": "directory-master-theo-theologicalstudies",
+      "programmeIds": [
+        "master-theo-theologicalstudies"
+      ],
+      "sha256": "7082ec8a0575c676bb302ef437b571baee64021809b1c6e3d9576eb171db2ab3",
+      "url": "https://studies.unifr.ch/en/master/theo/theologicalstudies"
+    },
+    {
+      "contentSha256": "699c41e723640314fad313e59ce22adb5f72db56a3d0e7d2d22e11959738536c",
+      "id": "directory-master-theo-interreligiousstudies",
+      "programmeIds": [
+        "master-theo-interreligiousstudies"
+      ],
+      "sha256": "fae148386c61e9240f4c42d2b83a664e373e6e251a699adb8b56d05a0e871990",
+      "url": "https://studies.unifr.ch/en/master/theo/interreligiousstudies"
+    },
+    {
+      "contentSha256": "a1768619194417f83b154098e0737e18196cda81621797d7a1bd28d8194d901e",
+      "id": "directory-master-theo-canonicallicence",
+      "programmeIds": [
+        "master-theo-canonicallicence"
+      ],
+      "sha256": "bbb796f83a2dccba298114b595d4e0995014dfd7eb6e3136f14a60215b34d46f",
+      "url": "https://studies.unifr.ch/en/master/theo/canonicallicence"
+    },
+    {
+      "contentSha256": "c95fcdbc38b9e727d8c4fd986f7bd39315b5e551cf530747e20cb01d48eece86",
+      "id": "directory-master-ius-law",
+      "programmeIds": [
+        "master-ius-law"
+      ],
+      "sha256": "c13a1262e2b5ca95e3eb04205a8b4f2b08e8dabca56d9624951974e90c25cc33",
+      "url": "https://studies.unifr.ch/en/master/ius/law"
+    },
+    {
+      "contentSha256": "0dde9c097a4cdb006a9b5de9e4a888ccb24605f56edb5262894b091f7a811add",
+      "id": "directory-master-ius-lawparttime",
+      "programmeIds": [
+        "master-ius-lawparttime"
+      ],
+      "sha256": "f28036d91757e62ae522d66c37ec46159c185ee7245098fbfd7431697d6fb1bd",
+      "url": "https://studies.unifr.ch/en/master/ius/lawparttime"
+    },
+    {
+      "contentSha256": "c51b2b988d61ac881263431bcab5ec8a989c52a119cf3c715e14b98b57dc4515",
+      "id": "directory-master-ius-legalstudies",
+      "programmeIds": [
+        "master-ius-legalstudies"
+      ],
+      "sha256": "f26f0dd62e72c83792a2b3a14b4d82a4454c7ccf044f427d48fb935c633b9c8e",
+      "url": "https://studies.unifr.ch/en/master/ius/legalstudies"
+    },
+    {
+      "contentSha256": "46d778653fd6eab15b5fd4178c0f67c14bf7c9dbc9cb6e40b5f74e52bdeb8510",
+      "id": "directory-master-eco-management",
+      "programmeIds": [
+        "master-eco-management"
+      ],
+      "sha256": "ab4b60cd89883d87ad36d0c44a74727048938c0202f92b49511cc4eccef34f31",
+      "url": "https://studies.unifr.ch/en/master/eco/management"
+    },
+    {
+      "contentSha256": "8bb90d7112d9a8c675a6e5e345a0ffce70e2ea985a9f15602365eb62f9a0bde9",
+      "id": "directory-master-eco-economics",
+      "programmeIds": [
+        "master-eco-economics"
+      ],
+      "sha256": "e4357566eea1c34b95926fdc22256508710bb851ad26a1735e727263559fa9f0",
+      "url": "https://studies.unifr.ch/en/master/eco/economics"
+    },
+    {
+      "contentSha256": "f3c74fb3a9933f7d118772a841dad43ddfe6c75368cfc9d467e616da80af1d1b",
+      "id": "directory-master-eco-accountingfinance",
+      "programmeIds": [
+        "master-eco-accountingfinance"
+      ],
+      "sha256": "4def75cf678af52beca4cda56f47f127290fdd8ee00d85fa00160a45359bc92f",
+      "url": "https://studies.unifr.ch/en/master/eco/accountingfinance"
+    },
+    {
+      "contentSha256": "c1816f0311a0d359e74a2e63bfdb981327f56fa7c9992e97ab8738252057ed1e",
+      "id": "directory-master-eco-europeanbusiness",
+      "programmeIds": [
+        "master-eco-europeanbusiness"
+      ],
+      "sha256": "298fe9035f3a293d75d8234f849d85b907d2b73fcf50a181dadebc3568e15e6c",
+      "url": "https://studies.unifr.ch/en/master/eco/europeanbusiness"
+    },
+    {
+      "contentSha256": "ff4d5b822976b1901caaad337443af983112401010404c2784a281848ddaa32d",
+      "id": "directory-master-eco-marketing",
+      "programmeIds": [
+        "master-eco-marketing"
+      ],
+      "sha256": "2db575263a43765df8c9ae48014fc1330c8b854ff1da1baa22e7a75ad78e8115",
+      "url": "https://studies.unifr.ch/en/master/eco/marketing"
+    },
+    {
+      "contentSha256": "4e1aa314043d69c7b24691d2416be5b56a52e774fde15baf1fd0aa5e3cacd3b5",
+      "id": "directory-master-eco-ethicseco30",
+      "programmeIds": [
+        "master-eco-ethicseco30"
+      ],
+      "sha256": "d31f73694e897e31ad299856e939ff0c00dbfa1a8330d56917a6c4ff3e17b276",
+      "url": "https://studies.unifr.ch/en/master/eco/ethicseco30"
+    },
+    {
+      "contentSha256": "0a2839cf2a5825a5d681df0ea32d00525f5b368e9cba0517bcb844d2670e7942",
+      "id": "directory-master-com-businesscommunication",
+      "programmeIds": [
+        "master-com-businesscommunication"
+      ],
+      "sha256": "a1870633d44e6edfa8933fedd5693e94c40472b736a3efc0d0438a13ccd9f5e7",
+      "url": "https://studies.unifr.ch/en/master/com/businesscommunication"
+    },
+    {
+      "contentSha256": "d8e76aaf88c6cc434a7105db449b83b50d8e52b0bbd26ff21d9b5ae08d1e101a",
+      "id": "directory-master-com-mediacommunicationgerman",
+      "programmeIds": [
+        "master-com-mediacommunicationgerman"
+      ],
+      "sha256": "801023514ca8f78bf40c114fd3a01ab82546f3c932cecfd2d6093b5d8b456de1",
+      "url": "https://studies.unifr.ch/en/master/com/mediacommunicationgerman"
+    },
+    {
+      "contentSha256": "9b347270a2bd5167fd8bf9781a9bbd41d893e4c3d8b272da15a1bb1446474396",
+      "id": "directory-master-com-mediacommunicationfrench",
+      "programmeIds": [
+        "master-com-mediacommunicationfrench"
+      ],
+      "sha256": "349b253d3ee772bb55e90460d7abadeb32448b7fb18b1784a5ed6524cd73ea1e",
+      "url": "https://studies.unifr.ch/en/master/com/mediacommunicationfrench"
+    },
+    {
+      "contentSha256": "1da942ca51acc17229757635ecd97dd4ee8ac5f3bee8e250f37b398725446c00",
+      "id": "directory-master-com-digitalcommunication",
+      "programmeIds": [
+        "master-com-digitalcommunication"
+      ],
+      "sha256": "a03d249ab9a52d5d10b65430a8eb638c4b0743ce6e3ddbc1464a27bc8a29d738",
+      "url": "https://studies.unifr.ch/en/master/com/digitalcommunication"
+    },
+    {
+      "contentSha256": "21ecde3513c258b1ad08d3e45d54c391d6a974927e707f18855d08b46dd82565",
+      "id": "directory-master-phi-philosophy",
+      "programmeIds": [
+        "master-phi-philosophy"
+      ],
+      "sha256": "cc950825a8964331c33e4e99a3fc90e5b7d19afda805c856f788d02325907234",
+      "url": "https://studies.unifr.ch/en/master/phi/philosophy"
+    },
+    {
+      "contentSha256": "726e21c23e437b85cd94dc02421d67a78939b7f35c440e88637bbe3161275a27",
+      "id": "directory-master-lang-classics",
+      "programmeIds": [
+        "master-lang-classics"
+      ],
+      "sha256": "06fc42cf59cd229c7fde10adf7c68abce3608d6658b3ffad35409b098f4fa60c",
+      "url": "https://studies.unifr.ch/en/master/lang/classics"
+    },
+    {
+      "contentSha256": "33faa6c0a2055d5f67cdd6dca04ec4a6323b37eebb65f4fe6545bcac1864c582",
+      "id": "directory-master-lang-comparativeliterature",
+      "programmeIds": [
+        "master-lang-comparativeliterature"
+      ],
+      "sha256": "6a991bd0da77a866632886be460f12767e6adc1983dc9ac4f0a60a0140c2e251",
+      "url": "https://studies.unifr.ch/en/master/lang/comparativeliterature"
+    },
+    {
+      "contentSha256": "a1d13b53a1212a50621834348a0805dcab9bd0f17cac0a07f6026d1a9d7bd986",
+      "id": "directory-master-lang-english",
+      "programmeIds": [
+        "master-lang-english"
+      ],
+      "sha256": "0748460f8d7157e4b8517c6c67b6f93620c84aa211a59d83b5ede9b64b2eb018",
+      "url": "https://studies.unifr.ch/en/master/lang/english"
+    },
+    {
+      "contentSha256": "a32c05f4f80c797f510ad0afe4f69165377880a4c504ee20f8c9417c7acb5e1f",
+      "id": "directory-master-lang-french",
+      "programmeIds": [
+        "master-lang-french"
+      ],
+      "sha256": "5dbff7dbb487353d8667d7bccd620b32b018db95600ce1ba9d6e3a2fbd95f663",
+      "url": "https://studies.unifr.ch/en/master/lang/french"
+    },
+    {
+      "contentSha256": "ad410254998328dda5dd380a6102203db69d6fb0bd9b7382a97214743cf71e84",
+      "id": "directory-master-lang-foundationalcurriculum30",
+      "programmeIds": [
+        "master-lang-foundationalcurriculum30"
+      ],
+      "sha256": "4f66bc0d947252a5d807336fb87fecd9587095b84939307917d865a9ef9b9715",
+      "url": "https://studies.unifr.ch/en/master/lang/foundationalcurriculum30"
+    },
+    {
+      "contentSha256": "4189a605042f988077211bfea62d5327ee4644b209131de07acd83640a9baf63",
+      "id": "directory-master-lang-german",
+      "programmeIds": [
+        "master-lang-german"
+      ],
+      "sha256": "b3ee0e142ebaa869064e4448f80ed1384b51afb8d3dba4d568fc363a2a54e2c8",
+      "url": "https://studies.unifr.ch/en/master/lang/german"
+    },
+    {
+      "contentSha256": "beeffcc803a957126ba3e85c6e9764043ed90349b483329f67754f203dd1fe91",
+      "id": "directory-master-lang-germanliterature",
+      "programmeIds": [
+        "master-lang-germanliterature"
+      ],
+      "sha256": "249c3f085abadf51cbb5046ab9ccda852944ae8dd6bd8067193194b1285160bf",
+      "url": "https://studies.unifr.ch/en/master/lang/germanliterature"
+    },
+    {
+      "contentSha256": "ac8fcf8cc96d337aa92682fbde0008a1ca5f876eab0ec7fdd55329ea3b53d34e",
+      "id": "directory-master-lang-greekstudies",
+      "programmeIds": [
+        "master-lang-greekstudies"
+      ],
+      "sha256": "b026a1a3dd15833ffff7c5d1c81d4b18e2f63c9feb652e134e40958b32cb0f5c",
+      "url": "https://studies.unifr.ch/en/master/lang/greekstudies"
+    },
+    {
+      "contentSha256": "a8d75ed073ed5e651b5b86e40e96317e9be8c018857c5ee2a3a80dbcea33cf70",
+      "id": "directory-master-lang-italian",
+      "programmeIds": [
+        "master-lang-italian"
+      ],
+      "sha256": "4deadc4dc384456ee89fb9a655556c4a6f946c7328885c0e7e5daab88f086a72",
+      "url": "https://studies.unifr.ch/en/master/lang/italian"
+    },
+    {
+      "contentSha256": "f88cc412e38af582790296507ea00e22e6851f2a2465dfcf1930d53f730fee8a",
+      "id": "directory-master-lang-italiandd",
+      "programmeIds": [
+        "master-lang-italiandd"
+      ],
+      "sha256": "fc9a1c787bf86b24283dce43c2cd6c403cd60c0a1ae8f920cfe79777aefbfac6",
+      "url": "https://studies.unifr.ch/en/master/lang/italiandd"
+    },
+    {
+      "contentSha256": "d6d8be2684af4a0acd3f79c0dd18248066d64f968dff5dd0a8476a979168ecb2",
+      "id": "directory-master-lang-latinstudies",
+      "programmeIds": [
+        "master-lang-latinstudies"
+      ],
+      "sha256": "6f85f60219a090fc594bed44bc2fd8ad873b393d5bc2f07a70b0c6c45d8df855",
+      "url": "https://studies.unifr.ch/en/master/lang/latinstudies"
+    },
+    {
+      "contentSha256": "712ef272bbf0f4782f32ec89755dd942b35020c23140ecab22b89bd03473086e",
+      "id": "directory-master-lang-rhaetoromance",
+      "programmeIds": [
+        "master-lang-rhaetoromance"
+      ],
+      "sha256": "2eda13601de6b1f9621370422c53b62fb10603cc4ce5489d4345160e37030ee9",
+      "url": "https://studies.unifr.ch/en/master/lang/rhaetoromance"
+    },
+    {
+      "contentSha256": "8d5728813a317c949cad83e0f6e92b5a170f93e6c15699ff2548fd0d3604dc8e",
+      "id": "directory-master-lang-slavicstudies",
+      "programmeIds": [
+        "master-lang-slavicstudies"
+      ],
+      "sha256": "80d70c57a0d96f852ae889b84f441f503a137fc8add5cde30978e9d928863952",
+      "url": "https://studies.unifr.ch/en/master/lang/slavicstudies"
+    },
+    {
+      "contentSha256": "0b42d8f0298e82225cf9a82acd3ad33793703730477a5337248fef3731d8aba8",
+      "id": "directory-master-lang-spanish",
+      "programmeIds": [
+        "master-lang-spanish"
+      ],
+      "sha256": "1e98a96642fb74e5f483c3bfb3f67cbb57fbb63a286083e8da865c7002b2602b",
+      "url": "https://studies.unifr.ch/en/master/lang/spanish"
+    },
+    {
+      "contentSha256": "eb9c9c116904c18d31aad27a150bd3995a2a2f0a4c0751a1b5bc98018e56d766",
+      "id": "directory-master-multi-germanforeignlanguage",
+      "programmeIds": [
+        "master-multi-germanforeignlanguage"
+      ],
+      "sha256": "e42dac5c0d8da5f43941072d65368c8b55a726efb6e9ad3cfc6e669c9d09a33c",
+      "url": "https://studies.unifr.ch/en/master/multi/germanforeignlanguage"
+    },
+    {
+      "contentSha256": "6a6c5d00adeff38239b0e64d327767f9cec6d6862b315cfc588ad3a676a64b87",
+      "id": "directory-master-multi-frenchforeignlanguage",
+      "programmeIds": [
+        "master-multi-frenchforeignlanguage"
+      ],
+      "sha256": "5f24c93b2f711833b4db41fe634a7855391f3c1fc88a617ce04ca09922136ac3",
+      "url": "https://studies.unifr.ch/en/master/multi/frenchforeignlanguage"
+    },
+    {
+      "contentSha256": "a2eb068f69e76fa2b1398581ea5ce3f16cbd08c0e1f075abe8e43e1e63a63a5f",
+      "id": "directory-master-multi-foreignlanguagedidactics",
+      "programmeIds": [
+        "master-multi-foreignlanguagedidactics"
+      ],
+      "sha256": "b6d9ac8aca1d633c440a298319bde8bdf188af7316d721671e94ecc6a2bca666",
+      "url": "https://studies.unifr.ch/en/master/multi/foreignlanguagedidactics"
+    },
+    {
+      "contentSha256": "3fcef2962e7ce52b2512b8d9ca5116f3507e2dcae7e8f4c55468111651c04fa9",
+      "id": "directory-master-multi-multilingualism",
+      "programmeIds": [
+        "master-multi-multilingualism"
+      ],
+      "sha256": "3032cf1e886fbb1efaf76ebe6396669e700a99c000d771acb6f87aaf30a47016",
+      "url": "https://studies.unifr.ch/en/master/multi/multilingualism"
+    },
+    {
+      "contentSha256": "cafc73a675ef5b5fe4aed5cd5bc399404c4f968aab65644aebbce6cff84c5139",
+      "id": "directory-master-hist-history",
+      "programmeIds": [
+        "master-hist-history"
+      ],
+      "sha256": "a48465379964d11b505c83bad0a81bbb2d6823d80f243b217757c51dbbef116c",
+      "url": "https://studies.unifr.ch/en/master/hist/history"
+    },
+    {
+      "contentSha256": "08436b8e196243ca55fd38f7aed314cf19043b8dbf8782b6887cd42ce2410217",
+      "id": "directory-master-hist-modernhistory",
+      "programmeIds": [
+        "master-hist-modernhistory"
+      ],
+      "sha256": "5b47cf47b73e069b55aa8a6d006256051b7934ede67ec68e269e07d7f63b83a7",
+      "url": "https://studies.unifr.ch/en/master/hist/modernhistory"
+    },
+    {
+      "contentSha256": "f658c3e3cfa7251ddceedeb8fcd59d29e035b12d59fc100866945ad1e1eea561",
+      "id": "directory-master-hist-contemporaryhistory",
+      "programmeIds": [
+        "master-hist-contemporaryhistory"
+      ],
+      "sha256": "311f1a0f6f01659aecc007f9badb1c4afb12916cd4e1c635e4eeb53e79491c88",
+      "url": "https://studies.unifr.ch/en/master/hist/contemporaryhistory"
+    },
+    {
+      "contentSha256": "0ec552b4f69809a396a9efd59105cfe1b590cbb50347416f80e26d1a124c40d3",
+      "id": "directory-master-artmus-arthistory",
+      "programmeIds": [
+        "master-artmus-arthistory"
+      ],
+      "sha256": "ad9b8be79ea699a0158541b1b2c41edd77c7d9a7461e0cdba7572dd47b22e6d5",
+      "url": "https://studies.unifr.ch/en/master/artmus/arthistory"
+    },
+    {
+      "contentSha256": "838f9aac563295d42fc4c77407e93e423321c71e815765ff256ba61639c40303",
+      "id": "directory-master-artmus-musicology",
+      "programmeIds": [
+        "master-artmus-musicology"
+      ],
+      "sha256": "bdbd04a11f5871a83def1d3b4e0b2e5f6047055f987cee1d8fe9987c9170ab85",
+      "url": "https://studies.unifr.ch/en/master/artmus/musicology"
+    },
+    {
+      "contentSha256": "3d841efcc9f11025c97576be6386e1ebc72994085b0d5ab813ddec3607145de9",
+      "id": "directory-master-artmus-archaeology",
+      "programmeIds": [
+        "master-artmus-archaeology"
+      ],
+      "sha256": "38ae67a54cbcdd0f4c894283f13f9e582467cab0c6906214f28f63aaa0494943",
+      "url": "https://studies.unifr.ch/en/master/artmus/archaeology"
+    },
+    {
+      "contentSha256": "e5ca2a9f670f6cfe2550fe1bbbef83c3636080b69bd5b253ddff0969f23efc99",
+      "id": "directory-master-soc-sociologyfrench",
+      "programmeIds": [
+        "master-soc-sociologyfrench"
+      ],
+      "sha256": "1160aa66657cd08546cf2d8c3f0ccd977d758bc47e8210b09236a9641f042c54",
+      "url": "https://studies.unifr.ch/en/master/soc/sociologyfrench"
+    },
+    {
+      "contentSha256": "55c92585816faecb6d321911967c4bdc8a2ac888f0ddad09bbfdef66db1449bf",
+      "id": "directory-master-soc-sociologygerman",
+      "programmeIds": [
+        "master-soc-sociologygerman"
+      ],
+      "sha256": "070dedbdfbc8567820951c8551683daca9b86f3dab813f7aac3605a906a3b98f",
+      "url": "https://studies.unifr.ch/en/master/soc/sociologygerman"
+    },
+    {
+      "contentSha256": "352324fef661bba4352df98167ec0e27ed0afd878bf5b1260b3c09f007f4f6d4",
+      "id": "directory-master-soc-socialworkfrench",
+      "programmeIds": [
+        "master-soc-socialworkfrench"
+      ],
+      "sha256": "b848b6128e149a10a647e3afa4223bd4b725023367055c4b6c03f91d19a283df",
+      "url": "https://studies.unifr.ch/en/master/soc/socialworkfrench"
+    },
+    {
+      "contentSha256": "9b10086de3ff31fb7fc55641c4ffbc3d7b81fed915347cc67f5da29a9f0cf2d8",
+      "id": "directory-master-soc-socialworkgerman",
+      "programmeIds": [
+        "master-soc-socialworkgerman"
+      ],
+      "sha256": "5b16b5cd75e6eace221963d04ff82e1097ae8c47d3256562d5d3c1f76e16c414",
+      "url": "https://studies.unifr.ch/en/master/soc/socialworkgerman"
+    },
+    {
+      "contentSha256": "a702731b4bad28b8c74f2c293a21793f8260be3364b4935d4b5a6e38100017b3",
+      "id": "directory-master-soc-easterneuropeanstudies",
+      "programmeIds": [
+        "master-soc-easterneuropeanstudies"
+      ],
+      "sha256": "c11f6cdeab307d93ad48edc4222555a872365e2368030fb3eed4227d5f6f78c4",
+      "url": "https://studies.unifr.ch/en/master/soc/easterneuropeanstudies"
+    },
+    {
+      "contentSha256": "f71c41afdbe9059cf8874e4c6ef651bf41159aacdbedab0b0d7e07773f6a6a71",
+      "id": "directory-master-soc-europeanstudies",
+      "programmeIds": [
+        "master-soc-europeanstudies"
+      ],
+      "sha256": "3dd62fb262bfefb89077f92c695409c72716b38d42bbc40170c517d2361da2ef",
+      "url": "https://studies.unifr.ch/en/master/soc/europeanstudies"
+    },
+    {
+      "contentSha256": "8cf1d2f34b57b47d3f990067e959186f51d2db957a941525d5f07f768d611158",
+      "id": "directory-master-soc-gendersocietysocialpolicy30",
+      "programmeIds": [
+        "master-soc-gendersocietysocialpolicy30"
+      ],
+      "sha256": "ed8dd27d8c8d62e6dcaf0994d2d0607a9fcdb4dacd75b3049529189528e27cff",
+      "url": "https://studies.unifr.ch/en/master/soc/gendersocietysocialpolicy30"
+    },
+    {
+      "contentSha256": "552f2ba17eaedd5bc6767dc728c1d5dbd275c2ef71f916b10bb9b94ced97a31a",
+      "id": "directory-master-soc-internationalcomparativesocialpolicy30",
+      "programmeIds": [
+        "master-soc-internationalcomparativesocialpolicy30"
+      ],
+      "sha256": "90e86933fb8aa314d1c3cf62a644930ea034f875c0b88221ef81e4f6eb34171e",
+      "url": "https://studies.unifr.ch/en/master/soc/internationalcomparativesocialpolicy30"
+    },
+    {
+      "contentSha256": "08e3f05a27595d3ec5c60789a7e71b4502ca7a4cb3e19de2e417f6941b05fffc",
+      "id": "directory-master-soc-religiousstudies",
+      "programmeIds": [
+        "master-soc-religiousstudies"
+      ],
+      "sha256": "78f636d54154a51999fb4537f123388403d5c19c894217399bcf586ace0fb8f5",
+      "url": "https://studies.unifr.ch/en/master/soc/religiousstudies"
+    },
+    {
+      "contentSha256": "e8a8defecb6ebdc53fa40e710116d4f2d670392b1f99b809365378b68e3e7d15",
+      "id": "directory-master-soc-socialanthropology",
+      "programmeIds": [
+        "master-soc-socialanthropology"
+      ],
+      "sha256": "08bc20c29ff1e656d76b26281c1867b26586628a6c8a93d4cc0dbfc3d5291355",
+      "url": "https://studies.unifr.ch/en/master/soc/socialanthropology"
+    },
+    {
+      "contentSha256": "b11c55d7ab6d84115948ed0f28b4f05085ac27101ce10dd7ff70a742ffdfa5bc",
+      "id": "directory-master-soc-sociologysocialproblems30",
+      "programmeIds": [
+        "master-soc-sociologysocialproblems30"
+      ],
+      "sha256": "8019d298f04474e1a777b7fddbd4f296ff088e976360402a16054e7aa2cb8e7a",
+      "url": "https://studies.unifr.ch/en/master/soc/sociologysocialproblems30"
+    },
+    {
+      "contentSha256": "346ab77c888277ac6de4fac4e54fe099571082a4583aa4ff538258c858f262d2",
+      "id": "directory-master-pedpsy-specialeducation",
+      "programmeIds": [
+        "master-pedpsy-specialeducation"
+      ],
+      "sha256": "fba55447ec7542a211f72ec1710fba7712bad737d062f094ebc057c99368d82a",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/specialeducation"
+    },
+    {
+      "contentSha256": "92d570af3772f4dbb93a0f7a3f16010affd362ad1c97cfb9d316c3166379fe51",
+      "id": "directory-master-pedpsy-speechtherapy",
+      "programmeIds": [
+        "master-pedpsy-speechtherapy"
+      ],
+      "sha256": "67aac7b2bfb65bc2a8102ccd0f8bebe2cd4225bd9a11178c28802e7c7aaf5892",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/speechtherapy"
+    },
+    {
+      "contentSha256": "4b371b6eb56b0331000a39130248e221d56f2c4fb578622a0937f787b82475b9",
+      "id": "directory-master-pedpsy-specialneedseducationfrench",
+      "programmeIds": [
+        "master-pedpsy-specialneedseducationfrench"
+      ],
+      "sha256": "88acdf9749e000f8780ec51b03f68ea6ff0ae14c9fe80107ee8a6ba8b9341fa2",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/specialneedseducationfrench"
+    },
+    {
+      "contentSha256": "f84925e89bc55c1378e21bc725f8dd52e822eb895ac876ef4ff0963b1fbd55a8",
+      "id": "directory-master-pedpsy-specialneedseducationgerman",
+      "programmeIds": [
+        "master-pedpsy-specialneedseducationgerman"
+      ],
+      "sha256": "43b12a8ae218c4a2619b8475a84b38ccfe9ff70ffd101922c6641b356de3dca0",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/specialneedseducationgerman"
+    },
+    {
+      "contentSha256": "c5082435e61c449df5df3b323411423f7ec802a18bd0f50c55eecf636f4a5879",
+      "id": "directory-master-pedpsy-specialeduminor",
+      "programmeIds": [
+        "master-pedpsy-specialeduminor"
+      ],
+      "sha256": "7f58dba2c83878325fe2a9111b6758aa90763ee83f9c4d6807810d7b5b2e6276",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/specialeduminor"
+    },
+    {
+      "contentSha256": "d92c743598d846a3b79a26974c8b72d95dd12214a683b7c4d63815c049908f33",
+      "id": "directory-master-pedpsy-educationalsciences",
+      "programmeIds": [
+        "master-pedpsy-educationalsciences"
+      ],
+      "sha256": "6943039162deb15726a1b72450ee762587bac26f7e3cf2792411b1e9fff7350a",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/educationalsciences"
+    },
+    {
+      "contentSha256": "bc45de3345892cdd6b7d2fc67d42c5472402abbc9303ce8f8f2e6e39b1237f2f",
+      "id": "directory-master-pedpsy-educationpsychology",
+      "programmeIds": [
+        "master-pedpsy-educationpsychology"
+      ],
+      "sha256": "112b55d1759265f3b2030753f3b0433bfcdfbcb139fd57ed72866431f52aa157",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/educationpsychology"
+    },
+    {
+      "contentSha256": "8d176acb41dede06694578e2a618435d00ec4f93166ed397e5940b201df6e49d",
+      "id": "directory-master-pedpsy-psychology",
+      "programmeIds": [
+        "master-pedpsy-psychology"
+      ],
+      "sha256": "8d8c5ee4ef7549b6e096f9cdaf7c290903e86d8a563d7005dc12502e73bb9a1c",
+      "url": "https://studies.unifr.ch/en/master/pedpsy/psychology"
+    },
+    {
+      "contentSha256": "8ceff205503182cc7a679f96573f8d04085c0cdb29bc33406075f58c10b4008b",
+      "id": "directory-master-sci-biochemistry",
+      "programmeIds": [
+        "master-sci-biochemistry"
+      ],
+      "sha256": "408bdff2708801c6808b523b5da1640956b781a07aab1e571922c785101101ee",
+      "url": "https://studies.unifr.ch/en/master/sci/biochemistry"
+    },
+    {
+      "contentSha256": "6ac4f6b4ca350276ae2ee8722cb3979ec8764432586a71fda730c4f17cc97335",
+      "id": "directory-master-sci-biology",
+      "programmeIds": [
+        "master-sci-biology"
+      ],
+      "sha256": "fb523c0bda082bedf5b31459d808fbf01d5f79d81ba9e69b45f9e0c4f8b4b57b",
+      "url": "https://studies.unifr.ch/en/master/sci/biology"
+    },
+    {
+      "contentSha256": "a3dca03f3f0536998c6fbb50307678c24dde54cbed26b435bcfa28b3b2b48296",
+      "id": "directory-master-sci-chemistry",
+      "programmeIds": [
+        "master-sci-chemistry"
+      ],
+      "sha256": "e5a67db86ff05b1451253514b606ee4b68a0e81d816b2fc6f1ed16bf3df89a66",
+      "url": "https://studies.unifr.ch/en/master/sci/chemistry"
+    },
+    {
+      "contentSha256": "e352cb0293b12e6825bc7b4c6ebba3d021b32b4f1f338a15165322bd0f4ca6be",
+      "id": "directory-master-sci-glaciology",
+      "programmeIds": [
+        "master-sci-glaciology"
+      ],
+      "sha256": "9cdcc5bc81f7a60d2a531f593ff423b27377604e0fff8fabaf0d0ec6563d6513",
+      "url": "https://studies.unifr.ch/en/master/sci/glaciology"
+    },
+    {
+      "contentSha256": "178ef479b2470b4b3a6fc6d82a82eb98a213dfa0578d39eefe8c0c186d03b433",
+      "id": "directory-master-sci-earthsciences",
+      "programmeIds": [
+        "master-sci-earthsciences"
+      ],
+      "sha256": "20e8281697b97fb6844fcf48054090ea04d4f59f9ce7240f5b00c19ad31425a1",
+      "url": "https://studies.unifr.ch/en/master/sci/earthsciences"
+    },
+    {
+      "contentSha256": "edee1c776c6fb2cd748d240f73d79ac8f2eb0e2b9a78d8f36d636593d0253091",
+      "id": "directory-master-sci-environmentalsciences",
+      "programmeIds": [
+        "master-sci-environmentalsciences"
+      ],
+      "sha256": "ee5be731156024380eb7a07b70f4556adbbdf54d3ea34d56e69de17ca1862e0d",
+      "url": "https://studies.unifr.ch/en/master/sci/environmentalsciences"
+    },
+    {
+      "contentSha256": "660f6ddc14efd6254dd8a9df56abee051d1af90b064cbad84267026b77506ca5",
+      "id": "directory-master-sci-geography",
+      "programmeIds": [
+        "master-sci-geography"
+      ],
+      "sha256": "964a23b8420062016e8b1f90549dced28c084b2f314931be7782db5c325bd327",
+      "url": "https://studies.unifr.ch/en/master/sci/geography"
+    },
+    {
+      "contentSha256": "63bf2952d98fa5c39885015dc43427a827258692d655b421ad719b03c352b698",
+      "id": "directory-master-sci-mathematics",
+      "programmeIds": [
+        "master-sci-mathematics"
+      ],
+      "sha256": "4818b7cd3d13f43329fffa79a2a5315491ac90100451a0b9c13335fb269f5278",
+      "url": "https://studies.unifr.ch/en/master/sci/mathematics"
+    },
+    {
+      "contentSha256": "df26424e1c983fa828f5ea94d3291f3e1ef210107bfdd480e46cd52545b33e22",
+      "id": "directory-master-sci-naturesocietypolitics",
+      "programmeIds": [
+        "master-sci-naturesocietypolitics"
+      ],
+      "sha256": "47a6f9c107cc26f5e1dc7f3756ab9c24d94670e00c057cd7a56e40b31a4fb011",
+      "url": "https://studies.unifr.ch/en/master/sci/naturesocietypolitics"
+    },
+    {
+      "contentSha256": "b6f1abe5f17845fdeb1d9f795e645510ee0cf13f63687b5cf28aefffcfe6f27a",
+      "id": "directory-master-sci-physics",
+      "programmeIds": [
+        "master-sci-physics"
+      ],
+      "sha256": "43a4d0c7f89c2b8e8a3c02ffe5ad1d0f01cf2fee6cce22c6dcdec7664e3818e4",
+      "url": "https://studies.unifr.ch/en/master/sci/physics"
+    },
+    {
+      "contentSha256": "d51a8d76b5520e1b29d88bc29675c9e49dc0de2826de2021080b680af1cb08fb",
+      "id": "directory-master-medspo-humanmedicine",
+      "programmeIds": [
+        "master-medspo-humanmedicine"
+      ],
+      "sha256": "0e3221607934541b9bcb161ccc6eee5be6f7b2f08f30e741e6c21bfcdc27c47f",
+      "url": "https://studies.unifr.ch/en/master/medspo/humanmedicine"
+    },
+    {
+      "contentSha256": "c811228dff2c34b069f8499d3399dd16b4fddad3f51de33e41b963b2d9d7c998",
+      "id": "directory-master-medspo-sportsciences",
+      "programmeIds": [
+        "master-medspo-sportsciences"
+      ],
+      "sha256": "85df48888277122481c75f8f1ab40fa28df5fe5e292cf134fc36770a21ec9d2b",
+      "url": "https://studies.unifr.ch/en/master/medspo/sportsciences"
+    },
+    {
+      "contentSha256": "b6bfb5f23615e997722c6e5963b561e688f9448becb7ef6f8949dcd8146b3f22",
+      "id": "directory-master-medspo-biomedicalresearch",
+      "programmeIds": [
+        "master-medspo-biomedicalresearch"
+      ],
+      "sha256": "01a4f5bb4b0fcddc8adbded7b83a87b259511720fb80971efd707c8c2a47b083",
+      "url": "https://studies.unifr.ch/en/master/medspo/biomedicalresearch"
+    },
+    {
+      "contentSha256": "dd87f223987be6be2188c1d22e26dedba4b931d784005a3c3204ed6cd4a4daa9",
+      "id": "directory-master-digitinf-businessinformatics",
+      "programmeIds": [
+        "master-digitinf-businessinformatics"
+      ],
+      "sha256": "7ec72bfac2875db423a8be79dfb96f591b52688a4502c4ff810554ff59e943df",
+      "url": "https://studies.unifr.ch/en/master/digitinf/businessinformatics"
+    },
+    {
+      "contentSha256": "07aebda4c8dd8db94b8b5a3cbbdcad64c9d2a33b8e0ddac245b45bce794c0bbd",
+      "id": "directory-master-digitinf-informatics",
+      "programmeIds": [
+        "master-digitinf-informatics"
+      ],
+      "sha256": "6579992ef43bec3b57090de8a99da2559facb8222f3da5079ea4c985564adeba",
+      "url": "https://studies.unifr.ch/en/master/digitinf/informatics"
+    },
+    {
+      "contentSha256": "6411c8809afd0b62b655a67ac171cdf03d32fc1412c89839cc03100903ccd7bb",
+      "id": "directory-master-digitinf-dataeco",
+      "programmeIds": [
+        "master-digitinf-dataeco"
+      ],
+      "sha256": "caedee0fb170dcf1cbc2cfd2dfd2c74fbc307f97dd8ca79afc39abc93d5af8f4",
+      "url": "https://studies.unifr.ch/en/master/digitinf/dataeco"
+    },
+    {
+      "contentSha256": "499ce1e6e51c43e5a52d7e2ae36657cdfeadf349945a7ae2f1108a46d2f05d41",
+      "id": "directory-master-digitinf-bioinformatics",
+      "programmeIds": [
+        "master-digitinf-bioinformatics"
+      ],
+      "sha256": "f70616bddacc93c5f9f6913f7d2d5aa33d4367af3e3ea8af9bb8309d8d2bbece",
+      "url": "https://studies.unifr.ch/en/master/digitinf/bioinformatics"
+    },
+    {
+      "contentSha256": "06280a7b1da8ed478a85a5b790b920c176a7ce8bd80bfba193f7ef5a94902655",
+      "id": "directory-master-digitinf-digitalneuroscience",
+      "programmeIds": [
+        "master-digitinf-digitalneuroscience"
+      ],
+      "sha256": "d3f10fac34af27d472d7e4ef1e90aec2e77336bf044649c0f1ce583827abb5fd",
+      "url": "https://studies.unifr.ch/en/master/digitinf/digitalneuroscience"
+    },
+    {
+      "contentSha256": "8d271bd711f45991103a751393f0ce936ac47df0206e295dec759677af120d04",
+      "id": "directory-master-teach-teacheredu1",
+      "programmeIds": [
+        "master-teach-teacheredu1"
+      ],
+      "sha256": "ce4048e9712c10ecb9bf32ee6d83e659b706583be4b96069f52cca7463fe8f79",
+      "url": "https://studies.unifr.ch/en/master/teach/teacheredu1"
+    },
+    {
+      "contentSha256": "1c3aec2619e2a6a7973f9c72d21ec4591a97a449d2c3aa2699fb6545fd1ab299",
+      "id": "directory-master-teach-teacheredu2",
+      "programmeIds": [
+        "master-teach-teacheredu2"
+      ],
+      "sha256": "ec9facf99acc6f123630255ab6a7e2aeda142ba4fff7f12a7654ccca9c4669a8",
+      "url": "https://studies.unifr.ch/en/master/teach/teacheredu2"
+    },
+    {
+      "contentSha256": "5b8aed358ad0be63f1dce9002ad0b3b4e4e66cb4f9309309ba0fa6c98c5a5820",
+      "id": "directory-master-teach-teacheredu1-2",
+      "programmeIds": [
+        "master-teach-teacheredu1-2"
+      ],
+      "sha256": "14a15d8535d327333bd2deaef7d283dee8b5060cbfb440561badd7618f33d25b",
+      "url": "https://studies.unifr.ch/en/master/teach/teacheredu1-2"
+    },
+    {
+      "contentSha256": "ff4a67cc32e8c85ef51af0bc1406e27e71b13834d3cff197efd65df5c17c27a3",
+      "id": "directory-master-int-digitalsociety",
+      "programmeIds": [
+        "master-int-digitalsociety"
+      ],
+      "sha256": "a412201734fa123a75275e416dfd91db2b7e654d7f9cd9e63618afb7ab455cb4",
+      "url": "https://studies.unifr.ch/en/master/int/digitalsociety"
+    },
+    {
+      "contentSha256": "f52181eac8881595711e965dc1e138b31988550e77ae95159db7f44ca41a4a0e",
+      "id": "directory-master-int-environmentalhumanitiessustainability",
+      "programmeIds": [
+        "master-int-environmentalhumanitiessustainability"
+      ],
+      "sha256": "984bcc2c45358fdaaf0e2a898270456a1349c967e8c1185764435f4a6b39693a",
+      "url": "https://studies.unifr.ch/en/master/int/environmentalhumanitiessustainability"
+    },
+    {
+      "contentSha256": "34523f97933d28d5005a1aba35d7d53365edd783f4362a7e8a271e97cc882671",
+      "id": "directory-master-int-familystudies",
+      "programmeIds": [
+        "master-int-familystudies"
+      ],
+      "sha256": "be8daab343e60130f9980fef519330f73e941f21fb36b07e7be50fb3ba7c016a",
+      "url": "https://studies.unifr.ch/en/master/int/familystudies"
+    },
+    {
+      "contentSha256": "b0b8bc214b356a0396391eb002729b470dda9c847ff1da4eb27c171c2b8fd6a8",
+      "id": "directory-master-int-islamsociety",
+      "programmeIds": [
+        "master-int-islamsociety"
+      ],
+      "sha256": "14020388c875dc17092bab95f54d59f6339ec842d8a09bd6ad0c36cc10282c38",
+      "url": "https://studies.unifr.ch/en/master/int/islamsociety"
+    },
+    {
+      "contentSha256": "2c072e1d03714ec3df0d625fed0c05cd6bf648ae04dd1c2c570f942e19256a04",
+      "id": "directory-master-int-medievalstudies30",
+      "programmeIds": [
+        "master-int-medievalstudies30"
+      ],
+      "sha256": "dc27c81494047dbf195f13f06adb74e846b3c5c21bbe1ade568c3645b97851b5",
+      "url": "https://studies.unifr.ch/en/master/int/medievalstudies30"
+    },
+    {
+      "contentSha256": "8fa98a53e92965582fc303b7041f2d22ae379a3489127ada73d8b4011afcea80",
+      "id": "ses-minors",
+      "programmeIds": [
+        "bachelor-digitinf-businessinformatics"
+      ],
+      "sha256": "6fe7a1fd76a07a0464fc0ead85e554293aeea538d97214b42c982b7cfad87d05",
+      "url": "https://www.unifr.ch/ses/en/studies/minors/"
+    },
+    {
+      "contentSha256": "36f498a91fa6e18c2dfda020beff93b84449944bf3c2033a0b3bcbf45a13f27c",
+      "id": "bi-department",
+      "programmeIds": [
+        "bachelor-digitinf-businessinformatics"
+      ],
+      "sha256": "f944ab257928671cdc2c9cd06d865f8baaf69293530550363a8cab61f132d432",
+      "url": "https://www.unifr.ch/inf/en/bsc-minor-business-informatics.html"
+    },
+    {
+      "contentSha256": "e1726d5ea78e85e1ddda9626332ba4bfa4640f94813a449fe5f4a8eb285e51c7",
+      "id": "psychology",
+      "programmeIds": [],
+      "sha256": "4064df5669b8d69ca03954463817068b0829d37fc56b31a45ed6c4c659653a32",
+      "url": "https://www.unifr.ch/psycho/fr/etudes/enseignements/"
+    },
+    {
+      "contentSha256": "1833f6c131638e5118e8bff9bc9a4717b3211bc16e3f43dffadb26acc7267497",
+      "id": "ses-full",
+      "programmeIds": [
+        "bachelor-digitinf-businessinformatics"
+      ],
+      "sha256": "d0c18d2e3499cb75794cf0495f3062582adf723a1590dc11834514c2243b1bbd",
+      "url": "https://www.unifr.ch/ses/en/studies/minors/plans-d%E2%80%99%C3%A9tudes-bc-bachelor.html"
+    },
+    {
+      "contentSha256": "1deb6209edee19cfa514c3a4004c1c1fe02b5c8d3b3aa97f0e99978f6a1f9bf6",
+      "id": "psychology-courses",
+      "programmeIds": [
+        "bachelor-pedpsy-psychology"
+      ],
+      "sha256": "fc80b6ef0dc025c476f47828077af0466d9cbee93865f599ede22accf3c62f51",
+      "url": "https://commonweb.unifr.ch/psycho/Pub/web_site/bsc-180-de.html"
+    },
+    {
+      "contentSha256": "ea1d565894c72f6a59df9c1b7a725c36a13dd7965890fe4f49662b329f2fdac8",
+      "id": "psychology-bsc",
+      "programmeIds": [],
+      "sha256": "87e3b02a1fed9933dae40a7270075d4ff496113d66886bb53f79f56af531c88b",
+      "url": "https://www.unifr.ch/psycho/de/studium/bachelor/"
+    },
+    {
+      "contentSha256": "335e2d28f8ff881f35fcf52027266e828111625d6f2cc12693ce91b72f580d77",
+      "id": "psychology-plans",
+      "programmeIds": [],
+      "sha256": "74fbd337866b7afeb894f6cfe14cb72f6ae0a3fa494431cf0d51b010728a25c2",
+      "url": "https://www.unifr.ch/psycho/de/studium/studienplaene-and-reglemente.html"
+    },
+    {
+      "contentSha256": "af69f4557af885b569bce0fff07e3b5e9bd7056c3d1b5a159c98d42a9ef11b78",
+      "id": "psychology-180",
+      "programmeIds": [
+        "bachelor-pedpsy-psychology"
+      ],
+      "sha256": "af69f4557af885b569bce0fff07e3b5e9bd7056c3d1b5a159c98d42a9ef11b78",
+      "url": "https://www.unifr.ch/psycho/assets/public/bachelor/plans/PLE_Psycho_BA180_De_rat29012019_v03.pdf"
+    },
+    {
+      "contentSha256": "1a85426b85124222e50a47356b7319d8f6eeb30d266da5ed4ab64f23e4a02ab2",
+      "id": "theology-1X",
+      "programmeIds": [],
+      "sha256": "de9ed0051760599b54e12e7e9807a2f8dc3fb76c50dd5adc13ed2355675688bd",
+      "url": "https://studies.unifr.ch/go/1X"
+    },
+    {
+      "contentSha256": "c1f630a1e756234fb9aa520a189676ce2aa5ce8d0c4bf8ebf1346433f7c9f517",
+      "id": "theology-1Y",
+      "programmeIds": [],
+      "sha256": "bcd15ea2c9003da92e281ea660cd39cbf990d062e4ffe1a506837233fac9ff7d",
+      "url": "https://studies.unifr.ch/go/1Y"
+    },
+    {
+      "contentSha256": "69ed8151384e582b9b86f23e28abaff4cd9d061e1eeca0a6f24c6f071b99fa91",
+      "id": "theological-studies-21",
+      "programmeIds": [],
+      "sha256": "f6ffd020a59901a684b4f42ee0ee2b3325049782b0847143d6d66ec78dc9687c",
+      "url": "https://studies.unifr.ch/go/21"
+    },
+    {
+      "contentSha256": "1c7e4c6a34e5fe5fe70589026b846e7731250f9d9ff5c8888e54c6ab38a8356e",
+      "id": "theological-studies-22",
+      "programmeIds": [],
+      "sha256": "c79db783ab2eefb52c770a114ab3be825a33db2055c1191f3a149ac8155043e1",
+      "url": "https://studies.unifr.ch/go/22"
+    },
+    {
+      "contentSha256": "f9a867ad781bd54441d361487564bae64e5fc42f395a203c4b7d818ef595b689",
+      "id": "theo180-2026",
+      "programmeIds": [
+        "bachelor-theo-theology"
+      ],
+      "sha256": "f9a867ad781bd54441d361487564bae64e5fc42f395a203c4b7d818ef595b689",
+      "url": "https://www.unifr.ch/theo/assets/public/2025-2026/BA_theo_2026_180.pdf"
+    },
+    {
+      "contentSha256": "0b89aad4438059cc5148d579c1e76af2187dc79b65599a5a364d00182a92db30",
+      "id": "theo120-2026",
+      "programmeIds": [
+        "bachelor-theo-theologicalstudies"
+      ],
+      "sha256": "0b89aad4438059cc5148d579c1e76af2187dc79b65599a5a364d00182a92db30",
+      "url": "https://www.unifr.ch/theo/assets/public/2025-2026/BA_theo_2026_120.pdf"
+    },
+    {
+      "contentSha256": "d03f361be252db3d2873ef84f93d58577ea51d567756a0503648fc89a1cdfecc",
+      "id": "law-plan-de",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "d03f361be252db3d2873ef84f93d58577ea51d567756a0503648fc89a1cdfecc",
+      "url": "https://www.unifr.ch/ius/de/assets/public/documents/etudes/BLaw-Studienplan.pdf"
+    },
+    {
+      "contentSha256": "747a9cff72639704eeb831a45be23338e47a511dabd7390ab2becf48c3ae0634",
+      "id": "law-regulations",
+      "programmeIds": [],
+      "sha256": "e12110cff1c32753dd37e3e2bf19177465d9af4a05d29cf4ce1bab169a8a0b84",
+      "url": "https://www.unifr.ch/ius/de/studium/vorlexam/reglemente/"
+    },
+    {
+      "contentSha256": "00ef284b4cde83cdfe5d5ce1a11099e097683fcff2ac810e9a26267e302639a2",
+      "id": "theo-regulations",
+      "programmeIds": [],
+      "sha256": "0e2b57e2a5a432e3552f3069d0e486af0da742d56760e725778433009195a45c",
+      "url": "https://www.unifr.ch/theo/de/ausbildung/studierende/reglemente.html"
+    },
+    {
+      "contentSha256": "a3285a9255868d38383f618664f8f7401a5fda8bf2039a07aef8975b591cf3e7",
+      "id": "law-transition",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "a3285a9255868d38383f618664f8f7401a5fda8bf2039a07aef8975b591cf3e7",
+      "url": "https://www.unifr.ch/ius/de/assets/public/documents/reglements-directives/4_421_XXX_RE_TRANS_DEF.pdf"
+    },
+    {
+      "contentSha256": "44eec6fedf8a071f50bf377539288fd3c078483691bf2481b3352b1c51128a11",
+      "id": "law-regulation-2023",
+      "programmeIds": [],
+      "sha256": "44eec6fedf8a071f50bf377539288fd3c078483691bf2481b3352b1c51128a11",
+      "url": "https://webapps.unifr.ch/legal/de/load/3746171"
+    },
+    {
+      "contentSha256": "36976f23026d0bec1fc779d8560174f8b3de15b58373c4c95a0e3d8d7e588e3a",
+      "id": "theo-regulation",
+      "programmeIds": [
+        "bachelor-theo-theology",
+        "bachelor-theo-theologicalstudies"
+      ],
+      "sha256": "36976f23026d0bec1fc779d8560174f8b3de15b58373c4c95a0e3d8d7e588e3a",
+      "url": "https://webapps.unifr.ch/legal/de/load/1340005"
+    },
+    {
+      "contentSha256": "583ddcef44818d41c77e764fa9ad6588a859fc6d037b19b5db7888751f8424d5",
+      "id": "education-plans",
+      "programmeIds": [
+        "bachelor-pedpsy-educationalsciences"
+      ],
+      "sha256": "9708ec6fc60d79d394650d6e36cf6a18bd3a00c4ac0732ede589ac07a1754eec",
+      "url": "https://studies.unifr.ch/go/1J"
+    },
+    {
+      "contentSha256": "199d70ee9369551bff9ee64756953f4f563fc5da4ecfa36fc090b1893244b47e",
+      "id": "psychology-master-main",
+      "programmeIds": [
+        "master-pedpsy-psychology"
+      ],
+      "sha256": "199d70ee9369551bff9ee64756953f4f563fc5da4ecfa36fc090b1893244b47e",
+      "url": "https://www.unifr.ch/psycho/assets/public/master/plans/MA_Psycho_PA_de_250225_SA25.pdf"
+    },
+    {
+      "contentSha256": "3d4018ab251e7e961e5dae2cc0fd4b2b54cef1e6679746852ef8ad27b4c10fd1",
+      "id": "education-ba120",
+      "programmeIds": [
+        "bachelor-pedpsy-educationalsciences"
+      ],
+      "sha256": "3d4018ab251e7e961e5dae2cc0fd4b2b54cef1e6679746852ef8ad27b4c10fd1",
+      "url": "https://cdn.unifr.ch/eduform/plans/current/BSc_Erzw_120 (1462) 05 06 2025.pdf"
+    },
+    {
+      "contentSha256": "26e02a1703d3b79476c12465308bdf5d1632904d604202935ed3483640acfd8d",
+      "id": "psychology-master-chp",
+      "programmeIds": [
+        "master-pedpsy-psychology"
+      ],
+      "sha256": "26e02a1703d3b79476c12465308bdf5d1632904d604202935ed3483640acfd8d",
+      "url": "https://www.unifr.ch/psycho/assets/public/master/plans/MA_Psycho_PS_CHP_de_250225_SA25.pdf"
+    },
+    {
+      "contentSha256": "0d48cb0e24d946eec8e6bc99e10299cc8a1000ea9aeaedabc61225468939dc41",
+      "id": "cs-2024",
+      "programmeIds": [
+        "bachelor-digitinf-informatics"
+      ],
+      "sha256": "0d48cb0e24d946eec8e6bc99e10299cc8a1000ea9aeaedabc61225468939dc41",
+      "url": "https://cdn.unifr.ch/scimed/plans/2024/Plan_BSc_IN_fr.pdf"
+    },
+    {
+      "contentSha256": "5263e28516bdf7e0444b32733a77680c6f3a63f93650e06715ba2620658a185a",
+      "id": "cs-2025",
+      "programmeIds": [
+        "bachelor-digitinf-informatics"
+      ],
+      "sha256": "5263e28516bdf7e0444b32733a77680c6f3a63f93650e06715ba2620658a185a",
+      "url": "https://cdn.unifr.ch/scimed/plans/2025/Plan_BSc_IN_fr.pdf"
+    },
+    {
+      "contentSha256": "c031431e2b80d835218ee14a6edf20649afcd63f23173c82c9efb3a5059262bd",
+      "id": "cs-current",
+      "programmeIds": [
+        "bachelor-digitinf-informatics"
+      ],
+      "sha256": "c031431e2b80d835218ee14a6edf20649afcd63f23173c82c9efb3a5059262bd",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BSc_IN_fr.pdf"
+    },
+    {
+      "contentSha256": "2869b9b01053eaa78aac790205d09f09a1c2c2a4895a044da8fe95ea36acff96",
+      "id": "directory-index",
+      "programmeIds": [
+        "bachelor-theo-theology",
+        "bachelor-theo-theologicalstudies",
+        "bachelor-theo-interreligiousstudies",
+        "bachelor-ius-law",
+        "bachelor-ius-lawparttime",
+        "bachelor-eco-management",
+        "bachelor-eco-economics",
+        "bachelor-eco-ecoius",
+        "bachelor-com-businesscommunication",
+        "bachelor-com-mediacommunicationgerman",
+        "bachelor-com-mediacommunicationfrench",
+        "bachelor-phi-philosophy",
+        "bachelor-lang-classics",
+        "bachelor-lang-english",
+        "bachelor-lang-french",
+        "bachelor-lang-bilingualism",
+        "bachelor-lang-german",
+        "bachelor-lang-germanliterature",
+        "bachelor-lang-greekstudies",
+        "bachelor-lang-italian",
+        "bachelor-lang-latinstudies",
+        "bachelor-lang-rhaetoromance",
+        "bachelor-lang-slavicstudies",
+        "bachelor-lang-spanish",
+        "bachelor-multi-germanforeignlanguage",
+        "bachelor-multi-frenchforeignlanguage",
+        "bachelor-hist-history",
+        "bachelor-hist-modernhistory",
+        "bachelor-hist-contemporaryhistory",
+        "bachelor-artmus-arthistory",
+        "bachelor-artmus-musicology",
+        "bachelor-soc-sociologyfrench",
+        "bachelor-soc-sociologygerman",
+        "bachelor-soc-socialworkfrench",
+        "bachelor-soc-socialworkgerman",
+        "bachelor-soc-easterneuropeanstudies",
+        "bachelor-soc-politicalscience",
+        "bachelor-soc-religiousstudies",
+        "bachelor-soc-socialanthropology",
+        "bachelor-pedpsy-specialeducation",
+        "bachelor-pedpsy-speechtherapy",
+        "bachelor-pedpsy-specialeduminor",
+        "bachelor-pedpsy-educationalsciences",
+        "bachelor-pedpsy-educationpsychology",
+        "bachelor-pedpsy-psychology",
+        "bachelor-sci-biochemistry",
+        "bachelor-sci-biology",
+        "bachelor-sci-chemistry",
+        "bachelor-sci-earthsciences",
+        "bachelor-sci-environmentalsciences",
+        "bachelor-sci-geography",
+        "bachelor-sci-mathematics",
+        "bachelor-sci-physics",
+        "bachelor-medspo-humanmedicine",
+        "bachelor-medspo-biomedicalsciences",
+        "bachelor-medspo-sportsciences",
+        "bachelor-digitinf-businessinformatics",
+        "bachelor-digitinf-informatics",
+        "bachelor-teach-teacheredu0",
+        "bachelor-teach-teacheredu1",
+        "master-theo-theology",
+        "master-theo-theologicalstudies",
+        "master-theo-interreligiousstudies",
+        "master-theo-canonicallicence",
+        "master-ius-law",
+        "master-ius-lawparttime",
+        "master-ius-legalstudies",
+        "master-eco-management",
+        "master-eco-economics",
+        "master-eco-accountingfinance",
+        "master-eco-europeanbusiness",
+        "master-eco-marketing",
+        "master-eco-ethicseco30",
+        "master-com-businesscommunication",
+        "master-com-mediacommunicationgerman",
+        "master-com-mediacommunicationfrench",
+        "master-com-digitalcommunication",
+        "master-phi-philosophy",
+        "master-lang-classics",
+        "master-lang-comparativeliterature",
+        "master-lang-english",
+        "master-lang-french",
+        "master-lang-foundationalcurriculum30",
+        "master-lang-german",
+        "master-lang-germanliterature",
+        "master-lang-greekstudies",
+        "master-lang-italian",
+        "master-lang-italiandd",
+        "master-lang-latinstudies",
+        "master-lang-rhaetoromance",
+        "master-lang-slavicstudies",
+        "master-lang-spanish",
+        "master-multi-germanforeignlanguage",
+        "master-multi-frenchforeignlanguage",
+        "master-multi-foreignlanguagedidactics",
+        "master-multi-multilingualism",
+        "master-hist-history",
+        "master-hist-modernhistory",
+        "master-hist-contemporaryhistory",
+        "master-artmus-arthistory",
+        "master-artmus-musicology",
+        "master-artmus-archaeology",
+        "master-soc-sociologyfrench",
+        "master-soc-sociologygerman",
+        "master-soc-socialworkfrench",
+        "master-soc-socialworkgerman",
+        "master-soc-easterneuropeanstudies",
+        "master-soc-europeanstudies",
+        "master-soc-gendersocietysocialpolicy30",
+        "master-soc-internationalcomparativesocialpolicy30",
+        "master-soc-religiousstudies",
+        "master-soc-socialanthropology",
+        "master-soc-sociologysocialproblems30",
+        "master-pedpsy-specialeducation",
+        "master-pedpsy-speechtherapy",
+        "master-pedpsy-specialneedseducationfrench",
+        "master-pedpsy-specialneedseducationgerman",
+        "master-pedpsy-specialeduminor",
+        "master-pedpsy-educationalsciences",
+        "master-pedpsy-educationpsychology",
+        "master-pedpsy-psychology",
+        "master-sci-biochemistry",
+        "master-sci-biology",
+        "master-sci-chemistry",
+        "master-sci-glaciology",
+        "master-sci-earthsciences",
+        "master-sci-environmentalsciences",
+        "master-sci-geography",
+        "master-sci-mathematics",
+        "master-sci-naturesocietypolitics",
+        "master-sci-physics",
+        "master-medspo-humanmedicine",
+        "master-medspo-sportsciences",
+        "master-medspo-biomedicalresearch",
+        "master-digitinf-businessinformatics",
+        "master-digitinf-informatics",
+        "master-digitinf-dataeco",
+        "master-digitinf-bioinformatics",
+        "master-digitinf-digitalneuroscience",
+        "master-teach-teacheredu1",
+        "master-teach-teacheredu2",
+        "master-teach-teacheredu1-2",
+        "master-int-digitalsociety",
+        "master-int-environmentalhumanitiessustainability",
+        "master-int-familystudies",
+        "master-int-islamsociety",
+        "master-int-medievalstudies30"
+      ],
+      "sha256": "1eb56a72cff8da1a76baab9bd5da2651c314c6a6cc03be487563ade54babdcec",
+      "url": "https://studies.unifr.ch/en/course-offerings/courses/?ba=1&do=0&ma=1"
+    }
+  ],
+  "edition": "2026-27.1",
+  "purpose": "Change detection only. Changed digests never update recipe rules automatically."
+}
