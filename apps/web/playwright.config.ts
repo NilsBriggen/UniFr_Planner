@@ -24,15 +24,13 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command:
-        `cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port ${apiPort}`,
+      command: `cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port ${apiPort}`,
       url: `http://127.0.0.1:${apiPort}/api/health`,
       reuseExistingServer: false,
       env: { UNIFR_ACCOUNT_ORIGINS: JSON.stringify([baseURL]) },
     },
     {
-      command:
-        `cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port ${rejectedApiPort} --rejected`,
+      command: `cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port ${rejectedApiPort} --rejected`,
       url: `http://127.0.0.1:${rejectedApiPort}/api/health`,
       reuseExistingServer: false,
       env: { UNIFR_ACCOUNT_ORIGINS: JSON.stringify([baseURL]) },

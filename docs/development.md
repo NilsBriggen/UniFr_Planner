@@ -57,8 +57,8 @@ planning horizon. Manual setup and skipping completed-course entry remain possib
 A setup creates the whole plan with one save; missing academic evidence remains
 `needs_clarification` rather than becoming a completion claim.
 
-Guest plans use the existing schema-v1/v2 JSON formats (v2 for configured degrees) and IndexedDB version 3. `PlanStore.save(next,
-expectedPrevious)` requires the caller's committed baseline; `null` means the ID must
+Guest plans use the existing schema-v1/v2 JSON formats (v2 for configured degrees)
+and IndexedDB version 3. `PlanStore.save(next, expectedPrevious)` requires the caller's committed baseline; `null` means the ID must
 not already exist. Comparison and writing happen in one transaction. A
 `PlanConflictError` preserves the attempted edit for the global recovery notice;
 storage errors do not advance committed state. Recovery can load the latest version
@@ -112,7 +112,7 @@ PostgreSQL behavior. Never point test commands at production.
 
 Run browser projects separately for fresh disposable account backends and independent
 authentication rate-limit budgets. `E2E_PORT=4183` changes the frontend port; the fixture
-API ports in `apps/web/playwright.config.ts` must also be free. Playwright refuses to
+`E2E_API_PORT` and `E2E_REJECTED_API_PORT` select the two fixture API ports. All ports must be free. Playwright refuses to
 reuse running servers. Screenshots use Chromium/Linux; inspect intentional visual
 changes before updating baselines. The focused two-tab recovery test is
 `npm run test:e2e -- save-safety.spec.ts --project=desktop`.
