@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = process.env.E2E_PORT ?? "4173";
+const apiPort = process.env.E2E_API_PORT ?? "8001";
+const rejectedApiPort = process.env.E2E_REJECTED_API_PORT ?? "8002";
 const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
@@ -23,15 +25,15 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port 8001",
-      url: "http://127.0.0.1:8001/api/health",
+        `cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port ${apiPort}`,
+      url: `http://127.0.0.1:${apiPort}/api/health`,
       reuseExistingServer: false,
       env: { UNIFR_ACCOUNT_ORIGINS: JSON.stringify([baseURL]) },
     },
     {
       command:
-        "cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port 8002 --rejected",
-      url: "http://127.0.0.1:8002/api/health",
+        `cd ../.. && PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.catalogue_demo --port ${rejectedApiPort} --rejected`,
+      url: `http://127.0.0.1:${rejectedApiPort}/api/health`,
       reuseExistingServer: false,
       env: { UNIFR_ACCOUNT_ORIGINS: JSON.stringify([baseURL]) },
     },
@@ -39,7 +41,7 @@ export default defineConfig({
       command: `npm run dev -- --port ${port} --strictPort`,
       url: baseURL,
       reuseExistingServer: false,
-      env: { API_PROXY_TARGET: "http://127.0.0.1:8001" },
+      env: { API_PROXY_TARGET: `http://127.0.0.1:${apiPort}` },
     },
   ],
 });

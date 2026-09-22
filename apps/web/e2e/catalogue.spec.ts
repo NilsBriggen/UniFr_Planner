@@ -373,7 +373,7 @@ test("real rejected database renders unavailable, never empty catalogue", async 
   await page.route("**/api/v1/**", async (route) => {
     const url = new URL(route.request().url());
     const response = await route.fetch({
-      url: `http://127.0.0.1:8002${url.pathname}${url.search}`,
+      url: `http://127.0.0.1:${process.env.E2E_REJECTED_API_PORT ?? "8002"}${url.pathname}${url.search}`,
     });
     await route.fulfill({ response });
   });

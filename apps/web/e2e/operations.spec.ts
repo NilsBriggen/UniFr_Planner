@@ -12,7 +12,7 @@ test("protected operations UI loads deployed schedule, monitoring and history wi
 }) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   const unauthenticated = await page.request.get(
-    "http://127.0.0.1:4173/api/v1/admin/operations",
+    `http://127.0.0.1:${process.env.E2E_PORT ?? "4173"}/api/v1/admin/operations`,
   );
   expect(unauthenticated.status()).toBe(401);
   expect(unauthenticated.headers()["cache-control"]).toBe("no-store");
