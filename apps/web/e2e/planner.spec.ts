@@ -412,3 +412,8 @@ for (const language of ["de", "fr", "en"] as const) {
     ]);
   });
 }
+
+// Published lesson fixtures represent this teaching week; keep assertions stable as time advances.
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-09-22T12:00:00Z"));
+});

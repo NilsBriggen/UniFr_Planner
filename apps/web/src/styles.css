@@ -147,7 +147,7 @@ p {
 .languages {
   display: flex;
 }
-.header-settings {
+.button.header-settings {
   width: 44px;
   padding: 10px;
   flex-shrink: 0;

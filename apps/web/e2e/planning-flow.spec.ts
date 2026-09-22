@@ -106,3 +106,8 @@ test("starting from a course returns to that course after creating a plan", asyn
     page.locator(".calendar-week").getByText("Algebra", { exact: true }),
   ).toBeVisible();
 });
+
+// Published lesson fixtures represent this teaching week; keep assertions stable as time advances.
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-09-22T12:00:00Z"));
+});

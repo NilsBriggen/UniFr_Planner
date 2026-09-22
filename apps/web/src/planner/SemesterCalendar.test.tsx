@@ -134,3 +134,9 @@ it("opens the current week and can return to it after browsing another day", asy
     vi.useRealTimers();
   }
 });
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-09-22T12:00:00Z"));
+});
+afterEach(() => vi.useRealTimers());

@@ -396,3 +396,9 @@ it("expands every semester for browser printing and restores exactly the previou
   expect(select).toHaveValue("SS-2027");
   expect(select).toHaveDisplayValue("Spring 2027");
 });
+
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-09-22T12:00:00Z"));
+});
+afterEach(() => vi.useRealTimers());

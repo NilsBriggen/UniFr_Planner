@@ -128,3 +128,8 @@ test("manual entry works when historical archive requests fail", async ({
     page.getByRole("region", { name: "Recorded completed courses" }),
   ).toContainText("Earned ECTS: 4 ECTS");
 });
+
+// Published lesson fixtures represent this teaching week; keep assertions stable as time advances.
+test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-09-22T12:00:00Z"));
+});
