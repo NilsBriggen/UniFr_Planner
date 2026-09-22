@@ -126,23 +126,29 @@ function Provenance({
         : null;
   return (
     <div className="catalogue-provenance">
-      <p className={warning ? "snapshot-age stale" : "snapshot-age"}>
-        {warning && <strong>{warning} · </strong>}
-        {status.published_at ? (
-          <>
-            {t.updated}:{" "}
+      <details className="source-details">
+        <summary className={warning ? "snapshot-age stale" : "snapshot-age"}>
+          {warning && <strong>{warning} · </strong>}
+          {status.published_at ? (
+            <>
+              {t.updated}:{" "}
+              {new Date(status.published_at).toLocaleDateString(language, {
+                timeZone: "Europe/Zurich",
+              })}
+            </>
+          ) : (
+            t.sourceState
+          )}
+        </summary>
+        {status.published_at && (
+          <p>
             {new Date(status.published_at).toLocaleString(language, {
               timeZone: "Europe/Zurich",
             })}{" "}
             · {t.age}: {Math.floor((status.age_seconds ?? 0) / 86400)} {t.days}
-          </>
-        ) : (
-          t.sourceState
+          </p>
         )}
-      </p>
-      {warning && (
-        <details className="source-details">
-          <summary>{t.sourceDetails}</summary>
+        {warning && (
           <p>
             {status.development_fixture
               ? t.fixtureBody
@@ -150,11 +156,11 @@ function Provenance({
                 ? t.rejectedBody
                 : t.staleBody}
           </p>
-          <a className="text-link" href={source}>
-            {t.catalogueSource} ↗
-          </a>
-        </details>
-      )}
+        )}
+        <a className="text-link" href={source}>
+          {t.catalogueSource} ↗
+        </a>
+      </details>
     </div>
   );
 }
@@ -621,9 +627,12 @@ function Search({
         )}
         {plan && (
           <p className="catalogue-degree">
-            {studyLabel(plan, language)} ·{" "}
-            <Link className="text-link" to="/requirements">
-              {d.viewRequirements}
+            <Link
+              className="text-link"
+              to="/requirements"
+              aria-label={`${d.viewRequirements}: ${studyLabel(plan, language)}`}
+            >
+              {studyLabel(plan, language)} <span aria-hidden="true">↗</span>
             </Link>
           </p>
         )}

@@ -329,3 +329,44 @@
     padding-inline: var(--space-4);
   }
 }
+
+@media (max-width: 680px) {
+  .discovery-controls > .button {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+    font-size: 0.8125rem;
+  }
+  .discovery-controls {
+    gap: 8px;
+    padding-block: 8px;
+  }
+  .discovery-controls .discovery-toggles {
+    gap: 8px 12px;
+  }
+  .discovery-controls label {
+    font-size: 0.8125rem;
+  }
+  .discovery-workspace {
+    gap: 12px;
+  }
+  .semester-summary-disclosure > summary {
+    min-height: 44px;
+  }
+  .semester-summary-disclosure > summary::after {
+    content: "⌄";
+    position: absolute;
+    right: 16px;
+    top: 12px;
+  }
+  .semester-summary-disclosure[open] > summary::after {
+    content: "⌃";
+  }
+  .semester-summary {
+    position: relative;
+    padding: 8px 16px;
+  }
+  .semester-summary-disclosure > summary {
+    padding-right: 12px;
+  }
+}

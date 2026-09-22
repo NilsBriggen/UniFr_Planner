@@ -181,6 +181,14 @@ function AppShell() {
   const t = messages[language];
   const x = experienceMessages[language];
   const location = useLocation();
+  const activeArea = location.pathname.startsWith("/semester/")
+    ? "semester"
+    : location.pathname.startsWith("/catalogue")
+      ? "catalogue"
+      : location.pathname.startsWith("/plan") ||
+          ["/requirements", "/setup"].includes(location.pathname)
+        ? "plan"
+        : undefined;
   const previousPath = useRef(location.pathname);
   const navigationRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -287,20 +295,9 @@ function AppShell() {
       <div className="layout">
         <nav ref={navigationRef} className="navigation" aria-label={t.nav}>
           {navigation.map(({ path, key, icon }) => (
-            <NavLink
-              className={({ isActive }) =>
-                isActive ||
-                (key === "plan" &&
-                  ["/requirements", "/setup"].includes(location.pathname))
-                  ? "active"
-                  : undefined
-              }
-              aria-current={
-                key === "plan" &&
-                ["/requirements", "/setup"].includes(location.pathname)
-                  ? "page"
-                  : undefined
-              }
+            <Link
+              className={activeArea === key ? "active" : undefined}
+              aria-current={activeArea === key ? "page" : undefined}
               key={key}
               to={
                 key === "semester"
@@ -331,7 +328,7 @@ function AppShell() {
                     ? x.courses
                     : x.studies}
               </span>
-            </NavLink>
+            </Link>
           ))}
         </nav>
         <div className="canvas">

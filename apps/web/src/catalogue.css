@@ -3,7 +3,7 @@
 }
 .catalogue-provenance {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   margin-bottom: var(--space-6);
 }
@@ -16,6 +16,8 @@
 }
 .source-details summary {
   cursor: pointer;
+  min-height: 44px;
+  align-content: center;
 }
 .catalogue-degree {
   color: var(--color-muted);
@@ -299,6 +301,9 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
     margin-bottom: 8px;
+  }
+  .source-details {
+    margin-bottom: 0;
   }
   .catalogue-provenance .snapshot-age {
     margin-block: 2px;
