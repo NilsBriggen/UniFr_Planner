@@ -1,3 +1,4 @@
+import "./requirements.css";
 import ReviewGaps from "./ReviewGaps";
 import {
   inheritedStructures,

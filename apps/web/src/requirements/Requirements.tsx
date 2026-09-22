@@ -91,7 +91,7 @@ function ResultNode({
             </ul>
           </div>
         )}
-        <Progress result={result} language={language} />
+        {depth > 0 && <Progress result={result} language={language} />}
         {result.remainingCourses > 0 && (
           <p>
             {t.courses}: {result.remainingCourses}
@@ -225,6 +225,14 @@ function PlanRequirements({
     <>
       <p>{t.limits}</p>
       {(error || failed) && <p role="alert">{t.error}</p>}
+      {result && (
+        <section className="studies-progress" aria-label={t.title}>
+          <span className={`requirement-status ${result.status}`}>
+            {t[result.status]}
+          </span>
+          <Progress result={result} language={language} />
+        </section>
+      )}
       {plan.degreeSelection && !editingStudies ? (
         <section className="studies-summary" aria-label={editStudies[language]}>
           <div>

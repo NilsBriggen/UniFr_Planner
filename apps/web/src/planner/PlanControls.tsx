@@ -1,3 +1,4 @@
+import "./planner.css";
 import type { ReactNode } from "react";
 import { Button } from "../components";
 import type { Language } from "../i18n";
