@@ -1,7 +1,7 @@
 """Production coordinator: backup before 05:00 import, weekly documents, minute monitoring."""
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import logging
 from pathlib import Path
@@ -15,6 +15,7 @@ from sqlalchemy.engine import Engine
 
 from .backups import backup, verify
 from .catalogue import SqlCatalogueRepository
+from .catalogue_archive import run_slice
 from .config import Settings
 from .operations import (
     assess_monitor,
@@ -148,6 +149,19 @@ def pulse(engine: Engine, settings: Settings, stop: Event) -> None:
         stop.wait(30)
 
 
+def current_catalogue_due(engine: Engine, now: datetime | None = None) -> bool:
+    """Reserve the adapter's maximum retry/timeout window before current import."""
+    now = now or datetime.now(timezone.utc)
+    with engine.connect() as connection:
+        due = connection.scalar(select(state.c.value).where(state.c.key == "next:catalogue"))
+        running = connection.scalar(
+            select(runs.c.id).where(runs.c.job == "catalogue", runs.c.outcome == "running").limit(1)
+        )
+    return bool(
+        running or due is None or datetime.fromisoformat(due) <= now + timedelta(seconds=150)
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--health", action="store_true")
@@ -168,15 +182,18 @@ def main() -> None:
     worker = Thread(target=pulse, args=(engine, settings, stop), daemon=True)
     worker.start()
 
+    # Both imports share the same throttle and the repository's global advisory lock.
+    repository = SqlCatalogueRepository(engine)
+    source = HttpCatalogueSource(repository)
+
     def execute(job: str) -> dict[str, Any]:
         if job == "documents":
             return review_sources(
                 load_sources(settings.recipe_source_manifest, settings.source_documents)
             )
-        repository = SqlCatalogueRepository(engine)
         result = catalogue_job(
             lambda: backup(settings.backup_dir, settings.database_url, datetime.now(timezone.utc)),
-            lambda: sync(HttpCatalogueSource(repository), repository),
+            lambda: sync(source, repository),
         )
         with repository.lock():
             repository.prune(datetime.now(timezone.utc))
@@ -188,6 +205,14 @@ def main() -> None:
         while True:
             try:
                 tick(engine, datetime.now(timezone.utc), execute)
+                if not args.once:
+                    try:
+                        run_slice(
+                            repository, source, current_due=lambda: current_catalogue_due(engine)
+                        )
+                    except RuntimeError:
+                        # A manually started current import owns the global lock.
+                        pass
             except Exception as error:
                 event("scheduler_failed", reason=type(error).__name__)
                 if args.once:

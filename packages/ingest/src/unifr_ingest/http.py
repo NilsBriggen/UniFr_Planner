@@ -1,6 +1,9 @@
 """Polite public HTTP adapter; parsing and publication decisions live elsewhere."""
 
 import time
+import re
+
+from bs4 import BeautifulSoup
 from collections.abc import Callable
 from typing import Protocol
 from urllib.error import HTTPError
@@ -145,7 +148,32 @@ class HttpCatalogueSource:
                 self.sleep(2**attempt)
         raise AssertionError("Unreachable retry state")
 
-    def listing(self, number: int) -> ListingPage:
+    def semesters(self) -> dict[str, str]:
+        """Discover advertised semester IDs; malformed/loading selectors fail closed."""
+
+        def parse(html: str) -> dict[str, str]:
+            soup = BeautifulSoup(html, "html.parser")
+            selector = soup.select_one('select[name="semestres"], select#semestres')
+            if selector is None:
+                raise ValueError("Missing semester selector")
+            result: dict[str, str] = {}
+            for option in selector.select("option"):
+                value = str(option.get("value", "")).strip()
+                if not value:
+                    continue
+                term = option.get_text(" ", strip=True)
+                if not re.fullmatch(r"(?:AS|SS)-[0-9]{4}", term) or not value.isdigit():
+                    raise ValueError("Unknown semester option")
+                if term in result or value in result.values():
+                    raise ValueError("Duplicate semester option")
+                result[term] = value
+            if not result:
+                raise ValueError("Empty semester selector")
+            return result
+
+        return parse(self.fetch(BASE, check=parse, max_age=86400))
+
+    def listing(self, number: int, *, semester: str = "") -> ListingPage:
         values = dict.fromkeys(
             (
                 "texte",
@@ -160,7 +188,9 @@ class HttpCatalogueSource:
             ),
             "",
         )
-        values.update(viewer="//www.unifr.ch/timetable/en/course.html", page=str(number))
+        values.update(
+            viewer="//www.unifr.ch/timetable/en/course.html", page=str(number), semestres=semester
+        )
         raw = self.fetch(
             CONNECTOR, urlencode(values).encode(), check=lambda html: parse_listing(html, number)
         )
