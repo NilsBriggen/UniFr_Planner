@@ -112,3 +112,34 @@ it("keeps advanced filters closed while retaining URL filter chips", async () =>
   await userEvent.click(toggle);
   expect(screen.getByLabelText("Faculty / domain")).toBeVisible();
 });
+
+it("keeps stale and rejected catalogue explanations distinct", async () => {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "en");
+  const course = publishedCourses()[0];
+  const status = {
+    ...publishedStatus,
+    stale: true,
+    published_at: "2026-09-01T10:00:00Z",
+    latest_sync_outcome: "success",
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) =>
+      Response.json(
+        request.url.endsWith("/status/catalogue") ? status : course,
+      ),
+    ),
+  );
+  render(
+    <MemoryRouter initialEntries={[`/catalogue/${course.code}`]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const warning = await screen.findByText(/Stale ·/);
+  await userEvent.click(warning.closest("summary")!);
+  expect(screen.getByText(/This catalogue snapshot is older/)).toBeVisible();
+  expect(
+    screen.queryByText(/The source changed during import or validation failed/),
+  ).not.toBeInTheDocument();
+});
