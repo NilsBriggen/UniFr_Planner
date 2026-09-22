@@ -22,7 +22,7 @@ import { requirementMessages } from "./messages";
 import "./requirements.css";
 import RecipeChooser from "./RecipeChooser";
 import { recipeMessages } from "./recipeMessages";
-import StudySummary from "./StudySummary";
+import { studyLabel } from "./study-summary";
 import ReviewGaps from "./ReviewGaps";
 
 const editStudies = {
@@ -236,7 +236,7 @@ function PlanRequirements({
       {plan.degreeSelection && !editingStudies ? (
         <section className="studies-summary" aria-label={editStudies[language]}>
           <div>
-            <StudySummary plan={plan} language={language} />
+            <p className="study-summary-title">{studyLabel(plan, language)}</p>
             {degree && (
               <>
                 <p>

@@ -735,3 +735,9 @@ input {
     width: 100%;
   }
 }
+
+@media print {
+  .study-navigation {
+    display: none;
+  }
+}

@@ -25,7 +25,10 @@ import ManualCompletion from "./ManualCompletion";
 import { catchupMessages } from "./catchup-messages";
 import { suggestionMessages } from "../suggestions/messages";
 import StudySummary from "../requirements/StudySummary";
-import { studyLabel } from "../requirements/study-summary";
+import {
+  hasStudyConfiguration,
+  studyLabel,
+} from "../requirements/study-summary";
 import { Download, SaveStatus } from "./PlanControls";
 import { semesterLabel } from "./SemesterField";
 
@@ -352,13 +355,16 @@ export function PlanBoard({ language }: { language: Language }) {
       )}
       {plan && scenario && (
         <>
+          <Summary courses={scenario.courses} t={t} />
           <div className="plan-meta">
             <h2 className="plan-title">{plan.name}</h2>
             <p>
               {t.target}: {plan.targetEcts} ECTS
             </p>
           </div>
-          <StudySummary plan={plan} language={language} />
+          {!hasStudyConfiguration(plan) && (
+            <StudySummary plan={plan} language={language} />
+          )}
           <label className="planning-term-control">
             {catchupMessages[language].planning}
             <select
@@ -376,7 +382,6 @@ export function PlanBoard({ language }: { language: Language }) {
               ))}
             </select>
           </label>
-          <Summary courses={scenario.courses} t={t} />
           <p className="planner-help">{t.boardHelp}</p>
           <fieldset disabled={busy} className="board-fieldset">
             <div className="semester-board" ref={board}>
