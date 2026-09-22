@@ -5,6 +5,8 @@ This records the approved work and its acceptance criteria. It does not authoriz
 production release. Verification below distinguishes bounded checks from outstanding
 integration acceptance.
 
+Implementation is complete locally. See the [final verification report](../reports/2026-09-22-simplicity.md) for integrated results and inspected screenshots.
+
 ## Goal and boundaries
 
 Make the ordinary student journey shorter: configure studies, find semester courses,
@@ -91,6 +93,8 @@ or successful paths.
   production image build and compressed responses. Independent review findings must be
   resolved and covered before final integration acceptance.
 
+Implementation is complete locally. See the [final verification report](../reports/2026-09-22-simplicity.md) for integrated results and inspected screenshots.
+
 ## Verification recorded on 2026-09-22
 
 Documentation/check worktree baseline: `bcb5de5`; subsequent main-worktree changes are
@@ -106,7 +110,7 @@ outside this record unless explicitly stated. This is local evidence, not a depl
 | `npm run recipes:test`                                                                 | Five passed                                                                                                                          |
 | Actual local Caddy compression, production/Traefik/web configs                         | All passed; 13,770,161-byte public sample → 963,678 gzip bytes; decoded bytes identical; account-path negative controls uncompressed |
 | Earlier bounded save-safety slice                                                      | 365 unit tests and four desktop/phone browser cases passed in its isolated worktree; integration must rerun affected journeys        |
-| Final integrated web suite, build budget, production image build and visual acceptance | Pending in this documentation record; main implementation/review work continues                                                      |
+| Final integrated web suite, build budget, production image build and visual acceptance | Completed; see the linked final verification report                                                                                  |
 | Production publication                                                                 | Not requested or performed                                                                                                           |
 
 The compression check used
