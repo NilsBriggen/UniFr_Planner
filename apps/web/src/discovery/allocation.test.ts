@@ -152,8 +152,19 @@ it("requires exact catalogue assignment metadata and removes fulfilled pools", (
   saved(p, course("POOL-A", true));
   expect(assess(p, course("POOL-B", true))).toMatchObject({
     match: "requirements",
-    recommended: false,
+    recommended: true,
+    contributionEcts: 6,
   });
+  // The local pool is fulfilled, but its extra credits remain useful until the
+  // degree's own 180-credit obligation is covered.
+  const large = course("POOL-FULL", true);
+  large.offerings[0].ects = 156;
+  saved(p, large);
+  saved(p, course("FIRST"));
+  saved(p, course("LATER"));
+  saved(p, course("A"));
+  expect(evaluatePlanRequirements(p)?.remaining).toBe(0);
+  expect(assess(p, course("POOL-B", true)).recommended).toBe(false);
 });
 it("excludes explicit unmet prerequisites and labels unparsed prose unknown", () => {
   const p = plan();
@@ -240,4 +251,78 @@ it("uses refreshed assignment eligibility in schedule-improvement degree impact"
   expect(suggestion.route).toBe("elective");
   expect(suggestion.uncertainty).not.toContain("requirementLoss");
   expect(suggestion.requirementsAfter?.planned).toBe(6);
+});
+
+it("allows every unfilled one_of alternative and carries ancestor review gaps", () => {
+  const p = plan();
+  expect(selectedChoices(evaluatePlanRequirements(p))).toEqual({});
+  expect(assess(p, course("A")).recommended).toBe(true);
+  expect(assess(p, course("B")).recommended).toBe(true);
+  expect(evaluatePlanRequirements(p)?.status).toBe("needs_clarification");
+  expect(assess(p, course("FIRST")).reviewState).toBe("needs_clarification");
+});
+
+it("adds pool progress without stealing a completed compulsory allocation", () => {
+  const p = plan();
+  // FIRST is eligible both for its compulsory leaf and for the catalogue pool.
+  saved(p, course("FIRST", true));
+  saved(p, course("POOL-A", true));
+  const before = evaluatePlanningRequirements(p);
+  const candidate = course("POOL-B", true);
+  expect(assess(p, candidate)).toMatchObject({
+    recommended: true,
+    contributionEcts: 6,
+  });
+  saved(p, candidate, "planned");
+  const after = evaluatePlanningRequirements(p, selectedChoices(before.degree));
+  const flatten = (
+    r: NonNullable<typeof before.degree>,
+  ): NonNullable<typeof before.degree>[] => [r, ...r.children.flatMap(flatten)];
+  const afterNodes = flatten(after.degree!);
+  for (const old of flatten(before.degree!)) {
+    const current = afterNodes.find((r) => r.node.id === old.node.id)!;
+    expect(current.remaining).toBeLessThanOrEqual(old.remaining);
+    expect(current.remainingCourses).toBeLessThanOrEqual(old.remainingCourses);
+  }
+  expect(
+    afterNodes
+      .find((r) => r.node.id.endsWith("/FIRST"))
+      ?.allocations.map((a) => a.code),
+  ).toEqual(["FIRST"]);
+});
+
+it("retains one_of evidence supplied by a completed checklist duty", async () => {
+  const { evaluateRequirements } = await import(
+    "../../../../packages/domain/src/requirements"
+  );
+  const base = {
+    title: { en: "Duty", de: "Duty", fr: "Duty" },
+    explanation: { en: "Duty", de: "Duty", fr: "Duty" },
+    citations: [
+      {
+        url: "https://example.org/rule",
+        title: "Rule",
+        revisionDate: "2026-01-01",
+        section: "1",
+        cohort: "2026",
+        retrievedAt: "2026-09-01",
+      },
+    ],
+    reviewStatus: "verified" as const,
+  };
+  const root: RequirementNode = {
+    ...base,
+    id: "choice",
+    kind: "one_of",
+    children: [
+      { ...base, id: "a", kind: "checklist" },
+      { ...base, id: "b", kind: "checklist" },
+    ],
+  };
+  expect(
+    selectedChoices(
+      evaluateRequirements(root, [], { completedChecklist: ["b"] }),
+    ),
+  ).toEqual({ choice: "b" });
+  expect(selectedChoices(evaluateRequirements(root, []))).toEqual({});
 });

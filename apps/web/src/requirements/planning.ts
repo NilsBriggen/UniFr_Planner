@@ -19,7 +19,17 @@ export const selectedChoices = (
   Object.fromEntries(
     roots
       .flatMap(resultNodes)
-      .filter((r) => r.selectedChildId)
+      // An empty allocator default is not a user choice. Only retain branches
+      // supported by selected course records or a completed checklist duty.
+      .filter(
+        (r) =>
+          r.selectedChildId &&
+          resultNodes(r).some(
+            (n) =>
+              n.allocations.length > 0 ||
+              (n.node.kind === "checklist" && n.status === "complete"),
+          ),
+      )
       .map((r) => [r.node.id, r.selectedChildId!]),
   );
 

@@ -161,7 +161,12 @@ export function discoverCourses(
       let recommendationKind: Assessment["recommendationKind"] = null;
       let contributionEcts: number | null = candidate.ects === null ? null : 0;
       let reviewState: Assessment["reviewState"] =
-        matches.some((n) => n.reviewStatus !== "verified") || requirementError
+        matches.some((n) => n.reviewStatus !== "verified") ||
+        (matching.length > 0 &&
+          baseline.degree?.status === "needs_clarification") ||
+        (additionalMatching.length > 0 &&
+          baseline.additional?.status === "needs_clarification") ||
+        requirementError
           ? "needs_clarification"
           : "reviewed";
       // Reuse the baseline; irrelevant catalogue entries never invoke the allocator.
@@ -189,6 +194,10 @@ export function discoverCourses(
           const after = evaluatePlanningRequirements(next, choices);
           const afterNodes = resultNodes(after.degree);
           const afterAdditional = resultNodes(after.additional);
+          const countDeficit = (r: (typeof beforeNodes)[number]): number =>
+            r.children.length
+              ? r.children.reduce((sum, child) => sum + countDeficit(child), 0)
+              : r.remainingCourses;
           const gains = (
             before: typeof beforeNodes,
             after: typeof beforeNodes,
@@ -197,15 +206,30 @@ export function discoverCourses(
               const old = before.find((b) => b.node.id === r.node.id);
               return (
                 old &&
-                !r.children.length &&
                 (r.remaining < old.remaining ||
-                  r.remainingCourses < old.remainingCourses)
+                  countDeficit(r) < countDeficit(old))
               );
             });
           const degreeGains = gains(beforeNodes, afterNodes);
           const additionalGains = gains(beforeAdditional, afterAdditional);
           const gained = [...degreeGains, ...additionalGains];
-          const targets = new Set(gained.map((r) => r.node.id));
+          const allAfter = [...afterNodes, ...afterAdditional];
+          const targets = new Set(
+            allAfter
+              .filter((r) =>
+                r.allocations.some((a) => a.courseId === candidate.id),
+              )
+              .map((r) => r.node.id),
+          );
+          // Improvements must not consume evidence needed elsewhere. Unfilled
+          // one_of defaults may disappear, but evidence-backed branches cannot.
+          const worsens = [...beforeNodes, ...beforeAdditional].some((old) => {
+            const current = allAfter.find((r) => r.node.id === old.node.id);
+            return current
+              ? current.remaining > old.remaining ||
+                  countDeficit(current) > countDeficit(old)
+              : old.allocations.length > 0;
+          });
           // Prerequisite checks use explicit recipe rules, never parsed prose.
           const rules =
             degree?.prerequisites.filter(
@@ -229,6 +253,7 @@ export function discoverCourses(
             prerequisiteState = "unmet";
           if (
             gained.length &&
+            !worsens &&
             [...afterNodes, ...afterAdditional].some((r) =>
               r.allocations.some((a) => a.courseId === candidate.id),
             )

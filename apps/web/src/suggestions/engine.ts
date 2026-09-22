@@ -192,10 +192,16 @@ export function generateSuggestions(input: {
     undefined,
     input.requirements,
   );
-  const choices = selectedChoices(
-    input.requirements ?? initial.degree,
-    initial.additional,
-  );
+  // Standalone fixture callers can supply an explicit alternative selection;
+  // configured plans derive choices only from retained course/checklist evidence.
+  const choices =
+    !plan.degreeSelection && !plan.requirements && input.requirements
+      ? Object.fromEntries(
+          flatten(input.requirements)
+            .filter((r) => r.selectedChildId)
+            .map((r) => [r.node.id, r.selectedChildId!]),
+        )
+      : selectedChoices(initial.degree, initial.additional);
   const baseline = evaluatePlanningRequirements(
     plan,
     choices,
