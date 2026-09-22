@@ -206,11 +206,7 @@ for (const language of ["de", "fr", "en"] as const) {
     const allocation = page.getByLabel(`${t.semester} · DEMO-001`, {
       exact: true,
     });
-    // Adding now chooses a semester immediately; still exercise keyboard allocation.
-    await allocation.selectOption("");
-    await expect(page.locator(".save-status")).toHaveText(t.saved);
-    await allocation.focus();
-    await allocation.selectOption("AS-2026");
+    // Direct add assigns the planning semester immediately.
     await expect(allocation).toHaveValue("AS-2026");
     const pin = page.getByRole("button", {
       name: `${t.pin} · DEMO-001`,
