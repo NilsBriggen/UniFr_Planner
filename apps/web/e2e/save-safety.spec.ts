@@ -26,8 +26,8 @@ async function create(page: Page) {
   await chooseManualSetup(page);
   await page.getByLabel("Plan name", { exact: true }).fill("Two tabs");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
-  await page.getByLabel("Entry year", { exact: true }).fill("2026");
-  await page.getByRole("button", { name: "Create local plan" }).click();
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2026");
+  await page.getByRole("button", { name: "Start planning" }).click();
   await expect(page).toHaveURL(/catalogue/);
 }
 
@@ -49,7 +49,7 @@ test("two stale tabs retain both course edits through separate-plan recovery", a
   const other = await context.newPage();
   await other.goto("/catalogue/DEMO-002?term=AS-2026");
   const add = (p: Page) =>
-    p.getByRole("button", { name: "Add to plan", exact: true });
+    p.getByRole("button", { name: "Add to semester", exact: true });
   await expect(add(page)).toBeEnabled();
   await expect(add(other)).toBeEnabled();
   await add(page).click();
@@ -96,7 +96,9 @@ test("another tab refreshes its committed plan after a successful save", async (
     other.getByRole("heading", { name: "Two tabs", exact: true }),
   ).toBeVisible();
   await page.goto("/catalogue/DEMO-001?term=AS-2026");
-  await page.getByRole("button", { name: "Add to plan", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Add to semester", exact: true })
+    .click();
   await expect(
     other.getByRole("heading", { name: "Algebra", exact: true }),
   ).toBeVisible();

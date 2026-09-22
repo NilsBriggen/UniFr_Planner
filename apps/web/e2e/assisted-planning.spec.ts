@@ -12,11 +12,11 @@ test("semester discovery explains lesson times and updates its overview as cours
   await page
     .getByLabel("Programme", { exact: true })
     .fill("Computer Science + Business Informatics");
-  await page.getByLabel("Entry year", { exact: true }).fill("2026");
-  await page.getByRole("button", { name: "Create local plan" }).click();
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2026");
+  await page.getByRole("button", { name: "Start planning" }).click();
   await page
     .getByRole("navigation")
-    .getByRole("link", { name: "Course catalogue", exact: true })
+    .getByRole("link", { name: "Courses", exact: true })
     .click();
   const overview = page.getByRole("complementary", { name: "Your semester" });
   await expect(overview).toBeVisible();

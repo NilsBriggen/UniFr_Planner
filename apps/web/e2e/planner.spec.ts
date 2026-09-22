@@ -1,4 +1,8 @@
-import { chooseManualSetup } from "./studies-helpers";
+import {
+  chooseManualSetup,
+  openPlanJson,
+  openPlanTools,
+} from "./studies-helpers";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { plannerMessages } from "../src/planner/messages";
@@ -6,6 +10,7 @@ import { messages } from "../src/i18n";
 import { createPlan } from "../src/planner/domain";
 import { readFile } from "node:fs/promises";
 import ICAL from "ical.js";
+import { setupMessages } from "../src/planner/setupMessages";
 
 for (const language of ["de", "fr", "en"] as const) {
   const t = plannerMessages[language],
@@ -18,6 +23,7 @@ for (const language of ["de", "fr", "en"] as const) {
       language,
     );
     await page.goto("/plan");
+    await openPlanJson(page, language);
     const imported = createPlan({
       id: "original",
       scenarioId: "main",
@@ -92,12 +98,14 @@ for (const language of ["de", "fr", "en"] as const) {
       page.getByRole("heading", { name: "Recovery degree", exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("alert")).toContainText(t.unreadable);
+    await openPlanTools(page, language);
     await expect(
       page.getByRole("button", { name: t.exportJson, exact: true }),
     ).toBeEnabled();
     await page.goto("/semester/AS-2026");
     await expect(page.locator(".calendar-check")).toContainText(t.unresolved);
     await expect(page.getByText(t.clear, { exact: true })).toHaveCount(0);
+    await page.locator("details.calendar-exports > summary").click();
     await expect(
       page.getByRole("button", { name: t.exportIcs, exact: true }),
     ).toBeDisabled();
@@ -117,6 +125,7 @@ for (const language of ["de", "fr", "en"] as const) {
       language,
     );
     await page.goto("/plan");
+    await openPlanJson(page, language);
     await page.getByLabel(t.json, { exact: true }).fill('{"schemaVersion":99}');
     await page.getByRole("button", { name: t.preview, exact: true }).click();
     await expect(page.getByRole("alert")).toHaveText(t.invalid);
@@ -154,6 +163,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await expect(
       page.getByRole("heading", { name: "Imported degree", exact: true }),
     ).toBeVisible();
+    await openPlanTools(page, language);
     const downloading = page.waitForEvent("download");
     await page.getByRole("button", { name: t.exportJson, exact: true }).click();
     const downloaded = await downloading;
@@ -176,14 +186,21 @@ for (const language of ["de", "fr", "en"] as const) {
     await chooseManualSetup(page, language);
     await page.getByLabel(t.planName, { exact: true }).fill("My degree");
     await page.getByLabel(t.programme, { exact: true }).fill("Informatics");
-    await page.getByRole("button", { name: t.create, exact: true }).click();
+    await page
+      .getByRole("button", {
+        name: setupMessages[language].start,
+        exact: true,
+      })
+      .click();
     await expect(page).toHaveURL(/catalogue/);
     await page.goto("/plan");
     await expect(
       page.getByRole("heading", { name: "My degree", exact: true }),
     ).toBeVisible();
     await page.goto("/catalogue/DEMO-001");
-    await page.getByRole("button", { name: t.add, exact: true }).click();
+    await page
+      .getByRole("button", { name: t.addToSemester, exact: true })
+      .click();
     await expect(
       page.getByRole("button", { name: t.added, exact: true }),
     ).toBeDisabled();
@@ -210,6 +227,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await page
       .getByRole("button", { name: `${t.unpin} · DEMO-001`, exact: true })
       .click();
+    await openPlanTools(page, language);
     await page.getByLabel(t.newScenario, { exact: true }).fill("Alternative");
     await page.getByRole("button", { name: t.duplicate, exact: true }).click();
     await expect(page.getByLabel(t.scenario, { exact: true })).toHaveValue(
@@ -229,6 +247,10 @@ for (const language of ["de", "fr", "en"] as const) {
     await expect(
       page.getByLabel(`${t.semester} · DEMO-001`, { exact: true }),
     ).toHaveValue("AS-2026");
+    await page
+      .getByRole("group", { name: t.completed, exact: true })
+      .locator(":scope > summary")
+      .click();
     await page
       .getByLabel(t.courseTitle, { exact: true })
       .fill("Prior mathematics");
@@ -260,11 +282,13 @@ for (const language of ["de", "fr", "en"] as const) {
         .locator(".screen-calendar")
         .getByText(language === "fr" ? "Algèbre" : "Algebra", { exact: true }),
     ).toBeVisible();
+    await page.locator("details.availability-form > summary").click();
     await page.getByLabel(t.busyLabel, { exact: true }).fill("Work");
     await page.getByLabel(t.starts, { exact: true }).fill("2026-09-21T12:15");
     await page.getByLabel(t.ends, { exact: true }).fill("2026-09-21T12:45");
     await page.getByRole("button", { name: t.addBusy, exact: true }).click();
     await expect(page.locator(".calendar-check")).toContainText(t.unavailable);
+    await page.locator("details.calendar-exports > summary").click();
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: t.exportIcs, exact: true }).click();
     const ics = await download;
@@ -316,7 +340,9 @@ for (const language of ["de", "fr", "en"] as const) {
     });
     await page.emulateMedia({ media: "screen" });
     await page.goto("/catalogue/DEMO-003");
-    await page.getByRole("button", { name: t.add, exact: true }).click();
+    await page
+      .getByRole("button", { name: t.addToSemester, exact: true })
+      .click();
     await expect(
       page.getByRole("button", { name: t.added, exact: true }),
     ).toBeDisabled();
@@ -338,7 +364,9 @@ for (const language of ["de", "fr", "en"] as const) {
       .selectOption("");
     await expect(page.locator(".save-status")).toHaveText(t.saved);
     await page.goto("/catalogue/DEMO-004");
-    await page.getByRole("button", { name: t.add, exact: true }).click();
+    await page
+      .getByRole("button", { name: t.addToSemester, exact: true })
+      .click();
     await expect(
       page.getByRole("button", { name: t.added, exact: true }),
     ).toBeDisabled();
@@ -348,6 +376,7 @@ for (const language of ["de", "fr", "en"] as const) {
       .selectOption("AS-2026");
     await expect(page.locator(".save-status")).toHaveText(t.saved);
     await page.goto("/semester/AS-2026");
+    await page.locator("details.calendar-exports > summary").click();
     const recurrenceDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: t.exportIcs, exact: true }).click();
     const recurrenceIcs = new ICAL.Component(

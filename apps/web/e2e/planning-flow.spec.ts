@@ -11,8 +11,8 @@ test("a student adds courses from a semester and opens the saved weekly timetabl
   await chooseManualSetup(page);
   await page.getByLabel("Plan name", { exact: true }).fill("My CS semester");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
-  await page.getByLabel("Entry year", { exact: true }).fill("2026");
-  await page.getByRole("button", { name: "Create local plan" }).click();
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2026");
+  await page.getByRole("button", { name: "Start planning" }).click();
   await expect(page).toHaveURL(/catalogue\?term=AS-2026$/);
   await page.goto("/plan");
   const semester = page.getByRole("region", { name: "AS-2026", exact: true });
@@ -26,7 +26,7 @@ test("a student adds courses from a semester and opens the saved weekly timetabl
   await algebra
     .getByRole("button", { name: "Add to semester", exact: true })
     .click();
-  await expect(algebra.getByRole("status")).toContainText("AS-2026");
+  await expect(algebra.getByRole("status")).toContainText("Autumn 2026");
   await algebra
     .getByRole("link", { name: "View weekly timetable", exact: true })
     .click();
@@ -63,7 +63,7 @@ test("a student adds courses from a semester and opens the saved weekly timetabl
   ).toHaveCount(0);
   await page
     .getByRole("navigation")
-    .getByRole("link", { name: "Degree plan", exact: true })
+    .getByRole("link", { name: "My studies", exact: true })
     .click();
   await expect(semester.getByText("Algebra", { exact: true })).toBeVisible();
   await expect(semester).toContainText("6 ECTS");
@@ -92,8 +92,8 @@ test("starting from a course returns to that course after creating a plan", asyn
   await chooseManualSetup(page);
   await page.getByLabel("Plan name", { exact: true }).fill("From a course");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
-  await page.getByLabel("Entry year", { exact: true }).fill("2026");
-  await page.getByRole("button", { name: "Create local plan" }).click();
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2026");
+  await page.getByRole("button", { name: "Start planning" }).click();
   await expect(page).toHaveURL(/catalogue\/DEMO-001\?term=AS-2026$/);
   await page
     .getByRole("button", { name: "Add to semester", exact: true })

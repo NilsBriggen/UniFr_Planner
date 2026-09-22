@@ -60,7 +60,7 @@ test("search stays usable while a complete 3750-course index finds a match beyon
   const started = Date.now();
   await page
     .getByRole("navigation")
-    .getByRole("link", { name: "Course catalogue", exact: true })
+    .getByRole("link", { name: "Courses", exact: true })
     .click();
   const search = page.getByRole("searchbox");
   await search.fill("typed while matches load");

@@ -10,13 +10,17 @@ test("2024 study start plans 2026 and records historical plus manual completion 
   await chooseManualSetup(page, "en");
   await page.getByLabel("Plan name", { exact: true }).fill("Continuing degree");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
-  await page.getByLabel("Study start", { exact: true }).selectOption("AS");
-  await page.getByLabel("Entry year", { exact: true }).fill("2024");
   await page
-    .getByLabel("Planning semester", { exact: true })
+    .getByLabel("Study start · Season", { exact: true })
     .selectOption("AS");
-  await page.getByLabel("Planning year", { exact: true }).fill("2026");
-  await page.getByRole("button", { name: "Create local plan" }).click();
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2024");
+  await page
+    .getByLabel("Planning semester · Season", { exact: true })
+    .selectOption("AS");
+  await page
+    .getByLabel("Planning semester · Year", { exact: true })
+    .fill("2026");
+  await page.getByRole("button", { name: "Start planning" }).click();
   await expect(page).toHaveURL(/\/plan\/completed/);
   const archive = page.getByRole("region", {
     name: "Search archived courses",
@@ -99,9 +103,11 @@ test("manual entry works when historical archive requests fail", async ({
   await chooseManualSetup(page, "en");
   await page.getByLabel("Plan name", { exact: true }).fill("Offline archive");
   await page.getByLabel("Programme", { exact: true }).fill("CS");
-  await page.getByLabel("Entry year", { exact: true }).fill("2024");
-  await page.getByLabel("Planning year", { exact: true }).fill("2026");
-  await page.getByRole("button", { name: "Create local plan" }).click();
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2024");
+  await page
+    .getByLabel("Planning semester · Year", { exact: true })
+    .fill("2026");
+  await page.getByRole("button", { name: "Start planning" }).click();
   await expect(
     page.getByText(
       "The archive could not be loaded. Manual entry remains available.",

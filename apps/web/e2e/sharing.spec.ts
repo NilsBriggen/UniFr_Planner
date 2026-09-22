@@ -128,9 +128,9 @@ test("share owner updates automatically while another guest can only import a co
   await page
     .getByLabel("Programme", { exact: true })
     .fill("Computer Science + Business Informatics");
-  await page.getByLabel("Entry year", { exact: true }).fill("2026");
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2026");
   await page
-    .getByRole("button", { name: "Create local plan", exact: true })
+    .getByRole("button", { name: "Start planning", exact: true })
     .click();
   await expect(page).toHaveURL(/catalogue/);
   await page.goto("/plan");
@@ -144,7 +144,7 @@ test("share owner updates automatically while another guest can only import a co
     .locator(".course-results > li")
     .filter({ has: page.getByRole("heading", { name: /Algebra/ }) });
   await algebra
-    .getByRole("button", { name: "Add to plan", exact: true })
+    .getByRole("button", { name: "Add to semester", exact: true })
     .click();
   await algebra
     .getByRole("link", { name: "View weekly timetable", exact: true })
@@ -275,9 +275,9 @@ test("the selected week downloads as an editable workbook and a complete landsca
     .getByLabel("Plan name", { exact: true })
     .fill("My weekly printout");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
-  await page.getByLabel("Entry year", { exact: true }).fill("2026");
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2026");
   await page
-    .getByRole("button", { name: "Create local plan", exact: true })
+    .getByRole("button", { name: "Start planning", exact: true })
     .click();
   await expect(page).toHaveURL(/catalogue/);
   await page.goto("/plan");
@@ -287,7 +287,9 @@ test("the selected week downloads as an editable workbook and a complete landsca
       .first(),
   ).toBeVisible();
   await page.goto("/catalogue/DEMO-001?term=AS-2026");
-  await page.getByRole("button", { name: "Add to plan", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Add to semester", exact: true })
+    .click();
   await page
     .getByRole("link", { name: "View weekly timetable", exact: true })
     .click();

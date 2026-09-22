@@ -51,6 +51,7 @@ export async function importStudyPlan(
 ) {
   const t = plannerMessages[language];
   await page.goto("/plan");
+  await openPlanJson(page, language);
   await page.getByLabel(t.json, { exact: true }).fill(JSON.stringify(plan));
   await page.getByRole("button", { name: t.preview, exact: true }).click();
   await page
@@ -62,12 +63,35 @@ export async function importStudyPlan(
   await expect(page.locator(".save-status")).toHaveText(t.saved);
 }
 
+export async function openPlanTools(page: Page, language: Language = "en") {
+  const tools = page.locator("details.plan-tools");
+  if (!(await tools.getAttribute("open"))) {
+    await tools.locator(":scope > summary").click();
+  }
+  return tools;
+}
+
+export async function openPlanJson(page: Page, language: Language = "en") {
+  const nested = page.locator("details.plan-tools details.import-advanced");
+  const advanced = (await nested.count())
+    ? nested
+    : page.locator("details.import-advanced");
+  if (await nested.count()) await openPlanTools(page, language);
+  if (!(await advanced.getAttribute("open"))) {
+    await advanced.locator("summary").first().click();
+    await expect(advanced).toHaveAttribute("open", "");
+  }
+}
+
 export async function chooseManualSetup(page: Page, language: Language = "en") {
   await page
     .getByRole("button", {
       name: setupMessages[language].manualFallback,
       exact: true,
     })
+    .click();
+  await page
+    .getByText(setupMessages[language].optional, { exact: true })
     .click();
 }
 
@@ -81,18 +105,48 @@ export async function chooseComputerScience(
   await page
     .getByLabel(t.main, { exact: true })
     .selectOption("bachelor-digitinf-informatics");
-  await expect(page.getByLabel(t.variant, { exact: true })).toHaveValue(
-    "major-120",
-  );
-  await page.getByLabel(t.structure, { exact: true }).selectOption("ba-120-60");
-  await page
-    .getByLabel(`${t.major} · ${t.semester}`, { exact: true })
-    .fill(start);
+  const variant = page.getByLabel(t.variant, { exact: true });
+  if (await variant.count()) await variant.selectOption("major-120");
+  const structure = page.getByLabel(t.structure, { exact: true });
+  if (await structure.count()) await structure.selectOption("ba-120-60");
+  await fillSemester(page, `${t.major} · ${t.semester}`, start, language);
   await page
     .getByLabel(`${t.minor} · 60 ECTS`, { exact: true })
     .selectOption("bachelor-digitinf-businessinformatics/minor-60");
+  if (minorStart !== start) {
+    await page.getByLabel(t.differentStart, { exact: true }).check();
+    await fillSemester(
+      page,
+      `${t.minor} · 60 ECTS · ${t.semester}`,
+      minorStart,
+      language,
+    );
+  }
+  const setupContinue = page.getByRole("button", {
+    name: setupMessages[language].continue,
+    exact: true,
+  });
+  await (
+    (await setupContinue.count())
+      ? setupContinue
+      : page.getByRole("button", { name: t.preview, exact: true })
+  ).click();
+}
+
+export async function fillSemester(
+  page: Page,
+  label: string,
+  term: string,
+  language: Language = "en",
+) {
+  const [season, year] = term.split("-");
+  const part = {
+    en: { season: "Season", year: "Year" },
+    de: { season: "Jahreszeit", year: "Jahr" },
+    fr: { season: "Saison", year: "Année" },
+  }[language];
   await page
-    .getByLabel(`${t.minor} · 60 ECTS · ${t.semester}`, { exact: true })
-    .fill(minorStart);
-  await page.getByRole("button", { name: t.preview, exact: true }).click();
+    .getByLabel(`${label} · ${part.season}`, { exact: true })
+    .selectOption(season);
+  await page.getByLabel(`${label} · ${part.year}`, { exact: true }).fill(year);
 }

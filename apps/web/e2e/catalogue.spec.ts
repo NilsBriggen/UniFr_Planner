@@ -313,7 +313,7 @@ test("invalid filter window keeps values editable and valid availability exclude
   ).toHaveAttribute("aria-describedby", "catalogue-filter-error");
   await expect(
     page.getByRole("heading", {
-      name: "Course catalogue",
+      name: "Courses",
     }),
   ).toBeVisible();
   await expect(
