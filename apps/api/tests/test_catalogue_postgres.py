@@ -107,3 +107,25 @@ def test_real_postgres_positive_then_broken_fixture_keeps_pointer(postgres_repo,
         f"case={damage} positive={first.snapshot_id} rejected={rejected.snapshot_id} "
         f"before={before} after={after} meetings_before=8 meetings_after=8"
     )
+
+
+def test_postgres_read_projection_filters_and_provenance(postgres_repo):
+    from test_catalogue_read import populated, publish
+    from unifr_api.catalogue_read import CatalogueFilters, CatalogueReadService
+
+    publish(postgres_repo, *populated("postgres-read", 40))
+    reader = CatalogueReadService(postgres_repo.engine)
+    assert reader.status.snapshot_id == "postgres-read"
+    page = reader.course_list(CatalogueFilters(q="STRASSE %_", limit=3, offset=17))
+    assert page.total == 20
+    assert len(page.items) == 3
+    assert reader.course_list(CatalogueFilters(faculty="Science", language="de")).total == 0
+    assert (
+        reader.course_list(
+            CatalogueFilters(available_day=0, available_from="12:00", available_until="13:00")
+        ).total
+        == 20
+    )
+    assert len(reader.discovery(CatalogueFilters(term="AS-2026")).items) == 20
+    assert reader.terms().terms == ["AS-2026", "SS-2027"]
+    assert reader.course("C0019").offerings[0].snapshot_id == "postgres-read"

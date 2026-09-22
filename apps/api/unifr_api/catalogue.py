@@ -28,6 +28,13 @@ from unifr_ingest.models import CatalogueSnapshot, Offering, SyncReport
 from unifr_ingest.sync import validate
 
 from .database import metadata
+from .catalogue_projection import (
+    completed_at,
+    facets as read_facets,
+    generations,
+    projection,
+    stage_projection,
+)
 
 snapshots = Table(
     "catalogue_snapshot",
@@ -155,6 +162,7 @@ class SqlCatalogueRepository:
                     ).model_dump(mode="json"),
                 )
             )
+            stage_projection(connection, snapshot, report)
             existing = set(connection.execute(select(courses.c.code)).scalars())
             codes = {off.course.code for off in snapshot.offerings} - existing
             if codes:
@@ -247,6 +255,11 @@ class SqlCatalogueRepository:
                 .where(snapshots.c.id == snapshot.snapshot_id)
                 .values(status="published", report=report.model_dump(mode="json"))
             )
+            connection.execute(
+                update(generations)
+                .where(generations.c.snapshot_id == snapshot.snapshot_id)
+                .values(completed_at=completed_at(report), outcome=report.outcome)
+            )
             if connection.execute(select(head.c.id)).first():
                 connection.execute(
                     update(head).where(head.c.id == 1).values(snapshot_id=snapshot.snapshot_id)
@@ -315,7 +328,14 @@ class SqlCatalogueRepository:
                 if counts[row.status] > keep and row.id != current:
                     expired.append(row.id)
             if expired:
-                for table in (meetings, assignments, offerings):
+                for table in (
+                    read_facets,
+                    projection,
+                    generations,
+                    meetings,
+                    assignments,
+                    offerings,
+                ):
                     connection.execute(delete(table).where(table.c.snapshot_id.in_(expired)))
                 connection.execute(delete(snapshots).where(snapshots.c.id.in_(expired)))
             connection.execute(

@@ -289,3 +289,67 @@ def test_openapi_declares_catalogue_error_response_bodies(path, status_code):
     model = contract["components"]["schemas"][schema["$ref"].rsplit("/", 1)[1]]
     assert model["properties"]["detail"]["type"] == "string"
     assert "detail" in model["required"]
+
+
+def test_status_and_facets_never_validate_snapshot_or_offerings(catalogue, monkeypatch):
+    from unifr_ingest.models import Offering
+
+    client, repo = catalogue
+    publish(repo)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("read metadata must not materialize catalogue models")
+
+    monkeypatch.setattr(CatalogueSnapshot, "model_validate", forbidden)
+    monkeypatch.setattr(Offering, "model_validate", forbidden)
+    assert client.get("/api/v1/status/catalogue").json()["snapshot_id"] == "api-snapshot"
+    assert client.get("/api/v1/catalogue/terms").json()["terms"] == ["AS-2026", "SS-2027"]
+
+
+def test_discovery_is_term_scoped_and_saved_codes_are_exact(catalogue):
+    client, repo = catalogue
+    publish(repo)
+    assert client.get("/api/v1/catalogue/discovery").status_code == 422
+    response = client.get("/api/v1/catalogue/discovery?term=AS-2026&limit=1&offset=100")
+    assert response.status_code == 200
+    assert [item["code"] for item in response.json()["items"]] == ["C1", "C3"]
+    assert response.json()["items"][0]["offerings"][0]["snapshot_id"] == "api-snapshot"
+    response = client.get("/api/v1/catalogue/courses?codes=C2,C3")
+    assert [item["code"] for item in response.json()["items"]] == ["C2", "C3"]
+    assert client.get("/api/v1/catalogue/courses?codes=c2").json()["items"] == []
+    assert (
+        client.get(
+            "/api/v1/catalogue/courses", params={"codes": ",".join(str(i) for i in range(101))}
+        ).status_code
+        == 422
+    )
+
+
+def test_saved_codes_use_only_documented_academic_prefix_alias(catalogue):
+    client, repo = catalogue
+    snap, report = sample("canonical-code")
+    original = snap.offerings[0]
+    code = "UE-SIN.01023"
+    snap = snap.model_copy(
+        update={
+            "offerings": (
+                original.model_copy(
+                    update={"course": original.course.model_copy(update={"code": code})}
+                ),
+            ),
+            "pages": (
+                snap.pages[0].model_copy(
+                    update={
+                        "entries": (snap.pages[0].entries[0].model_copy(update={"code": code}),)
+                    }
+                ),
+            ),
+        }
+    )
+    repo.stage(snap, report)
+    with repo.lock():
+        repo.publish(snap, report)
+    for query in ("SIN.01023", "UE-SIN.01023"):
+        response = client.get("/api/v1/catalogue/courses", params={"codes": query})
+        assert [item["code"] for item in response.json()["items"]] == [code]
+    assert client.get("/api/v1/catalogue/courses", params={"codes": "SIN.010"}).json()["total"] == 0

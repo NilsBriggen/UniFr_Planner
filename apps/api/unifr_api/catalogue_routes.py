@@ -1,15 +1,17 @@
 """Public read HTTP boundary; ingestion and student choices have no write route."""
 
 from collections.abc import Iterator
+from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from .catalogue_read import (
     CatalogueFilters,
+    CatalogueDiscovery,
     CatalogueReadService,
     CatalogueStatus,
     CatalogueTerms,
@@ -25,19 +27,22 @@ class CatalogueError(BaseModel):
     detail: str
 
 
-def reader() -> Iterator[CatalogueReadService | None]:
-    url = Settings().database_url
-    engine = create_engine(
-        url, connect_args={"connect_timeout": 3} if url.startswith("postgresql") else {}
+@lru_cache(maxsize=8)
+def catalogue_engine(url: str) -> Engine:
+    # SQLAlchemy engines/pools are thread safe. Each reader pins its own generation.
+    return create_engine(
+        url,
+        pool_pre_ping=True,
+        connect_args={"connect_timeout": 3} if url.startswith("postgresql") else {},
     )
+
+
+def reader() -> Iterator[CatalogueReadService | None]:
     try:
-        try:
-            service = CatalogueReadService(engine)
-        except SQLAlchemyError:
-            service = None
-        yield service
-    finally:
-        engine.dispose()
+        service = CatalogueReadService(catalogue_engine(Settings().database_url))
+    except SQLAlchemyError:
+        service = None
+    yield service
 
 
 def available(service: CatalogueReadService | None) -> CatalogueReadService:
@@ -87,3 +92,14 @@ def course(course_code: str, service: Reader) -> CourseDetail:
 )
 def terms(service: Reader) -> CatalogueTerms:
     return available(service).terms()
+
+
+@router.get(
+    "/catalogue/discovery",
+    operation_id="catalogueDiscovery",
+    responses={503: {"model": CatalogueError, "description": "Catalogue unavailable"}},
+)
+def discovery(service: Reader, filters: Annotated[CatalogueFilters, Query()]) -> CatalogueDiscovery:
+    if not filters.term:
+        raise HTTPException(status_code=422, detail="Discovery requires a term")
+    return available(service).discovery(filters)

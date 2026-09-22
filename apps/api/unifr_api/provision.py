@@ -89,6 +89,9 @@ def provision(
                         "catalogue_snapshot",
                         "catalogue_head",
                         "catalogue_offering",
+                        "catalogue_read_generation",
+                        "catalogue_read_offering",
+                        "catalogue_read_facet",
                         "operations_run",
                         "operations_state",
                     }
