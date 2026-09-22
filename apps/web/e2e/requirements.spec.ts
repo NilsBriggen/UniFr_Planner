@@ -4,6 +4,7 @@ import { createPlan } from "../src/planner/domain";
 import { requirementMessages } from "../src/requirements/messages";
 import { recipeMessages } from "../src/requirements/recipeMessages";
 import { plannerMessages } from "../src/planner/messages";
+import { importStudyPlan } from "./studies-helpers";
 
 for (const language of ["de", "fr", "en"] as const)
   test(`requirements ${language}: recover imported stale checklist without overrides`, async ({
@@ -32,15 +33,7 @@ for (const language of ["de", "fr", "en"] as const)
       overrides: [],
       completedChecklist: ["removed-duty"],
     };
-    await page.goto("/plan");
-    await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(plan));
-    await page.getByRole("button", { name: p.preview, exact: true }).click();
-    await page
-      .getByRole("button", { name: p.confirmImport, exact: true })
-      .click();
-    await expect(
-      page.getByRole("heading", { name: plan.name, exact: true }),
-    ).toBeVisible();
+    await importStudyPlan(page, plan, language);
     await page.goto("/requirements");
     await expect(page.getByRole("alert")).toHaveText(t.error);
     const reset = page.getByRole("button", { name: t.reset, exact: true });
@@ -64,8 +57,7 @@ for (const language of ["de", "fr", "en"] as const)
   test(`requirements ${language}: allocations, source evidence, reload, keyboard and Axe`, async ({
     page,
   }, info) => {
-    const t = requirementMessages[language],
-      planner = plannerMessages[language];
+    const t = requirementMessages[language];
     await page.addInitScript(
       (lang) => localStorage.setItem("unifr.language", lang),
       language,
@@ -101,19 +93,7 @@ for (const language of ["de", "fr", "en"] as const)
         offering: null,
       },
     ];
-    await page.goto("/plan");
-    await page
-      .getByLabel(planner.json, { exact: true })
-      .fill(JSON.stringify(plan));
-    await page
-      .getByRole("button", { name: planner.preview, exact: true })
-      .click();
-    await page
-      .getByRole("button", { name: planner.confirmImport, exact: true })
-      .click();
-    await expect(
-      page.getByRole("heading", { name: plan.name, exact: true }),
-    ).toBeVisible();
+    await importStudyPlan(page, plan, language);
     await page.goto("/requirements");
     await page
       .getByText(recipeMessages[language].legacy, { exact: true })

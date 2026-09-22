@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { createPlan } from "../src/planner/domain";
-import { plannerMessages } from "../src/planner/messages";
 import { recipeMessages } from "../src/requirements/recipeMessages";
+import { importStudyPlan } from "./studies-helpers";
+
+const editStudies = "Edit studies";
 const cases = [
   ["theology", "bachelor", "bachelor-theo-theology", "major-180", "ba-180"],
   ["law", "bachelor", "bachelor-ius-law", "major-180", "ba-180"],
@@ -33,8 +35,7 @@ test("every faculty can save and reopen a sourced degree with visible review gap
   page,
 }, info) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
-  const p = plannerMessages.en,
-    t = recipeMessages.en;
+  const t = recipeMessages.en;
   const plan = createPlan({
     id: "faculty-browser",
     scenarioId: "main",
@@ -44,15 +45,7 @@ test("every faculty can save and reopen a sourced degree with visible review gap
     semesterCount: 6,
     targetEcts: 180,
   });
-  await page.goto("/plan");
-  await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(plan));
-  await page.getByRole("button", { name: p.preview, exact: true }).click();
-  await page
-    .getByRole("button", { name: p.confirmImport, exact: true })
-    .click();
-  await expect(
-    page.getByRole("heading", { name: plan.name, exact: true }),
-  ).toBeVisible();
+  await importStudyPlan(page, plan);
   await page.goto("/requirements");
   for (const [faculty, degree, programme, variant, structure] of cases) {
     await page.getByLabel(t.degree, { exact: true }).selectOption(degree);
@@ -70,6 +63,7 @@ test("every faculty can save and reopen a sourced degree with visible review gap
       page.getByRole("button", { name: t.save, exact: true }),
     ).toBeEnabled();
     await page.reload();
+    await page.getByRole("button", { name: editStudies, exact: true }).click();
     await expect(page.getByLabel(t.main, { exact: true })).toHaveValue(
       programme,
     );

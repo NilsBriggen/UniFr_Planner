@@ -8,7 +8,11 @@ import { recipeMessages } from "../src/requirements/recipeMessages";
 import { discoveryMessages } from "../src/discovery/messages";
 import { catchupMessages } from "../src/planner/catchup-messages";
 import { createPlan, type Plan } from "../src/planner/domain";
-import { chooseComputerScience, importStudyPlan } from "./studies-helpers";
+import {
+  chooseComputerScience,
+  importStudyPlan,
+  openPlanTools,
+} from "./studies-helpers";
 import type { Language } from "../src/i18n";
 
 async function catalogue(page: Page) {
@@ -45,6 +49,26 @@ async function catalogue(page: Page) {
   );
 }
 
+async function expectSemester(
+  page: Page,
+  label: string,
+  language: Language,
+  season: string,
+  year: string,
+) {
+  const part = {
+    en: { season: "Season", year: "Year" },
+    de: { season: "Jahreszeit", year: "Jahr" },
+    fr: { season: "Saison", year: "Année" },
+  }[language];
+  await expect(
+    page.getByLabel(`${label} · ${part.season}`, { exact: true }),
+  ).toHaveValue(season);
+  await expect(
+    page.getByLabel(`${label} · ${part.year}`, { exact: true }),
+  ).toHaveValue(year);
+}
+
 async function exportPlan(
   page: Page,
   language: Language = "en",
@@ -52,6 +76,7 @@ async function exportPlan(
   const t = plannerMessages[language];
   await page.goto("/plan");
   await expect(page.locator(".save-status")).toHaveText(t.saved);
+  await openPlanTools(page, language);
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: t.exportJson, exact: true }).click();
   return JSON.parse(await readFile((await (await download).path())!, "utf8"));
@@ -72,27 +97,30 @@ for (const language of ["en", "de", "fr"] as const) {
     await catalogue(page);
     await page.goto("/setup");
     await chooseComputerScience(page, language, "AS-2026", "SS-2027");
-    await expect(
-      page.getByRole("heading", { name: r.rules, exact: true }),
-    ).toBeVisible();
+    await expect(page.locator(".setup-review")).toContainText("180 ECTS");
     await page.screenshot({
       path: info.outputPath("studies-preview.png"),
       fullPage: true,
     });
-    await page.getByRole("button", { name: s.continue, exact: true }).click();
+    await page.getByText(s.optional, { exact: true }).click();
     await page
       .getByLabel(p.planName, { exact: true })
       .fill("Configured degree");
     await expect(page.locator(".setup-review")).toContainText("180 ECTS");
     await page.getByRole("button", { name: s.back, exact: true }).click();
-    await expect(
-      page.getByLabel(`${r.minor} · 60 ECTS · ${r.semester}`, { exact: true }),
-    ).toHaveValue("SS-2027");
-    await page.getByRole("button", { name: s.continue, exact: true }).click();
-    await expect(page.getByLabel(p.planName, { exact: true })).toHaveValue(
-      "Configured degree",
+    await expectSemester(
+      page,
+      `${r.minor} · 60 ECTS · ${r.semester}`,
+      language,
+      "SS",
+      "2027",
     );
-    await page.getByRole("button", { name: p.create, exact: true }).click();
+    await page.getByRole("button", { name: s.continue, exact: true }).click();
+    await page.getByText(s.optional, { exact: true }).click();
+    await page
+      .getByLabel(p.planName, { exact: true })
+      .fill("Configured degree");
+    await page.getByRole("button", { name: s.start, exact: true }).click();
     await expect(page).toHaveURL(/catalogue\?term=AS-2026&focus=programme$/);
     await expect(
       page.getByRole("button", { name: d.recommended, exact: true }),
@@ -114,7 +142,9 @@ for (const language of ["en", "de", "fr"] as const) {
           .analyze()
       ).violations,
     ).toEqual([]);
-    await programming.getByRole("button", { name: p.add, exact: true }).click();
+    await programming
+      .getByRole("button", { name: p.addToSemester, exact: true })
+      .click();
     const overview = page.getByRole("complementary", {
       name: d.overview,
       exact: true,
@@ -125,10 +155,34 @@ for (const language of ["en", "de", "fr"] as const) {
     await page.getByRole("button", { name: d.all, exact: true }).click();
     await expect(page.locator(".course-results > li")).toHaveCount(2);
     await page.goto("/requirements");
-    await expect(
-      page.getByLabel(`${r.minor} · 60 ECTS · ${r.semester}`, { exact: true }),
-    ).toHaveValue("SS-2027");
+    await page
+      .getByRole("button", {
+        name: {
+          en: "Edit studies",
+          de: "Studium bearbeiten",
+          fr: "Modifier les études",
+        }[language],
+        exact: true,
+      })
+      .click();
+    await expectSemester(
+      page,
+      `${r.minor} · 60 ECTS · ${r.semester}`,
+      language,
+      "SS",
+      "2027",
+    );
     await page.reload();
+    await page
+      .getByRole("button", {
+        name: {
+          en: "Edit studies",
+          de: "Studium bearbeiten",
+          fr: "Modifier les études",
+        }[language],
+        exact: true,
+      })
+      .click();
     await expect(page.getByLabel(r.main, { exact: true })).toHaveValue(
       "bachelor-digitinf-informatics",
     );
@@ -171,9 +225,12 @@ test("existing unconfigured plans remain usable and keep their courses when stud
   });
   await catalogue(page);
   await importStudyPlan(page, plan);
-  await expect(
-    page.getByRole("region", { name: "Completed", exact: true }),
-  ).toContainText("Prior programming");
+  const completed = page.getByRole("group", {
+    name: "Completed",
+    exact: true,
+  });
+  await completed.locator(":scope > summary").click();
+  await expect(completed).toContainText("Prior programming");
   await page.goto("/catalogue?term=AS-2026");
   await expect(
     page.getByRole("button", {
@@ -181,9 +238,7 @@ test("existing unconfigured plans remain usable and keep their courses when stud
       exact: true,
     }),
   ).toHaveCount(0);
-  await page
-    .getByRole("link", { name: "Configure your studies", exact: true })
-    .click();
+  await page.goto("/requirements#study-configuration");
   await chooseComputerScience(page, "en", "AS-2024");
   await page
     .getByRole("button", { name: recipeMessages.en.save, exact: true })
@@ -213,14 +268,12 @@ test("a configured continuing student reaches semester recommendations after cat
   await catalogue(page);
   await page.goto("/setup");
   await chooseComputerScience(page, "en", "AS-2024");
-  await page
-    .getByRole("button", { name: setupMessages.en.continue, exact: true })
-    .click();
+  await page.getByText(setupMessages.en.optional, { exact: true }).click();
   await page
     .getByLabel("Plan name", { exact: true })
     .fill("Continuing configured degree");
   await page
-    .getByRole("button", { name: plannerMessages.en.create, exact: true })
+    .getByRole("button", { name: setupMessages.en.start, exact: true })
     .click();
   await expect(page).toHaveURL(/\/plan\/completed/);
   await page
