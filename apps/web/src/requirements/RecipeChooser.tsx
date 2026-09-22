@@ -4,7 +4,7 @@ import {
   majorProgrammes,
   slotOptions,
 } from "./recipeOptions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { recipeRegistry } from "../../../../packages/domain/src/registry";
 import {
   composeDegree,
@@ -18,15 +18,41 @@ import { usePlans } from "../planner/context";
 import { bindDegreeSelection } from "./adapter";
 import { recipeMessages } from "./recipeMessages";
 
-export default function RecipeChooser({
+export function degreeProgrammeLabel(
+  degree: ResolvedDegree,
+  language: Language,
+) {
+  return degree.selection.components
+    .map((component) => {
+      const programme = recipeRegistry.programmes.find(
+        (candidate) => candidate.id === component.programmeId,
+      );
+      return (
+        programme?.titles?.[language] ??
+        programme?.title ??
+        component.programmeId
+      );
+    })
+    .join(" + ")
+    .slice(0, 200);
+}
+
+export function DegreeSelectionForm({
   plan,
   language,
+  busy = false,
+  onCommit,
+  onClearEvidence,
+  commitLabel,
 }: {
   plan: Plan;
   language: Language;
+  busy?: boolean;
+  onCommit: (degree: ResolvedDegree) => Promise<boolean>;
+  onClearEvidence?: () => Promise<boolean>;
+  commitLabel?: string;
 }) {
-  const t = recipeMessages[language],
-    { busy, save } = usePlans();
+  const t = recipeMessages[language];
   const original = plan.degreeSelection?.components.find(
     (c) => c.slotId === "major",
   );
@@ -83,14 +109,48 @@ export default function RecipeChooser({
   async function commit() {
     if (!preview) return;
     try {
-      if (!(await save(bindDegreeSelection(plan, preview.selection))))
-        setError(t.failed);
+      if (!(await onCommit(preview))) setError(t.failed);
     } catch (e) {
       setError(`${t.failed} ${e instanceof Error ? e.message : ""}`);
     }
   }
+  useEffect(() => {
+    const available = majorProgrammes(degree, faculty);
+    if (!main && available.length === 1) setMain(available[0].id);
+  }, [degree, faculty, main]);
+  useEffect(() => {
+    const variants =
+      major?.variants.filter((candidate) => candidate.role === "major") ?? [];
+    if (!variant && variants.length === 1) setVariant(variants[0].id);
+  }, [major, variant]);
+  useEffect(() => {
+    if (!structure && structures.length === 1) setStructure(structures[0]);
+  }, [structure, structures]);
+  useEffect(() => {
+    if (!layout || !major) return;
+    const additions: Record<string, SelectedComponent> = {};
+    for (const slot of layout.slots.filter(
+      (candidate) => candidate.role !== "major" && !candidate.optional,
+    )) {
+      const options = slotOptions(slot, major);
+      if (!choices[slot.id] && options.length === 1)
+        additions[slot.id] = {
+          slotId: slot.id,
+          programmeId: options[0].programme.id,
+          variantId: options[0].variant.id,
+          startSemester: semester,
+          recipeVersion: recipeRegistry.edition,
+        };
+    }
+    if (Object.keys(additions).length)
+      setChoices((current) => ({ ...current, ...additions }));
+  }, [choices, layout, major, semester]);
   return (
-    <section aria-label={t.title} className="recipe-chooser">
+    <section
+      id="study-configuration"
+      aria-label={t.title}
+      className="recipe-chooser"
+    >
       <h2>{t.title}</h2>
       {plan.requirements && <p>{t.migration}</p>}
       <form
@@ -420,19 +480,7 @@ export default function RecipeChooser({
               <Button
                 disabled={busy}
                 onClick={async () => {
-                  if (
-                    !(await save({
-                      ...plan,
-                      scenarios: plan.scenarios.map((s) => ({
-                        ...s,
-                        requirementEvidence: {
-                          overrides: [],
-                          completedChecklist: [],
-                        },
-                      })),
-                    }))
-                  )
-                    setError(t.failed);
+                  if (!(await onClearEvidence?.())) setError(t.failed);
                 }}
               >
                 {t.clear}
@@ -447,10 +495,37 @@ export default function RecipeChooser({
             }
             onClick={() => void commit()}
           >
-            {t.save}
+            {commitLabel ?? t.save}
           </Button>
         </section>
       )}
     </section>
+  );
+}
+
+export default function RecipeChooser({
+  plan,
+  language,
+}: {
+  plan: Plan;
+  language: Language;
+}) {
+  const { busy, save } = usePlans();
+  return (
+    <DegreeSelectionForm
+      plan={plan}
+      language={language}
+      busy={busy}
+      onCommit={(degree) => save(bindDegreeSelection(plan, degree.selection))}
+      onClearEvidence={() =>
+        save({
+          ...plan,
+          scenarios: plan.scenarios.map((scenario) => ({
+            ...scenario,
+            requirementEvidence: { overrides: [], completedChecklist: [] },
+          })),
+        })
+      }
+    />
   );
 }

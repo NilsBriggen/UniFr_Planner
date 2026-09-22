@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import type { Language } from "../i18n";
 import { messages } from "../i18n";
@@ -26,6 +26,13 @@ import "./planner.css";
 import ManualCompletion from "./ManualCompletion";
 import { catchupMessages } from "./catchup-messages";
 import { suggestionMessages } from "../suggestions/messages";
+import {
+  DegreeSelectionForm,
+  degreeProgrammeLabel,
+} from "../requirements/RecipeChooser";
+import { bindDegreeSelection } from "../requirements/adapter";
+import { setupMessages } from "./setupMessages";
+import type { ResolvedDegree } from "../../../../packages/domain/src/recipes";
 
 export function Download({
   text,
@@ -89,140 +96,257 @@ export function Setup({ language }: { language: Language }) {
   const [rangeError, setRangeError] = useState(false);
   const current = currentSemester();
   const c = catchupMessages[language];
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const setup = setupMessages[language];
+  const [manual, setManual] = useState(false);
+  const [degree, setDegree] = useState<ResolvedDegree | null>(null);
+  const [step, setStep] = useState<"studies" | "settings">("studies");
+  const [settings, setSettings] = useState({
+    name: "",
+    programme: "",
+    target: 180,
+    start: current,
+    planning: current,
+    count: 6,
+  });
+  const draftStart = /^(AS|SS)-\d{4}$/.test(settings.start)
+    ? settings.start
+    : current;
+  const draft = createPlan({
+    id: "setup-draft",
+    scenarioId: "setup-scenario",
+    name: settings.name || t.planExample,
+    programme: settings.programme || t.programmeExample,
+    startTerm: draftStart,
+    semesterCount: 24,
+    targetEcts: 180,
+  });
+  function destination(planning: string, configured: boolean) {
+    const returnTo = query.get("returnTo");
+    if (returnTo && /^\/catalogue(?:\/[^/?#]+)?(?:\?[^#]*)?$/.test(returnTo))
+      return returnTo;
+    return configured
+      ? `/catalogue?term=${encodeURIComponent(planning)}&focus=programme`
+      : `/catalogue?term=${encodeURIComponent(planning)}`;
+  }
+  async function persist(
+    programme: string,
+    targetEcts: number,
+    selection?: Parameters<typeof bindDegreeSelection>[1],
+  ) {
     try {
       setRangeError(false);
-      const start = `${form.get("season")}-${form.get("year")}`;
-      const planning = `${form.get("planningSeason")}-${form.get("planningYear")}`;
-      const distance = semesterIndex(planning) - semesterIndex(start);
+      const start =
+        selection?.components.find((component) => component.slotId === "major")
+          ?.startSemester ?? settings.start;
+      const distance = semesterIndex(settings.planning) - semesterIndex(start);
       if (distance < 0 || distance >= 24) {
         setRangeError(true);
-        return;
+        return false;
       }
-      const plan = createPlan({
+      let plan = createPlan({
         id: crypto.randomUUID(),
         scenarioId: crypto.randomUUID(),
-        name: String(form.get("name")),
-        programme: String(form.get("programme")),
+        name: settings.name,
+        programme,
         startTerm: start,
-        planningSemester: planning,
-        semesterCount: Math.max(Number(form.get("count")), distance + 1),
-        targetEcts: Number(form.get("target")),
+        planningSemester: settings.planning,
+        semesterCount: Math.max(settings.count, distance + 1),
+        targetEcts,
       });
+      if (selection) plan = bindDegreeSelection(plan, selection);
       if (await save(plan)) {
-        const returnTo = query.get("returnTo");
-        const destination =
-          returnTo && /^\/catalogue(?:\/[^/?#]+)?(?:\?[^#]*)?$/.test(returnTo)
-            ? returnTo
-            : "/plan";
+        const next = destination(settings.planning, !!selection);
         navigate(
           distance > 0
-            ? `/plan/completed?returnTo=${encodeURIComponent(destination)}`
-            : destination,
+            ? `/plan/completed?returnTo=${encodeURIComponent(next)}`
+            : next,
         );
-      } else setError(true);
+        return true;
+      }
+      setError(true);
     } catch {
       setError(true);
     }
+    return false;
   }
   return (
     <section className="page planner-page setup-page">
       <p className="eyebrow">UniFr Planner</p>
       <h1>{messages[language].setup}</h1>
       <p className="setup-intro">{t.programmeHelp}</p>
-      <form className="setup-form" onSubmit={(e) => void submit(e)}>
-        <fieldset className="planner-fields" disabled={!ready || busy}>
-          <label>
-            {t.planName}
-            <input
-              name="name"
-              required
-              maxLength={200}
-              placeholder={t.planExample}
-            />
-          </label>
-          <label>
-            {t.programme}
-            <input
-              name="programme"
-              required
-              maxLength={200}
-              placeholder={t.programmeExample}
-            />
-          </label>
-          <label>
-            {c.studyStart}
-            <select
-              name="season"
-              aria-label={c.studyStart}
-              defaultValue={current.split("-")[0]}
-            >
-              <option value="AS">{t.autumn}</option>
-              <option value="SS">{t.spring}</option>
-            </select>
-          </label>
-          <label>
-            {t.startYear}
-            <input
-              name="year"
-              type="number"
-              min="2000"
-              max="2087"
-              defaultValue={current.split("-")[1]}
-              required
-            />
-          </label>
-          <label>
-            {c.planning}
-            <select
-              name="planningSeason"
-              aria-label={c.planning}
-              defaultValue={current.split("-")[0]}
-            >
-              <option value="AS">{t.autumn}</option>
-              <option value="SS">{t.spring}</option>
-            </select>
-          </label>
-          <label>
-            {c.planningYear}
-            <input
-              name="planningYear"
-              type="number"
-              min="2000"
-              max="2099"
-              defaultValue={current.split("-")[1]}
-              required
-            />
-          </label>
-          <label>
-            {t.semesterCount}
-            <input
-              name="count"
-              type="number"
-              min="1"
-              max="24"
-              defaultValue="6"
-              required
-            />
-          </label>
-          <label>
-            {t.target}
-            <input
-              name="target"
-              type="number"
-              min="1"
-              max="600"
-              defaultValue="180"
-              required
-            />
-          </label>
-          <Button className="primary setup-submit" type="submit">
-            {t.create}
-          </Button>
-        </fieldset>
-      </form>
+      {!manual && (
+        <div hidden={step !== "studies"}>
+          <h2>{setup.studies}</h2>
+          <DegreeSelectionForm
+            plan={draft}
+            language={language}
+            busy={!ready || busy}
+            commitLabel={setup.continue}
+            onCommit={async (resolved) => {
+              setDegree(resolved);
+              setStep("settings");
+              return true;
+            }}
+          />
+        </div>
+      )}
+      {(manual || step === "settings") && <h2>{setup.settings}</h2>}
+      {(manual || step === "settings") && (
+        <form
+          className="setup-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (manual) void persist(settings.programme, settings.target);
+            else if (degree)
+              void persist(
+                degreeProgrammeLabel(degree, language),
+                degree.targetEcts,
+                degree.selection,
+              );
+          }}
+        >
+          <fieldset className="planner-fields" disabled={!ready || busy}>
+            <label>
+              {t.planName}
+              <input
+                name="name"
+                required
+                maxLength={200}
+                placeholder={t.planExample}
+                value={settings.name}
+                onChange={(e) =>
+                  setSettings({ ...settings, name: e.target.value })
+                }
+              />
+            </label>
+            {manual && (
+              <label>
+                {c.studyStart}
+                <select
+                  aria-label={c.studyStart}
+                  value={settings.start.split("-")[0]}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      start: `${e.target.value}-${settings.start.slice(3)}`,
+                    })
+                  }
+                >
+                  <option value="AS">{t.autumn}</option>
+                  <option value="SS">{t.spring}</option>
+                </select>
+              </label>
+            )}
+            {manual && (
+              <label>
+                {t.startYear}
+                <input
+                  type="number"
+                  min="2000"
+                  max="2087"
+                  value={settings.start.slice(3)}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      start: `${settings.start.slice(0, 2)}-${e.target.value}`,
+                    })
+                  }
+                  required
+                />
+              </label>
+            )}
+            <label>
+              {c.planning}
+              <select
+                aria-label={c.planning}
+                value={settings.planning.split("-")[0]}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    planning: `${e.target.value}-${settings.planning.slice(3)}`,
+                  })
+                }
+              >
+                <option value="AS">{t.autumn}</option>
+                <option value="SS">{t.spring}</option>
+              </select>
+            </label>
+            <label>
+              {c.planningYear}
+              <input
+                type="number"
+                min="2000"
+                max="2099"
+                value={settings.planning.slice(3)}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    planning: `${settings.planning.slice(0, 2)}-${e.target.value}`,
+                  })
+                }
+                required
+              />
+            </label>
+            <label>
+              {t.semesterCount}
+              <input
+                type="number"
+                min="1"
+                max="24"
+                value={settings.count}
+                onChange={(e) =>
+                  setSettings({ ...settings, count: Number(e.target.value) })
+                }
+                required
+              />
+            </label>
+            {manual && (
+              <>
+                <label>
+                  {t.programme}
+                  <input
+                    required
+                    maxLength={200}
+                    value={settings.programme}
+                    onChange={(e) =>
+                      setSettings({ ...settings, programme: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  {t.target}
+                  <input
+                    required
+                    type="number"
+                    min="1"
+                    max="600"
+                    value={settings.target}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        target: Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+              </>
+            )}
+            {!manual && (
+              <Button type="button" onClick={() => setStep("studies")}>
+                {setup.back}
+              </Button>
+            )}
+            <Button className="primary setup-submit" type="submit">
+              {t.create}
+            </Button>
+          </fieldset>
+        </form>
+      )}
+      {step === "studies" && (
+        <Button onClick={() => setManual((value) => !value)}>
+          {manual ? setup.configuredFallback : setup.manualFallback}
+        </Button>
+      )}
       <SaveStatus language={language} />
       {rangeError && <p role="alert">{c.rangeError}</p>}
       {error && <p role="alert">{t.actionError}</p>}

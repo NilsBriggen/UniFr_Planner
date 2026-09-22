@@ -82,6 +82,11 @@ it("sets start and planning separately, extends semester range and offers skippa
   archive();
   const user = userEvent.setup();
   mount("/setup?returnTo=%2Fcatalogue%3Fterm%3DAS-2026");
+  await user.click(
+    await screen.findByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
   await waitFor(() => expect(screen.getByLabelText("Plan name")).toBeEnabled());
   await user.type(screen.getByLabelText("Plan name"), "My degree");
   await user.type(screen.getByLabelText("Programme"), "CS");

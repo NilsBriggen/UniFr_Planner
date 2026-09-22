@@ -104,11 +104,21 @@ it("shows only unavailable intervals in the selected semester calendar", async (
 });
 it("creates a guest degree, records completion, duplicates independently and restores after remount", async () => {
   const user = userEvent.setup();
-  const app = mount();
+  let app = mount();
+  await user.click(
+    await screen.findByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
   await waitFor(() => expect(screen.getByLabelText("Plan name")).toBeEnabled());
   await user.type(await screen.findByLabelText("Plan name"), "CS degree");
   await user.type(screen.getByLabelText("Programme"), "Informatics");
   await user.click(screen.getByRole("button", { name: "Create local plan" }));
+  await waitFor(async () =>
+    expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(1),
+  );
+  app.unmount();
+  app = mount("/plan");
   await screen.findByRole("heading", { name: "CS degree" });
   await user.type(screen.getByLabelText("Course title"), "Prior mathematics");
   await user.type(screen.getByLabelText("Course code"), "MATH0");
@@ -139,6 +149,64 @@ it("creates a guest degree, records completion, duplicates independently and res
   mount("/plan");
   await screen.findByText("Prior mathematics");
   expect(screen.getByLabelText("Scenario")).toHaveDisplayValue("Alternative");
+});
+it("creates a configured degree atomically with its derived credits and component starts", async () => {
+  const user = userEvent.setup();
+  mount();
+  await screen.findByLabelText("Faculty");
+  await user.selectOptions(
+    screen.getByLabelText("Faculty"),
+    "science-medicine",
+  );
+  await user.selectOptions(
+    screen.getByLabelText("Main programme"),
+    "bachelor-digitinf-informatics",
+  );
+  await user.selectOptions(
+    screen.getByLabelText("Variant / track"),
+    "major-120",
+  );
+  await user.selectOptions(
+    screen.getByLabelText("Degree structure"),
+    "ba-120-60",
+  );
+  await user.selectOptions(
+    screen.getByLabelText("Minor · 60 ECTS"),
+    "bachelor-digitinf-businessinformatics/minor-60",
+  );
+  await user.clear(
+    screen.getByLabelText("Minor · 60 ECTS · Starting semester"),
+  );
+  await user.type(
+    screen.getByLabelText("Minor · 60 ECTS · Starting semester"),
+    "SS-2027",
+  );
+  await user.click(screen.getByRole("button", { name: "Preview degree" }));
+  await user.click(
+    screen.getByRole("button", { name: "Continue to planning" }),
+  );
+  await user.type(screen.getByLabelText("Plan name"), "My informatics degree");
+  await user.click(screen.getByRole("button", { name: "Create local plan" }));
+  const stored = (await new PlanStore(indexedDB).load()).plans;
+  expect(stored).toHaveLength(1);
+  expect(stored[0].targetEcts).toBe(180);
+  expect(stored[0].degreeSelection?.components[1].startSemester).toBe(
+    "SS-2027",
+  );
+  expect(stored[0].programme).toContain("Informatics");
+});
+
+it("keeps manual setup explicit and requires its programme and ECTS", async () => {
+  const user = userEvent.setup();
+  mount();
+  await user.click(
+    await screen.findByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
+  expect(screen.getByLabelText("Programme")).toBeRequired();
+  expect(screen.getByLabelText("Degree target (ECTS)")).toBeRequired();
+  expect(screen.queryByLabelText("Degree")).not.toBeInTheDocument();
 });
 it("validates imports and previews before adding a new plan", async () => {
   const user = userEvent.setup();
