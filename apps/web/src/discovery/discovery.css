@@ -301,6 +301,7 @@
   }
   .semester-summary {
     position: static;
+    top: auto;
     order: -1;
     padding: 12px 16px;
   }
