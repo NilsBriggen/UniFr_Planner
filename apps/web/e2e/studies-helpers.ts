@@ -72,6 +72,9 @@ export async function openPlanTools(page: Page, language: Language = "en") {
 }
 
 export async function openPlanJson(page: Page, language: Language = "en") {
+  await expect(page.locator(".save-status")).not.toHaveText(
+    plannerMessages[language].loading,
+  );
   const nested = page.locator("details.plan-tools details.import-advanced");
   const advanced = (await nested.count())
     ? nested
