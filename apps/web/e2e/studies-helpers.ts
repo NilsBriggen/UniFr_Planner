@@ -65,6 +65,7 @@ export async function importStudyPlan(
 
 export async function openPlanTools(page: Page, language: Language = "en") {
   const tools = page.locator("details.plan-tools");
+  await expect(tools).toHaveAccessibleName(plannerMessages[language].planTools);
   if ((await tools.getAttribute("open")) === null) {
     await tools.locator(":scope > summary").click();
   }

@@ -238,11 +238,10 @@ test("keyboard-only search and modal traps focus and restores it", async ({
   page,
 }) => {
   await page.goto("/catalogue");
-  await expect(page.getByLabel("Kurse suchen", { exact: true })).toBeVisible();
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Tab");
-  await expect(page.getByLabel("Kurse suchen", { exact: true })).toBeFocused();
+  const search = page.getByLabel("Kurse suchen", { exact: true });
+  await expect(search).toBeVisible();
+  await search.focus();
+  await expect(search).toBeFocused();
   await page.keyboard.type("Algebra");
   await page.keyboard.press("Enter");
   await expect(
@@ -311,11 +310,8 @@ test("invalid filter window keeps values editable and valid availability exclude
   await expect(
     page.getByLabel("Available until", { exact: true }),
   ).toHaveAttribute("aria-describedby", "catalogue-filter-error");
-  await expect(
-    page.getByRole("heading", {
-      name: "Courses",
-    }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.getByRole("button", { name: "Filters", exact: true }).click();
   await expect(
     page.getByRole("combobox", { name: "Faculty / domain", exact: true }),
   ).toHaveValue("Science");

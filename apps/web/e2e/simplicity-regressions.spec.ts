@@ -2,11 +2,13 @@ import { expect, test } from "@playwright/test";
 import { experienceMessages } from "../src/experience-messages";
 import { messages } from "../src/i18n";
 import { plannerMessages } from "../src/planner/messages";
+import { catalogueMessages } from "../src/catalogue-i18n";
 import { configuredStudyPlan, importStudyPlan } from "./studies-helpers";
 
 test("timetable remembers its date and view after visiting another destination", async ({
   page,
 }) => {
+  await page.clock.setFixedTime(new Date("2026-09-22T12:00:00Z"));
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await importStudyPlan(page, configuredStudyPlan());
   const t = plannerMessages.en;
@@ -39,6 +41,18 @@ test("timetable remembers its date and view after visiting another destination",
   await expect(
     page.getByRole("button", { name: t.day, exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(page.getByLabel(t.date, { exact: true })).toHaveValue(
+    "2026-10-06",
+  );
+  await expect(
+    page.getByRole("button", { name: t.day, exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/semester\/AS-2026$/);
+  await expect(page.getByLabel(t.date, { exact: true })).toHaveValue(
+    "2026-10-06",
+  );
 });
 
 test("the university logo returns to the home route", async ({ page }) => {
@@ -74,6 +88,16 @@ test("course query and settled scroll position survive a detail round trip", asy
   );
   await page.goBack();
 
+  await expect(page).toHaveURL(/\/catalogue\?q=Example$/);
+  await expect(results.first()).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThanOrEqual(savedScroll - 2);
+
+  await target.locator("h2 a").click();
+  await page
+    .getByRole("link", { name: catalogueMessages.de.back, exact: true })
+    .click();
   await expect(page).toHaveURL(/\/catalogue\?q=Example$/);
   await expect(results.first()).toBeVisible();
   await expect

@@ -102,13 +102,7 @@ test("compact navigation keeps localized labels intact and focused content above
       word-spacing: 0.16em !important;
     }
   `;
-  for (const label of [
-    "Studienplan",
-    "Semester",
-    "Kurskatalog",
-    "Anforderungen",
-    "Einstellungen",
-  ]) {
+  for (const label of ["Stundenplan", "Kurse", "Mein Studium"]) {
     const text = navigation
       .getByRole("link", { name: label })
       .locator("span")

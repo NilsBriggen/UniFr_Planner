@@ -78,14 +78,16 @@ test("2024 study start plans 2026 and records historical plus manual completion 
   ).toHaveValue("AS-2026");
   await expect(page.locator(".planning-semester")).toHaveAttribute(
     "aria-label",
-    "AS-2026",
+    "Autumn 2026",
   );
-  await expect(
-    page.getByRole("region", { name: "Completed", exact: true }),
-  ).toContainText("AS-2024");
+  const completed = page.locator(
+    'details.semester-column[aria-label="Completed"]',
+  );
+  await completed.locator("summary").click();
+  await expect(completed).toContainText("Autumn 2024");
   await page
     .getByRole("navigation")
-    .getByRole("link", { name: "Semester", exact: true })
+    .getByRole("link", { name: "Timetable", exact: true })
     .click();
   await expect(page).toHaveURL(/\/semester\/AS-2026$/);
   await expect(page.locator(".calendar-week .calendar-event")).toHaveCount(0);

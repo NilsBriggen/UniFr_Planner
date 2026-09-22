@@ -15,7 +15,7 @@ test("a student adds courses from a semester and opens the saved weekly timetabl
   await page.getByRole("button", { name: "Start planning" }).click();
   await expect(page).toHaveURL(/catalogue\?term=AS-2026$/);
   await page.goto("/plan");
-  const semester = page.getByRole("region", { name: "AS-2026", exact: true });
+  const semester = page.locator(".planning-semester");
   await semester
     .getByRole("link", { name: "Add courses", exact: true })
     .click();
