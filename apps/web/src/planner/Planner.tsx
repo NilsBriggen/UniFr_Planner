@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Language } from "../i18n";
 import { messages } from "../i18n";
@@ -27,6 +27,7 @@ import { suggestionMessages } from "../suggestions/messages";
 import StudySummary from "../requirements/StudySummary";
 import { studyLabel } from "../requirements/study-summary";
 import { Download, SaveStatus } from "./PlanControls";
+import { semesterLabel } from "./SemesterField";
 
 export { Download, SaveStatus } from "./PlanControls";
 export { Setup } from "./Setup";
@@ -132,7 +133,11 @@ function ImportPlan({ language }: { language: Language }) {
           <p>
             {preview.name} · {preview.programme} · {preview.targetEcts} ECTS
           </p>
-          <p>{preview.semesters.join(" · ")}</p>
+          <p>
+            {preview.semesters
+              .map((term) => semesterLabel(term, language))
+              .join(" · ")}
+          </p>
           <ul>
             {preview.scenarios.map((s) => (
               <li key={s.id}>
@@ -232,7 +237,9 @@ function CourseCard({
           >
             <option value="">{t.unscheduled}</option>
             {plan.semesters.map((term) => (
-              <option key={term}>{term}</option>
+              <option key={term} value={term}>
+                {semesterLabel(term, language)}
+              </option>
             ))}
           </select>
         </label>
@@ -275,6 +282,28 @@ export function PlanBoard({ language }: { language: Language }) {
   const { plan, plans, ready, busy, save, select } = usePlans();
   const t = plannerMessages[language];
   const [error, setError] = useState(false);
+  const board = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let previous: { element: HTMLDetailsElement; open: boolean }[] | undefined;
+    const beforePrint = () => {
+      if (previous) return;
+      previous = [...(board.current?.querySelectorAll("details") ?? [])].map(
+        (element) => ({ element, open: element.open }),
+      );
+      for (const { element } of previous) element.open = true;
+    };
+    const afterPrint = () => {
+      for (const { element, open } of previous ?? []) element.open = open;
+      previous = undefined;
+    };
+    window.addEventListener("beforeprint", beforePrint);
+    window.addEventListener("afterprint", afterPrint);
+    return () => {
+      window.removeEventListener("beforeprint", beforePrint);
+      window.removeEventListener("afterprint", afterPrint);
+      afterPrint();
+    };
+  }, []);
   const scenario = plan ? activeScenario(plan) : undefined;
   const change = (next: Plan) => {
     setError(false);
@@ -341,14 +370,16 @@ export function PlanBoard({ language }: { language: Language }) {
               }
             >
               {plan.semesters.map((term) => (
-                <option key={term}>{term}</option>
+                <option key={term} value={term}>
+                  {semesterLabel(term, language)}
+                </option>
               ))}
             </select>
           </label>
           <Summary courses={scenario.courses} t={t} />
           <p className="planner-help">{t.boardHelp}</p>
           <fieldset disabled={busy} className="board-fieldset">
-            <div className="semester-board">
+            <div className="semester-board" ref={board}>
               {[
                 ...plan.semesters.filter(
                   (term) =>
@@ -368,7 +399,11 @@ export function PlanBoard({ language }: { language: Language }) {
                     : c.status !== "completed" && c.semester === term,
                 );
                 const label =
-                  term === "completed" ? t.completed : (term ?? t.unscheduled);
+                  term === "completed"
+                    ? t.completed
+                    : term
+                      ? semesterLabel(term, language)
+                      : t.unscheduled;
                 const knownEcts = courses.reduce(
                   (sum, c) => sum + (c.ects ?? 0),
                   0,
@@ -423,7 +458,9 @@ export function PlanBoard({ language }: { language: Language }) {
                               className="completed-term"
                             >
                               <h3>
-                                {semester ?? catchupMessages[language].earlier}
+                                {semester
+                                  ? semesterLabel(semester, language)
+                                  : catchupMessages[language].earlier}
                               </h3>
                               <p>
                                 <strong>

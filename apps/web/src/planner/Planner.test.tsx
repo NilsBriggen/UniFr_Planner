@@ -107,9 +107,9 @@ it("expands only the planning semester and keeps tools in one disclosure", async
   );
   await new PlanStore(indexedDB).save(plan, null);
   mount("/plan");
-  const planning = await screen.findByRole("group", { name: /SS-2027/ });
+  const planning = await screen.findByRole("group", { name: /Spring 2027/ });
   expect(within(planning).getByText("Known course")).toBeVisible();
-  const other = screen.getByRole("group", { name: /AS-2027/ });
+  const other = screen.getByRole("group", { name: /Autumn 2027/ });
   expect(other).not.toHaveAttribute("open");
   expect(within(other).queryByText("Unknown course")).not.toBeVisible();
   expect(within(other).getByText(/0 ECTS · 1 Unknown ECTS/)).toBeVisible();
@@ -293,4 +293,106 @@ it("validates imports and previews before adding a new plan", async () => {
   await screen.findByRole("heading", { name: "Imported degree" });
   const stored = await new PlanStore(indexedDB).load();
   expect(stored.plans[0].id).not.toBe("original");
+});
+
+it("expands every semester for browser printing and restores exactly the previous disclosures", async () => {
+  const plan = createPlan({
+    id: "print-plan",
+    scenarioId: "main",
+    name: "Printable studies",
+    programme: "CS",
+    startTerm: "AS-2026",
+    planningSemester: "SS-2027",
+    semesterCount: 3,
+    targetEcts: 90,
+  });
+  plan.scenarios[0].courses = [
+    {
+      id: "past",
+      code: "PAST",
+      titles: { en: "Past course" },
+      ects: 6,
+      status: "planned",
+      semester: "AS-2026",
+      pinned: false,
+      offering: null,
+    },
+    {
+      id: "active",
+      code: "ACTIVE",
+      titles: { en: "Active course" },
+      ects: 6,
+      status: "planned",
+      semester: "SS-2027",
+      pinned: false,
+      offering: null,
+    },
+    {
+      id: "future",
+      code: "FUTURE",
+      titles: { en: "Future course" },
+      ects: 6,
+      status: "planned",
+      semester: "AS-2027",
+      pinned: false,
+      offering: null,
+    },
+    {
+      id: "done",
+      code: "DONE",
+      titles: { en: "Completed course" },
+      ects: 6,
+      status: "completed",
+      semester: null,
+      pinned: false,
+      offering: null,
+    },
+    {
+      id: "later",
+      code: "LATER",
+      titles: { en: "Unscheduled course" },
+      ects: 6,
+      status: "unscheduled",
+      semester: null,
+      pinned: false,
+      offering: null,
+    },
+  ];
+  await new PlanStore(indexedDB).save(plan, null);
+  const app = mount("/plan");
+  await screen.findByRole("heading", { name: "Printable studies" });
+  const panels = [
+    ...app.container.querySelectorAll<HTMLDetailsElement>(
+      ".semester-board details",
+    ),
+  ];
+  // Preserve a user's choice to close the planning semester and open another.
+  const primary =
+    app.container.querySelector<HTMLDetailsElement>(".planning-semester")!;
+  primary.open = false;
+  const other = panels.find((panel) => panel !== primary)!;
+  other.open = true;
+  const before = panels.map((panel) => panel.open);
+  window.dispatchEvent(new Event("beforeprint"));
+  expect(panels.every((panel) => panel.open)).toBe(true);
+  for (const name of [
+    "Past course",
+    "Active course",
+    "Future course",
+    "Completed course",
+    "Unscheduled course",
+  ])
+    expect(screen.getByRole("heading", { name })).toBeVisible();
+  expect(app.container.querySelector(".plan-tools")).not.toHaveAttribute(
+    "open",
+  );
+  // Some browser workflows can issue another print event before finishing.
+  window.dispatchEvent(new Event("beforeprint"));
+  window.dispatchEvent(new Event("afterprint"));
+  expect(panels.map((panel) => panel.open)).toEqual(before);
+  const select = screen.getByRole("combobox", {
+    name: "Planning semester",
+  });
+  expect(select).toHaveValue("SS-2027");
+  expect(select).toHaveDisplayValue("Spring 2027");
 });
