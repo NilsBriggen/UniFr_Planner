@@ -255,6 +255,17 @@ function Calendar({ language }: { language: Language }) {
                 ))}
               </select>
             </label>
+            {today >= range.start && today <= range.end && (
+              <Button
+                className="calendar-today"
+                onClick={() => {
+                  setDate(today);
+                  setView("week");
+                }}
+              >
+                {x.thisWeek}
+              </Button>
+            )}
             {view !== "agenda" && (
               <div className="calendar-date-navigation">
                 {view === "week" && (

@@ -57,7 +57,7 @@ planning horizon. Manual setup and skipping completed-course entry remain possib
 A setup creates the whole plan with one save; missing academic evidence remains
 `needs_clarification` rather than becoming a completion claim.
 
-Guest plans use schema-v1 JSON and IndexedDB version 3. `PlanStore.save(next,
+Guest plans use the existing schema-v1/v2 JSON formats (v2 for configured degrees) and IndexedDB version 3. `PlanStore.save(next,
 expectedPrevious)` requires the caller's committed baseline; `null` means the ID must
 not already exist. Comparison and writing happen in one transaction. A
 `PlanConflictError` preserves the attempted edit for the global recovery notice;

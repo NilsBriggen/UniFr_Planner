@@ -13,7 +13,7 @@ disclosures while preserving meaningful uncertainty and existing data.
 
 Retain guest-first use, German/French/English, keyboard access, accounts, sharing,
 exports, scenarios and existing deep links. Do not change academic rules, infer missing
-curriculum evidence, use MyUnifr credentials or send outreach. Preserve schema-v1 plan
+curriculum evidence, use MyUnifr credentials or send outreach. Preserve existing schema-v1/v2 plan
 JSON, IndexedDB version 3, account payload compatibility and independently versioned
 catalogue/recipe data. No push or deployment is included in this plan.
 

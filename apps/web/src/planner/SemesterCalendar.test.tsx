@@ -67,7 +67,16 @@ async function mountCalendar(
   await screen.findByRole("heading", {
     name: plannerMessages[language].conflictHeading,
   });
-  await userEvent.click(screen.getByText({en: "Print and download", de: "Drucken und herunterladen", fr: "Imprimer et télécharger"}[language], {selector: "summary"}));
+  await userEvent.click(
+    screen.getByText(
+      {
+        en: "Print and download",
+        de: "Drucken und herunterladen",
+        fr: "Imprimer et télécharger",
+      }[language],
+      { selector: "summary" },
+    ),
+  );
   return app;
 }
 
@@ -104,3 +113,25 @@ it.each([false, true])(
       ).toBeVisible();
   },
 );
+
+it("opens the current week and can return to it after browsing another day", async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2027-03-17T10:00:00Z"));
+  try {
+    await mountCalendar("en", "2027-03-01");
+    const user = userEvent.setup();
+    expect(screen.getByLabelText("Date")).toHaveValue("2027-03-17");
+    await user.click(screen.getByRole("button", { name: "Day", exact: true }));
+    await user.clear(screen.getByLabelText("Date"));
+    await user.type(screen.getByLabelText("Date"), "2027-03-10");
+    await user.click(
+      screen.getByRole("button", { name: "This week", exact: true }),
+    );
+    expect(screen.getByLabelText("Date")).toHaveValue("2027-03-17");
+    expect(
+      screen.getByRole("button", { name: "Week", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+  } finally {
+    vi.useRealTimers();
+  }
+});
