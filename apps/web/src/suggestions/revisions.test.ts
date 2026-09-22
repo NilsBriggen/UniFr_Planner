@@ -20,7 +20,7 @@ it("persists a revision atomically with its plan, survives reload, and undoes ex
     after: { ...before, name: "Changed" },
     suggestionId: "repair",
   };
-  await store.save(before);
+  await store.save(before, null);
   await store.saveRevision(revision);
   const reloaded = new PlanStore(factory);
   expect((await reloaded.load()).revisions).toEqual([revision]);
@@ -47,11 +47,14 @@ it("rejects stale revisions and undo after another tab saved a change", async ()
     after: { ...before, name: "Changed" },
     suggestionId: "repair",
   };
-  await store.save({ ...before, name: "Other tab" });
-  await expect(store.saveRevision(revision)).rejects.toThrow("stale");
-  await store.save(before);
+  await store.save({ ...before, name: "Other tab" }, null);
+  await expect(store.saveRevision(revision)).rejects.toThrow("another tab");
+  await store.save(before, { ...before, name: "Other tab" });
   await store.saveRevision(revision);
-  await store.save({ ...revision.after, name: "Other tab again" });
-  await expect(store.undoRevision(revision)).rejects.toThrow("stale");
+  await store.save(
+    { ...revision.after, name: "Other tab again" },
+    revision.after,
+  );
+  await expect(store.undoRevision(revision)).rejects.toThrow("another tab");
   expect((await store.load()).plans[0].name).toBe("Other tab again");
 });

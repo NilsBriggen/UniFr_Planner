@@ -29,7 +29,7 @@ for (const [language, title, refresh] of [
   it(`flags only affected choices in ${language} after an overnight refresh without changing the saved plan`, async () => {
     localStorage.setItem("unifr.language", language);
     const plan = publishedPlan();
-    await new PlanStore(indexedDB).save(plan);
+    await new PlanStore(indexedDB).save(plan, null);
     const courses = publishedCourses();
     vi.stubGlobal(
       "fetch",

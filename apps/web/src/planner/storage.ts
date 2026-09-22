@@ -15,6 +15,25 @@ const complete = (tx: IDBTransaction) =>
     tx.onerror = () =>
       reject(tx.error ?? new Error("IndexedDB transaction failed"));
   });
+export class PlanConflictError extends Error {
+  constructor() {
+    super("Plan changed in another tab");
+    this.name = "PlanConflictError";
+  }
+}
+// Normalize legacy records through the same migration used by load().
+function matches(saved: unknown, expected: Plan | null): boolean {
+  if (expected === null) return saved === undefined;
+  if (saved === undefined) return false;
+  try {
+    return (
+      JSON.stringify(parsePlan(JSON.stringify(saved))) ===
+      JSON.stringify(planSchema.parse(expected))
+    );
+  } catch {
+    return false;
+  }
+}
 export class PlanStore {
   constructor(private readonly factory: IDBFactory) {}
   async preference<T>(key: string): Promise<T | undefined> {
@@ -57,7 +76,7 @@ export class PlanStore {
         reject(new Error("storage upgrade blocked by another tab"));
     });
   }
-  async save(value: Plan): Promise<void> {
+  async save(value: Plan, expectedPrevious: Plan | null): Promise<void> {
     // Validate before JSON serialization so nonfinite numbers cannot turn into
     // otherwise valid nulls. Then apply the identical read/import byte limits.
     const plan = parsePlan(JSON.stringify(planSchema.parse(value)));
@@ -65,9 +84,25 @@ export class PlanStore {
     try {
       const tx = db.transaction(["plans", "preferences"], "readwrite");
       const done = complete(tx);
-      tx.objectStore("plans").put(plan);
-      tx.objectStore("preferences").put(plan.id, "activeId");
-      await done;
+      try {
+        const saved = await request(tx.objectStore("plans").get(plan.id));
+        if (
+          (expectedPrevious !== null && expectedPrevious.id !== plan.id) ||
+          !matches(saved, expectedPrevious)
+        )
+          throw new PlanConflictError();
+        tx.objectStore("plans").put(plan);
+        tx.objectStore("preferences").put(plan.id, "activeId");
+        await done;
+      } catch (error) {
+        try {
+          tx.abort();
+        } catch {
+          /* Already completed/aborted. */
+        }
+        await done.catch(() => {});
+        throw error;
+      }
     } finally {
       db.close();
     }
@@ -108,8 +143,7 @@ export class PlanStore {
       const done = complete(tx);
       try {
         const saved = await request(tx.objectStore("plans").get(expected.id));
-        if (JSON.stringify(saved) !== JSON.stringify(expected))
-          throw new Error("stale revision");
+        if (!matches(saved, expected)) throw new PlanConflictError();
         tx.objectStore("plans").put(next);
         tx.objectStore("preferences").put(next.id, "activeId");
         if (undo) tx.objectStore("revisions").delete(next.id);

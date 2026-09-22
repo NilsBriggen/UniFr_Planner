@@ -32,7 +32,7 @@ async function seed() {
     semesterCount: 6,
     targetEcts: 180,
   });
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   return plan;
 }
 const offering = {
@@ -211,6 +211,7 @@ it("keeps manual values after persistence failure while archive is offline", asy
 });
 it("requires explicit manual completion of an existing code and prevents double credit", async () => {
   const plan = await seed();
+  const baseline = structuredClone(plan);
   plan.scenarios[0].courses.push({
     id: "existing",
     code: "SIN.001",
@@ -221,7 +222,7 @@ it("requires explicit manual completion of an existing code and prevents double 
     pinned: false,
     offering: null,
   });
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, baseline);
   vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
   const user = userEvent.setup();
   mount();
@@ -287,6 +288,7 @@ it("distinguishes importing archives and resumes the chosen term without claimin
 
 it("requires a deliberate archive checkbox to complete an existing selection and respects a pinned course", async () => {
   const plan = await seed();
+  const baseline = structuredClone(plan);
   plan.scenarios[0].courses.push({
     id: "existing",
     code: "HIST.1",
@@ -297,7 +299,7 @@ it("requires a deliberate archive checkbox to complete an existing selection and
     pinned: true,
     offering: null,
   });
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, baseline);
   archive();
   const user = userEvent.setup();
   const app = mount();
@@ -306,8 +308,9 @@ it("requires a deliberate archive checkbox to complete an existing selection and
   ).toBeDisabled();
   expect(screen.getByText(/This course is pinned/)).toBeVisible();
   app.unmount();
+  const pinnedBaseline = structuredClone(plan);
   plan.scenarios[0].courses[0].pinned = false;
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, pinnedBaseline);
   mount();
   const checkbox = await screen.findByRole("checkbox", {
     name: /Mark existing course completed/,

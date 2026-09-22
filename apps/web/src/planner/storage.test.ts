@@ -57,10 +57,10 @@ describe("IndexedDB plan persistence", () => {
     expect(
       new TextEncoder().encode(JSON.stringify(original)).length,
     ).toBeGreaterThan(1_000_000);
-    await store.save(original);
+    await store.save(original, null);
     const nonfinite = structuredClone(original);
     nonfinite.scenarios[0].courses[0].ects = Infinity;
-    await expect(store.save(nonfinite)).rejects.toThrow();
+    await expect(store.save(nonfinite, null)).rejects.toThrow();
     let duplicated: Plan = original;
     for (let n = 1; n <= 4; n++)
       duplicated = duplicateScenario(duplicated, `copy-${n}`, `Copy ${n}`);
@@ -68,7 +68,7 @@ describe("IndexedDB plan persistence", () => {
     expect(
       new TextEncoder().encode(JSON.stringify(duplicated)).length,
     ).toBeGreaterThan(5_000_000);
-    await expect(store.save(duplicated)).rejects.toThrow(/5 MB/);
+    await expect(store.save(duplicated, null)).rejects.toThrow(/5 MB/);
     const nearLimit = structuredClone(duplicated);
     for (const scenario of nearLimit.scenarios)
       for (const meeting of scenario.courses[0].offering!.meetings)
@@ -85,7 +85,7 @@ describe("IndexedDB plan persistence", () => {
     expect(
       new TextEncoder().encode(JSON.stringify(nearLimit, null, 2)).length,
     ).toBeGreaterThan(5_000_000);
-    await expect(store.save(nearLimit)).rejects.toThrow(/5 MB/);
+    await expect(store.save(nearLimit, null)).rejects.toThrow(/5 MB/);
     const restored = await store.load();
     expect(restored.plans).toEqual([original]);
     expect(parsePlan(JSON.stringify(restored.plans[0], null, 2))).toEqual(
@@ -93,7 +93,7 @@ describe("IndexedDB plan persistence", () => {
     );
     // Separate small records may collectively exceed the per-backup limit.
     for (let n = 1; n <= 5; n++)
-      await store.save({ ...original, id: `separate-${n}` });
+      await store.save({ ...original, id: `separate-${n}` }, null);
     expect((await store.load()).plans).toHaveLength(6);
     const db = await new Promise<IDBDatabase>((resolve) => {
       const open = factory.open("unifr-planner");
@@ -120,10 +120,10 @@ describe("IndexedDB plan persistence", () => {
   it("saves and restores plans and active selection across repository instances", async () => {
     const factory = new IDBFactory();
     const first = new PlanStore(factory);
-    await first.save(plan());
+    await first.save(plan(), null);
     const second = new PlanStore(factory);
     expect(await second.load()).toEqual({ plans: [plan()], activeId: "plan" });
-    await second.save({ ...plan(), id: "other", name: "Other" });
+    await second.save({ ...plan(), id: "other", name: "Other" }, null);
     await second.select("plan");
     expect((await first.load()).activeId).toBe("plan");
     expect((await first.load()).plans).toHaveLength(2);
@@ -144,18 +144,25 @@ describe("IndexedDB plan persistence", () => {
       tx.oncomplete = () => resolve();
     });
     db.close();
-    expect(await new PlanStore(factory).load()).toEqual({
+    const migrated = new PlanStore(factory);
+    const loaded = await migrated.load();
+    expect(loaded).toEqual({
       plans: [{ ...plan(), schemaVersion: 1 }],
       activeId: "plan",
     });
+    await migrated.save(
+      { ...loaded.plans[0], name: "Edited legacy" },
+      loaded.plans[0],
+    );
+    expect((await migrated.load()).plans[0].name).toBe("Edited legacy");
   });
   it("reports unreadable records while retaining valid plans and the original corrupt record", async () => {
     const factory = new IDBFactory();
     const store = new PlanStore(factory);
     await expect(
-      store.save({ ...plan(), schemaVersion: 8 } as never),
+      store.save({ ...plan(), schemaVersion: 8 } as never, null),
     ).rejects.toThrow();
-    await store.save(plan());
+    await store.save(plan(), null);
     const db = await new Promise<IDBDatabase>((resolve) => {
       const request = factory.open("unifr-planner");
       request.onsuccess = () => resolve(request.result);
@@ -177,4 +184,24 @@ describe("IndexedDB plan persistence", () => {
     expect(retained).toEqual({ id: "bad", schemaVersion: 99 });
     db.close();
   });
+});
+
+it("atomically rejects stale ordinary edits and concurrent creations", async () => {
+  const factory = new IDBFactory();
+  const a = new PlanStore(factory),
+    b = new PlanStore(factory);
+  const results = await Promise.allSettled([
+    a.save(plan(), null),
+    b.save({ ...plan(), name: "Duplicate" }, null),
+  ]);
+  expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  expect(results.find((r) => r.status === "rejected")).toMatchObject({
+    reason: { name: "PlanConflictError" },
+  });
+  const baseline = (await a.load()).plans[0];
+  await a.save({ ...baseline, name: "Newer" }, baseline);
+  await expect(
+    b.save({ ...baseline, name: "Stale" }, baseline),
+  ).rejects.toMatchObject({ name: "PlanConflictError" });
+  expect((await b.load()).plans[0].name).toBe("Newer");
 });

@@ -28,7 +28,7 @@ it("warns about unreadable records without hiding a usable saved plan", async ()
     semesterCount: 6,
     targetEcts: 180,
   });
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   await new Promise<void>((resolve) => {
     const open = indexedDB.open("unifr-planner");
     open.onsuccess = () => {
@@ -60,7 +60,7 @@ it("opens a semester belonging to the active degree from the main navigation", a
     semesterCount: 6,
     targetEcts: 180,
   });
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   mount("/plan");
   await screen.findByRole("heading", { name: "Future degree" });
   expect(
@@ -93,7 +93,7 @@ it("shows only unavailable intervals in the selected semester calendar", async (
       end: "2027-03-21T11:00:00Z",
     },
   ];
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   const app = mount("/semester/AS-2026");
   await screen.findByRole("heading", { name: "Schedule check" });
   const calendar = within(

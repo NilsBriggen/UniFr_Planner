@@ -27,7 +27,7 @@ it("can clear stale checklist-only evidence and restore evaluation", async () =>
     overrides: [],
     completedChecklist: ["removed-duty"],
   };
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   render(
     <MemoryRouter initialEntries={["/requirements"]}>
       <App />
@@ -113,7 +113,7 @@ for (const [
       pinned: false,
       offering: null,
     });
-    await new PlanStore(indexedDB).save(plan);
+    await new PlanStore(indexedDB).save(plan, null);
     render(
       <MemoryRouter initialEntries={["/requirements"]}>
         <App />
@@ -181,6 +181,7 @@ it("offers seven faculty groups, major-only recipes, and saves a preview with in
       semesterCount: 6,
       targetEcts: 180,
     }),
+    null,
   );
   render(
     <MemoryRouter initialEntries={["/requirements"]}>
@@ -267,7 +268,7 @@ it("shows pinned recipe gaps after reopening and keeps additions outside degree 
       ],
     },
   );
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   render(
     <MemoryRouter initialEntries={["/requirements"]}>
       <App />
@@ -318,7 +319,7 @@ it("groups source gaps by programme and keeps technical diagnostics collapsed", 
       ],
     },
   );
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   render(
     <MemoryRouter initialEntries={["/requirements"]}>
       <App />

@@ -51,7 +51,7 @@ it("shows an imported UE code as already added when the plan has its curriculum 
   localStorage.setItem("unifr.language", "en");
   const manual = publishedPlan();
   for (const course of manual.scenarios[0].courses) course.offering = null;
-  await new PlanStore(indexedDB).save(manual);
+  await new PlanStore(indexedDB).save(manual, null);
   const course = publishedCourses()[0];
   course.code = "UE-SIN.01023";
   course.offerings[0].course.code = course.code;

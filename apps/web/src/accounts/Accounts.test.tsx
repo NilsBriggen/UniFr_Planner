@@ -24,7 +24,7 @@ it("offers optional accounts without replacing local plans; hides recovery after
     semesterCount: 6,
     targetEcts: 180,
   });
-  await new PlanStore(indexedDB).save(local);
+  await new PlanStore(indexedDB).save(local, null);
   const requests: string[] = [];
   let signedIn = false;
   vi.stubGlobal(
@@ -116,7 +116,7 @@ it("revalidates shared-cookie identity and aborts stale actions before showing t
     semesterCount: 6,
     targetEcts: 180,
   });
-  await new PlanStore(indexedDB).save(local);
+  await new PlanStore(indexedDB).save(local, null);
   let identity = { username: "alice", accountId: "account-a" };
   const mutations: { user: string; owner: string | null }[] = [];
   vi.stubGlobal(
@@ -217,7 +217,9 @@ it("shows valid plans and a recovery download when one saved server plan is unre
   expect(
     screen.getByRole("button", { name: "Download recovery data" }),
   ).toBeVisible();
-  expect(
-    screen.getByRole("button", { name: "Copy to this device" }),
-  ).toBeEnabled();
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Copy to this device" }),
+    ).toBeEnabled(),
+  );
 });

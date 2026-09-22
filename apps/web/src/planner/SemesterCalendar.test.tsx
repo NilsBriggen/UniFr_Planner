@@ -58,7 +58,7 @@ async function mountCalendar(
       },
     },
   ];
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   const app = render(
     <MemoryRouter initialEntries={["/semester/SS-2027"]}>
       <App />

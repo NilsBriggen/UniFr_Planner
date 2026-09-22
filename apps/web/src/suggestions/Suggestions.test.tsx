@@ -20,7 +20,7 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 it("loads published alternatives for the selected CS plus BI plan and preserves the pinned course", async () => {
   const plan = publishedPlan();
-  await new PlanStore(indexedDB).save(plan);
+  await new PlanStore(indexedDB).save(plan, null);
   const courses = publishedCourses();
   vi.stubGlobal(
     "fetch",
@@ -82,7 +82,7 @@ for (const [language, remaining, courses] of [
     localStorage.setItem("unifr.language", language);
     const plan = createExample("impact", "Impact");
     plan.scenarios[0].courses[0].ects = 4;
-    await new PlanStore(indexedDB).save(plan);
+    await new PlanStore(indexedDB).save(plan, null);
     render(
       <MemoryRouter initialEntries={["/suggestions"]}>
         <App />
