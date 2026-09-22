@@ -24,7 +24,7 @@ import {
   type HistoricalOffering,
 } from "./history";
 import ManualCompletion from "./ManualCompletion";
-import { SaveStatus } from "./Planner";
+import { SaveStatus } from "./PlanControls";
 
 export default function CompletedCourses({ language }: { language: Language }) {
   const { plan } = usePlans();

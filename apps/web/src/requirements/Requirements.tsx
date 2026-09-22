@@ -9,7 +9,7 @@ import { Button } from "../components";
 import type { Language } from "../i18n";
 import { usePlans } from "../planner/context";
 import { activeScenario, updateScenario, type Plan } from "../planner/domain";
-import { SaveStatus } from "../planner/Planner";
+import { SaveStatus } from "../planner/PlanControls";
 import {
   bindProgramme,
   evaluateAdditionalRequirements,
@@ -22,6 +22,14 @@ import { requirementMessages } from "./messages";
 import "./requirements.css";
 import RecipeChooser from "./RecipeChooser";
 import { recipeMessages } from "./recipeMessages";
+import StudySummary from "./StudySummary";
+import ReviewGaps from "./ReviewGaps";
+
+const editStudies = {
+  en: "Edit studies",
+  de: "Studium bearbeiten",
+  fr: "Modifier les études",
+} as const;
 
 function Progress({
   result,
@@ -55,15 +63,17 @@ function Progress({
 function ResultNode({
   result,
   language,
+  depth = 0,
 }: {
   result: RequirementResult;
   language: Language;
+  depth?: number;
 }) {
   const t = requirementMessages[language],
     n = result.node;
   return (
     <li className="requirement-node">
-      <details open={result.children.length > 0}>
+      <details open={depth === 0 && result.children.length > 0}>
         <summary className="requirement-title">
           <strong>{n.title[language]}</strong>{" "}
           <span className={`requirement-status ${result.status}`}>
@@ -120,6 +130,7 @@ function ResultNode({
                 key={child.node.id}
                 result={child}
                 language={language}
+                depth={depth + 1}
               />
             ))}
           </ul>
@@ -141,6 +152,7 @@ function PlanRequirements({
     plan.requirements?.cohort ?? Number(plan.semesters[0].slice(3)),
   );
   const [error, setError] = useState(false);
+  const [editingStudies, setEditingStudies] = useState(!plan.degreeSelection);
   const available = programmeTemplates.filter(
     (p) =>
       p.cohortFrom === cohort &&
@@ -154,11 +166,12 @@ function PlanRequirements({
   let additional: RequirementResult | null = null;
   let result: RequirementResult | null = null,
     failed = false;
+  let degree: ReturnType<typeof resolvedPlanDegree> = null;
   let nodes: ReturnType<typeof flattenRequirements> = [];
   try {
     const tree = requirementTree(plan);
     if (tree) nodes = flattenRequirements(tree);
-    const degree = resolvedPlanDegree(plan);
+    degree = resolvedPlanDegree(plan);
     if (degree?.additionalRoot)
       nodes = [...nodes, ...flattenRequirements(degree.additionalRoot)];
     result = evaluatePlanRequirements(plan);
@@ -212,7 +225,34 @@ function PlanRequirements({
     <>
       <p>{t.limits}</p>
       {(error || failed) && <p role="alert">{t.error}</p>}
-      <RecipeChooser plan={plan} language={language} />
+      {plan.degreeSelection && !editingStudies ? (
+        <section className="studies-summary" aria-label={editStudies[language]}>
+          <div>
+            <StudySummary plan={plan} language={language} />
+            {degree && (
+              <>
+                <p>
+                  {recipeMessages[language].counted}: {degree.targetEcts} ECTS
+                </p>
+                {degree.additionalEcts > 0 && (
+                  <p>
+                    {recipeMessages[language].additional}:{" "}
+                    {degree.additionalEcts} ECTS
+                  </p>
+                )}
+              </>
+            )}
+            {degree?.issues.length ? (
+              <ReviewGaps degree={degree} language={language} />
+            ) : null}
+          </div>
+          <Button onClick={() => setEditingStudies(true)}>
+            {editStudies[language]}
+          </Button>
+        </section>
+      ) : (
+        <RecipeChooser plan={plan} language={language} />
+      )}
       {!plan.degreeSelection && (
         <details open={!!plan.requirements}>
           <summary>{recipeMessages[language].legacy}</summary>

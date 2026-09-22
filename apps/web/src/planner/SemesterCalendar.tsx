@@ -23,7 +23,7 @@ import {
   type CalendarEvent,
 } from "./calendar";
 import { plannerMessages } from "./messages";
-import { Download, SaveStatus } from "./Planner";
+import { Download, SaveStatus } from "./PlanControls";
 import WeekTimetable from "./WeekTimetable";
 import { discoveryMessages } from "../discovery/messages";
 import SharePanel from "../sharing/SharePanel";

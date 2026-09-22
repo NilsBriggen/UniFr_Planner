@@ -64,10 +64,58 @@ it("opens a semester belonging to the active degree from the main navigation", a
   mount("/plan");
   await screen.findByRole("heading", { name: "Future degree" });
   expect(
-    within(screen.getByRole("navigation")).getByRole("link", {
-      name: "Semester",
+    within(
+      screen.getByRole("navigation", { name: "Main navigation" }),
+    ).getByRole("link", {
+      name: "Timetable",
     }),
   ).toHaveAttribute("href", "/semester/SS-2027");
+});
+
+it("expands only the planning semester and keeps tools in one disclosure", async () => {
+  const plan = createPlan({
+    id: "focus",
+    scenarioId: "s",
+    name: "Focused plan",
+    programme: "CS",
+    startTerm: "AS-2026",
+    planningSemester: "SS-2027",
+    semesterCount: 3,
+    targetEcts: 180,
+  });
+  plan.scenarios[0].courses.push(
+    {
+      id: "known",
+      code: "KNOWN",
+      titles: { en: "Known course" },
+      ects: 6,
+      status: "planned",
+      semester: "SS-2027",
+      pinned: false,
+      offering: null,
+    },
+    {
+      id: "unknown",
+      code: "UNKNOWN",
+      titles: { en: "Unknown course" },
+      ects: null,
+      status: "planned",
+      semester: "AS-2027",
+      pinned: false,
+      offering: null,
+    },
+  );
+  await new PlanStore(indexedDB).save(plan, null);
+  mount("/plan");
+  const planning = await screen.findByRole("group", { name: /SS-2027/ });
+  expect(within(planning).getByText("Known course")).toBeVisible();
+  const other = screen.getByRole("group", { name: /AS-2027/ });
+  expect(other).not.toHaveAttribute("open");
+  expect(within(other).queryByText("Unknown course")).not.toBeVisible();
+  expect(within(other).getByText(/0 ECTS · 1 Unknown ECTS/)).toBeVisible();
+  expect(
+    screen.getByRole("group", { name: "Plan settings and backups" }),
+  ).not.toHaveAttribute("open");
 });
 it("shows only unavailable intervals in the selected semester calendar", async () => {
   const plan = createPlan({
@@ -129,16 +177,19 @@ it("creates a guest degree, records completion, duplicates independently and res
     screen.getByRole("button", { name: "Add completed course" }),
   );
   await screen.findByText("Prior mathematics");
+  const completed = screen.getByRole("group", { name: "Completed" });
+  await user.click(
+    within(completed).getByRole("heading", { name: "Completed" }),
+  );
+  expect(within(completed).getByText("Prior mathematics")).toBeVisible();
   expect(
-    within(screen.getByRole("region", { name: "Completed" })).getByText(
-      "Prior mathematics",
-    ),
-  ).toBeVisible();
-  expect(
-    within(screen.getByRole("region", { name: "Unscheduled" })).queryByText(
+    within(screen.getByRole("group", { name: "Unscheduled" })).queryByText(
       "Prior mathematics",
     ),
   ).not.toBeInTheDocument();
+  await user.click(
+    screen.getByRole("heading", { name: "Plan settings and backups" }),
+  );
   await user.type(screen.getByLabelText("New scenario name"), "Alternative");
   await user.click(screen.getByRole("button", { name: "Duplicate scenario" }));
   await waitFor(() =>

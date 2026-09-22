@@ -6,7 +6,7 @@ import type { Language } from "../i18n";
 import { usePlans } from "../planner/context";
 import { activeScenario, type Selection } from "../planner/domain";
 import { calendarFor } from "../planner/calendar";
-import { SaveStatus } from "../planner/Planner";
+import { SaveStatus } from "../planner/PlanControls";
 import { evaluatePlanRequirements } from "../requirements/adapter";
 import {
   generateSuggestions,

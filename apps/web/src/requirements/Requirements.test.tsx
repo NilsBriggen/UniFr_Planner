@@ -235,6 +235,111 @@ it("offers seven faculty groups, major-only recipes, and saves a preview with in
   expect(saved.degreeSelection?.components[1].startSemester).toBe("SS-2027");
   expect(saved.targetEcts).toBe(180);
 });
+
+it("shows saved studies as a summary until editing is requested", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const { bindDegreeSelection } = await import("./adapter");
+  const plan = bindDegreeSelection(
+    createPlan({
+      id: "summary",
+      scenarioId: "s",
+      name: "Law",
+      programme: "Law",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    {
+      structureId: "ba-180",
+      components: [
+        {
+          slotId: "major",
+          programmeId: "bachelor-ius-law",
+          variantId: "major-180",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+      ],
+    },
+  );
+  await new PlanStore(indexedDB).save(plan, null);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(await screen.findByRole("heading", { name: "Law" })).toBeVisible();
+  expect(screen.queryByLabelText("Main programme")).not.toBeInTheDocument();
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Edit studies" }),
+  );
+  expect(await screen.findByLabelText("Main programme")).toBeVisible();
+});
+
+it("preserves an independently saved minor start when editing the major start", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const { bindDegreeSelection } = await import("./adapter");
+  const plan = bindDegreeSelection(
+    createPlan({
+      id: "cohorts",
+      scenarioId: "s",
+      name: "CS",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    {
+      structureId: "ba-120-60",
+      components: [
+        {
+          slotId: "major",
+          programmeId: "bachelor-digitinf-informatics",
+          variantId: "major-120",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+        {
+          slotId: "minor",
+          programmeId: "bachelor-digitinf-businessinformatics",
+          variantId: "minor-60",
+          startSemester: "SS-2027",
+          recipeVersion: "2026-27.1",
+        },
+      ],
+    },
+  );
+  await new PlanStore(indexedDB).save(plan, null);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Edit studies" }),
+  );
+  await userEvent.clear(
+    screen.getByRole("spinbutton", {
+      name: "Major · Starting semester · Year",
+    }),
+  );
+  await userEvent.type(
+    screen.getByRole("spinbutton", {
+      name: "Major · Starting semester · Year",
+    }),
+    "2025",
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Preview degree" }));
+  await userEvent.click(
+    screen.getByRole("button", { name: "Save degree selection" }),
+  );
+  const saved = (await new PlanStore(indexedDB).load()).plans[0];
+  expect(
+    saved.degreeSelection?.components.find(
+      (component) => component.slotId === "minor",
+    )?.startSemester,
+  ).toBe("SS-2027");
+});
 it("shows pinned recipe gaps after reopening and keeps additions outside degree progress", async () => {
   localStorage.setItem("unifr.language", "en");
   const { bindDegreeSelection } = await import("./adapter");

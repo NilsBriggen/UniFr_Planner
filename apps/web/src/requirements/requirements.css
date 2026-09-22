@@ -6,6 +6,18 @@
 .requirement-tree {
   padding-inline-start: 0;
 }
+.studies-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  margin-block: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: white;
+}
 .requirement-node {
   border-inline-start: 2px solid var(--border, #d2d7dc);
   padding: 0.6rem 0 0.6rem 1rem;

@@ -206,8 +206,9 @@ export function DegreeSelectionForm({
             const resolved = composeDegree(recipeRegistry, selection);
             setPreview(resolved);
             setError("");
-            if (setupMode && resolved.status !== "prohibited") {
-              if (!(await onCommit(resolved))) setError(t.failed);
+            if (setupMode) {
+              if (resolved.status === "prohibited") setError(t.prohibited);
+              else if (!(await onCommit(resolved))) setError(t.failed);
             }
           } catch (e) {
             setPreview(null);
@@ -358,16 +359,17 @@ export function DegreeSelectionForm({
           disabled={busy}
           onChange={(value) => {
             setSemester(value);
-            setChoices((current) =>
-              Object.fromEntries(
-                Object.entries(current).map(([id, component]) => [
-                  id,
-                  differentStarts[id]
-                    ? component
-                    : { ...component, startSemester: value },
-                ]),
-              ),
-            );
+            if (setupMode)
+              setChoices((current) =>
+                Object.fromEntries(
+                  Object.entries(current).map(([id, component]) => [
+                    id,
+                    differentStarts[id]
+                      ? component
+                      : { ...component, startSemester: value },
+                  ]),
+                ),
+              );
             invalidate();
           }}
         />

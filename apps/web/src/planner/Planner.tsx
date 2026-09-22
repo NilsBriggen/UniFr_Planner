@@ -26,60 +26,9 @@ import { catchupMessages } from "./catchup-messages";
 import { suggestionMessages } from "../suggestions/messages";
 import StudySummary from "../requirements/StudySummary";
 import { studyLabel } from "../requirements/study-summary";
+import { Download, SaveStatus } from "./PlanControls";
 
-export function Download({
-  text,
-  filename,
-  type,
-  children,
-}: {
-  text: string;
-  filename: string;
-  type: string;
-  children: string;
-}) {
-  return (
-    <Button
-      onClick={() => {
-        const url = URL.createObjectURL(new Blob([text], { type }));
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }}
-    >
-      {children}
-    </Button>
-  );
-}
-export function SaveStatus({ language }: { language: Language }) {
-  const { ready, busy, error, plan, unreadableIds } = usePlans();
-  const t = plannerMessages[language];
-  return (
-    <>
-      {unreadableIds.length > 0 && (
-        <p role="alert" className="planner-error">
-          {t.unreadable} ({unreadableIds.length})
-        </p>
-      )}
-      <p
-        role={error ? "alert" : "status"}
-        className={error ? "planner-error" : "save-status"}
-      >
-        {error
-          ? t.storageError
-          : !ready
-            ? t.loading
-            : busy
-              ? t.saving
-              : plan
-                ? t.saved
-                : t.localHelp}
-      </p>
-    </>
-  );
-}
+export { Download, SaveStatus } from "./PlanControls";
 export { Setup } from "./Setup";
 function Summary({ courses, t }: { courses: Selection[]; t: PlannerMessages }) {
   const sums = summarize(courses);
@@ -143,15 +92,18 @@ function ImportPlan({ language }: { language: Language }) {
           }}
         />
       </label>
-      <label>
-        {t.json}
-        <textarea
-          value={json}
-          rows={4}
-          maxLength={5_000_000}
-          onChange={(e) => change(e.target.value)}
-        />
-      </label>
+      <details className="import-advanced">
+        <summary>{t.json}</summary>
+        <label>
+          {t.json}
+          <textarea
+            value={json}
+            rows={4}
+            maxLength={5_000_000}
+            onChange={(e) => change(e.target.value)}
+          />
+        </label>
+      </details>
       <Button
         disabled={!ready || busy}
         onClick={() => {
@@ -417,37 +369,45 @@ export function PlanBoard({ language }: { language: Language }) {
                 );
                 const label =
                   term === "completed" ? t.completed : (term ?? t.unscheduled);
+                const knownEcts = courses.reduce(
+                  (sum, c) => sum + (c.ects ?? 0),
+                  0,
+                );
+                const unknownEcts = courses.filter(
+                  (course) => course.ects === null,
+                ).length;
                 return (
-                  <section
+                  <details
                     className={`semester-column${term === planningSemester(plan) ? " planning-semester" : ""}`}
                     key={term ?? "unassigned"}
+                    open={term === planningSemester(plan)}
                     aria-label={label}
                   >
-                    <div className="semester-heading">
+                    <summary className="semester-heading">
                       <h2>{label}</h2>
-                      {term && term !== "completed" && (
-                        <div className="semester-actions no-print">
-                          <Link
-                            className="button"
-                            to={`/catalogue?term=${term}`}
-                          >
-                            {t.addCourses}
-                          </Link>
-                          <Link className="text-link" to={`/semester/${term}`}>
-                            {t.openCalendar}
-                          </Link>
-                        </div>
-                      )}
-                    </div>
+                      <span>
+                        {knownEcts} ECTS
+                        {unknownEcts > 0
+                          ? ` · ${unknownEcts} ${t.unknown}`
+                          : ""}{" "}
+                        · {courses.length} {t.courseCount}
+                      </span>
+                    </summary>
+                    {term && term !== "completed" && (
+                      <div className="semester-actions no-print">
+                        <Link className="button" to={`/catalogue?term=${term}`}>
+                          {t.addCourses}
+                        </Link>
+                        <Link className="text-link" to={`/semester/${term}`}>
+                          {t.openCalendar}
+                        </Link>
+                      </div>
+                    )}
                     {term === planningSemester(plan) && (
                       <p className="planning-label">
                         {catchupMessages[language].planning}
                       </p>
                     )}
-                    <p>
-                      {courses.reduce((sum, c) => sum + (c.ects ?? 0), 0)} ECTS
-                      · {courses.length} {t.courseCount}
-                    </p>
                     {courses.length === 0 && (
                       <p className="planner-help">{t.emptySemester}</p>
                     )}
@@ -516,7 +476,7 @@ export function PlanBoard({ language }: { language: Language }) {
                         />
                       ))
                     )}
-                  </section>
+                  </details>
                 );
               })}
             </div>
@@ -559,8 +519,10 @@ export function PlanBoard({ language }: { language: Language }) {
               </div>
             </section>
           )}
-          <section className="plan-tools no-print" aria-label={t.planTools}>
-            <h2>{t.planTools}</h2>
+          <details className="plan-tools no-print" aria-label={t.planTools}>
+            <summary>
+              <h2>{t.planTools}</h2>
+            </summary>
             <Link className="text-link" to="/suggestions">
               {suggestionMessages[language].nav}
             </Link>
@@ -639,12 +601,13 @@ export function PlanBoard({ language }: { language: Language }) {
                 </Button>
               </form>
             </fieldset>
-          </section>
+            <ImportPlan language={language} />
+          </details>
           <ManualCompletion plan={plan} language={language} />
         </>
       )}
       {error && <p role="alert">{t.actionError}</p>}
-      <ImportPlan language={language} />
+      {!plan && <ImportPlan language={language} />}
     </section>
   );
 }

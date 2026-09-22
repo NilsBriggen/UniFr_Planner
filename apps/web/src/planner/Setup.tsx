@@ -16,7 +16,7 @@ import { catchupMessages } from "./catchup-messages";
 import { usePlans } from "./context";
 import { createPlan, currentSemester, semesterIndex } from "./domain";
 import { plannerMessages } from "./messages";
-import { SaveStatus } from "./Planner";
+import { SaveStatus } from "./PlanControls";
 import { SemesterField, semesterLabel } from "./SemesterField";
 import { setupMessages } from "./setupMessages";
 
