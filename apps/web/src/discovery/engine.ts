@@ -1,4 +1,4 @@
-import type { Course, Offering } from "../api/client";
+import type { Course } from "../api/client";
 import {
   activeScenario,
   fromOffering,
@@ -8,8 +8,6 @@ import {
 import {
   calendarFor,
   detectConflicts,
-  localDate,
-  type CalendarEvent,
   type CalendarResult,
 } from "../planner/calendar";
 import { requirementTree, resolvedPlanDegree } from "../requirements/adapter";
@@ -46,8 +44,8 @@ export type Discovery = {
   hasProgramme: boolean;
   requirementError: boolean;
 };
-export const offeringKey = (offering: Offering) =>
-  `${offering.course.code}:${offering.source_id}`;
+import { offeringKey } from "./presentation";
+export { offeringKey, filterDiscovery, lessonGroups } from "./presentation";
 
 /** Recommendations require pinned academic evidence and a measurable outstanding obligation. */
 export function discoverCourses(
@@ -374,46 +372,4 @@ export function discoverCourses(
     hasProgramme: !!root || !!degree,
     requirementError,
   };
-}
-
-export function filterDiscovery(
-  discovery: Discovery,
-  options: { programme: boolean; fits: boolean; hideAdded: boolean },
-) {
-  return discovery.courses.flatMap((course) => {
-    const offerings = course.offerings.filter((offering) => {
-      const a = discovery.assessments.get(offeringKey(offering))!;
-      return (
-        (!options.programme || a.recommended) &&
-        (!options.fits || a.fit === "fits") &&
-        (!options.hideAdded || !a.selected)
-      );
-    });
-    return offerings.length ? [{ ...course, offerings }] : [];
-  });
-}
-
-/** Group actual expanded dates; never describe irregular source dates as a weekly recurrence. */
-export function lessonGroups(events: CalendarEvent[], language: string) {
-  const stamp = (value: string, options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(language, {
-      timeZone: "Europe/Zurich",
-      ...options,
-    }).format(new Date(value));
-  const groups = new Map<
-    string,
-    { time: string; location: string; dates: string[] }
-  >();
-  for (const event of events) {
-    const time = `${stamp(event.start, { weekday: "short" })} ${stamp(event.start, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}–${stamp(event.end, { weekday: localDate(event.start) !== localDate(event.end) ? "short" : undefined, hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}`;
-    const key = `${time}:${event.location}`;
-    const group = groups.get(key) ?? {
-      time,
-      location: event.location,
-      dates: [],
-    };
-    group.dates.push(stamp(event.start, { day: "numeric", month: "short" }));
-    groups.set(key, group);
-  }
-  return [...groups.values()];
 }

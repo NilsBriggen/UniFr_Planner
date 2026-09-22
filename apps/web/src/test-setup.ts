@@ -55,4 +55,5 @@ Object.defineProperty(window, "localStorage", {
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  sessionStorage.clear();
 });

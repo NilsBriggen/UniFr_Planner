@@ -21,6 +21,26 @@
   gap: var(--space-2);
   min-width: 0;
 }
+.calendar-exports {
+  padding: 8px 16px;
+  border-top: 1px solid var(--color-line);
+}
+.calendar-exports summary,
+.availability-form summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 10px;
+  color: var(--color-blue);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.calendar-exports .calendar-export {
+  flex-wrap: wrap;
+  padding-block: 8px;
+}
+.calendar-today {
+  margin-right: auto;
+}
 .calendar-browse {
   gap: var(--space-4);
 }

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
@@ -13,6 +13,21 @@ function mount(path = "/") {
 }
 
 describe("application shell", () => {
+  it("has three task destinations and settings in the header", () => {
+    localStorage.setItem("unifr.language", "en");
+    mount();
+    const nav = within(
+      screen.getByRole("navigation", { name: "Main navigation" }),
+    );
+    expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual([
+      "Timetable",
+      "Courses",
+      "My studies",
+    ]);
+    expect(screen.getByRole("banner")).toContainElement(
+      screen.getByRole("link", { name: "Settings" }),
+    );
+  });
   it("offers guest planning and the unchanged bilingual logo", () => {
     mount();
     expect(
@@ -54,11 +69,14 @@ describe("application shell", () => {
     expect(document.documentElement.lang).toBe("en");
   });
 
-  it("restores a saved language", () => {
+  it("restores a saved language", async () => {
     localStorage.setItem("unifr.language", "en");
     mount("/catalogue");
     expect(
-      screen.getByRole("heading", { level: 1, name: "Course catalogue" }),
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Course catalogue",
+      }),
     ).toBeVisible();
   });
 
@@ -71,10 +89,10 @@ describe("application shell", () => {
     ["/settings", "Optionales Konto"],
     ["/admin", "Administration"],
     ["/missing", "Seite nicht gefunden"],
-  ])("renders a directly opened route %s", (path, title) => {
+  ])("renders a directly opened route %s", async (path, title) => {
     mount(path);
     expect(
-      screen.getByRole("heading", { level: 1, name: title }),
+      await screen.findByRole("heading", { level: 1, name: title }),
     ).toBeVisible();
   });
 

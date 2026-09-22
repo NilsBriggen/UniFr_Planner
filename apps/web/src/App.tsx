@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   Link,
   NavLink,
+  Navigate,
   Route,
   Routes,
   useLocation,
@@ -9,16 +10,23 @@ import {
 } from "react-router-dom";
 import { Button, StatusNotice } from "./components";
 import { messages, type Language, type Messages } from "./i18n";
-import Catalogue from "./Catalogue";
+import { experienceMessages } from "./experience-messages";
+import RouteBoundary from "./RouteBoundary";
+const Catalogue = lazy(() => import("./Catalogue"));
 import { PlanProvider, usePlans } from "./planner/context";
-import CompletedCourses from "./planner/CompletedCourses";
+const CompletedCourses = lazy(() => import("./planner/CompletedCourses"));
 import { planningSemester, currentSemester } from "./planner/domain";
-import { PlanBoard, Setup } from "./planner/Planner";
-import Requirements from "./requirements/Requirements";
-import Suggestions from "./suggestions/Suggestions";
+const PlanBoard = lazy(() =>
+  import("./planner/Planner").then((module) => ({ default: module.PlanBoard })),
+);
+const Setup = lazy(() =>
+  import("./planner/Planner").then((module) => ({ default: module.Setup })),
+);
+const Requirements = lazy(() => import("./requirements/Requirements"));
+const Suggestions = lazy(() => import("./suggestions/Suggestions"));
 import SourceChanges from "./planner/SourceChanges";
-import Accounts from "./accounts/Accounts";
-import Operations from "./Operations";
+const Accounts = lazy(() => import("./accounts/Accounts"));
+const Operations = lazy(() => import("./Operations"));
 import { SharingProvider } from "./sharing/context";
 const SharedPlanPage = lazy(() => import("./sharing/SharedPlanPage"));
 const SemesterCalendar = lazy(() => import("./planner/SemesterCalendar"));
@@ -30,11 +38,6 @@ const languages = [
 ] as const;
 const navigation = [
   {
-    path: "/plan",
-    key: "plan",
-    icon: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
-  },
-  {
     path: "/semester/AS-2026",
     key: "semester",
     icon: "M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z M7 3v4 M17 3v4 M3 11h18 M7 15h3 M14 15h3",
@@ -45,19 +48,16 @@ const navigation = [
     icon: "M21 21l-5-5 M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
   },
   {
-    path: "/requirements",
-    key: "requirements",
-    icon: "M9 5h12 M9 12h12 M9 19h12 M2 5l2 2 3-4 M2 12l2 2 3-4 M2 19l2 2 3-4",
-  },
-  {
-    path: "/settings",
-    key: "settings",
-    icon: "M4 7h16 M4 17h16 M9 4v6 M15 14v6",
+    path: "/plan",
+    key: "plan",
+    icon: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
   },
 ] as const;
 
 function Home({ t }: { t: Messages }) {
-  const { plan } = usePlans();
+  const { plan, ready } = usePlans();
+  if (ready && plan)
+    return <Navigate replace to={`/semester/${planningSemester(plan)}`} />;
   return (
     <>
       <section className="hero">
@@ -171,6 +171,7 @@ function AppShell() {
     }
   });
   const t = messages[language];
+  const x = experienceMessages[language];
   const location = useLocation();
   const previousPath = useRef(location.pathname);
   const navigationRef = useRef<HTMLElement>(null);
@@ -244,6 +245,24 @@ function AppShell() {
             </select>
           </label>
           <span className="guest-status">{t.guest}</span>
+          <Link
+            className="button header-settings"
+            to="/settings"
+            aria-label={t.settings}
+            title={t.settings}
+          >
+            <svg
+              aria-hidden="true"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+            >
+              <path d="M4 7h16 M4 17h16 M9 4v6 M15 14v6" />
+            </svg>
+          </Link>
           <div className="languages" role="group" aria-label={t.languages}>
             {languages.map(({ code, name }) => (
               <Button
@@ -263,6 +282,13 @@ function AppShell() {
         <nav ref={navigationRef} className="navigation" aria-label={t.nav}>
           {navigation.map(({ path, key, icon }) => (
             <NavLink
+              className={({ isActive }) =>
+                isActive ||
+                (key === "plan" &&
+                  ["/requirements", "/setup"].includes(location.pathname))
+                  ? "active"
+                  : undefined
+              }
               key={key}
               to={
                 key === "semester"
@@ -288,10 +314,10 @@ function AppShell() {
               </span>
               <span>
                 {key === "semester"
-                  ? t.semesterNav
-                  : key === "requirements"
-                    ? t.requirementsNav
-                    : t[key]}
+                  ? x.timetable
+                  : key === "catalogue"
+                    ? x.courses
+                    : x.studies}
               </span>
             </NavLink>
           ))}
@@ -301,68 +327,95 @@ function AppShell() {
             {!location.pathname.startsWith("/shared/") && (
               <SourceChanges language={language} />
             )}
-            <Routes>
-              <Route
-                path="/shared/:id"
-                element={
-                  <Suspense fallback={<p>…</p>}>
-                    <SharedPlanPage language={language} />
-                  </Suspense>
+            {["/plan", "/requirements", "/plan/completed"].includes(
+              location.pathname,
+            ) && (
+              <nav className="study-navigation" aria-label={x.studies}>
+                <NavLink end to="/plan">
+                  {x.overview}
+                </NavLink>
+                <NavLink to="/requirements">{x.requirements}</NavLink>
+                <NavLink to="/plan/completed">{x.completed}</NavLink>
+              </nav>
+            )}
+            <RouteBoundary key={location.pathname} language={language}>
+              <Suspense
+                fallback={
+                  <p className="page" role="status">
+                    {x.loading}
+                  </p>
                 }
-              />
-              <Route path="/" element={<Home t={t} />} />
-              <Route path="/setup" element={<Setup language={language} />} />
-              <Route path="/plan" element={<PlanBoard language={language} />} />
-              <Route
-                path="/plan/completed"
-                element={<CompletedCourses language={language} />}
-              />
-              <Route
-                path="/semester/:term"
-                element={
-                  plans.plan ? (
-                    <Suspense fallback={<Semester t={t} />}>
-                      <SemesterCalendar
-                        key={location.pathname}
-                        language={language}
-                      />
-                    </Suspense>
-                  ) : (
-                    <Semester t={t} />
-                  )
-                }
-              />
-              <Route
-                path="/catalogue"
-                element={<Catalogue language={language} />}
-              />
-              <Route
-                path="/catalogue/:course_code"
-                element={<Catalogue language={language} />}
-              />
-              <Route
-                path="/requirements"
-                element={<Requirements language={language} />}
-              />
-              <Route
-                path="/suggestions"
-                element={<Suggestions language={language} />}
-              />
-              <Route
-                path="/settings"
-                element={<Accounts language={language} />}
-              />
-              <Route
-                path="/admin"
-                element={<Operations title={t.admin} language={language} />}
-              />
-              <Route
-                path="*"
-                element={
-                  <EmptyPage title={t.missing} body={t.notFound} t={t} />
-                }
-              />
-            </Routes>
+              >
+                <Routes>
+                  <Route
+                    path="/shared/:id"
+                    element={
+                      <Suspense fallback={<p role="status">{x.loading}</p>}>
+                        <SharedPlanPage language={language} />
+                      </Suspense>
+                    }
+                  />
+                  <Route path="/" element={<Home t={t} />} />
+                  <Route
+                    path="/setup"
+                    element={<Setup language={language} />}
+                  />
+                  <Route
+                    path="/plan"
+                    element={<PlanBoard language={language} />}
+                  />
+                  <Route
+                    path="/plan/completed"
+                    element={<CompletedCourses language={language} />}
+                  />
+                  <Route
+                    path="/semester/:term"
+                    element={
+                      plans.plan ? (
+                        <Suspense fallback={<p role="status">{x.loading}</p>}>
+                          <SemesterCalendar
+                            key={location.pathname}
+                            language={language}
+                          />
+                        </Suspense>
+                      ) : (
+                        <Semester t={t} />
+                      )
+                    }
+                  />
+                  <Route
+                    path="/catalogue"
+                    element={<Catalogue language={language} />}
+                  />
+                  <Route
+                    path="/catalogue/:course_code"
+                    element={<Catalogue language={language} />}
+                  />
+                  <Route
+                    path="/requirements"
+                    element={<Requirements language={language} />}
+                  />
+                  <Route
+                    path="/suggestions"
+                    element={<Suggestions language={language} />}
+                  />
+                  <Route
+                    path="/settings"
+                    element={<Accounts language={language} />}
+                  />
+                  <Route
+                    path="/admin"
+                    element={<Operations title={t.admin} language={language} />}
+                  />
+                  <Route
+                    path="*"
+                    element={
+                      <EmptyPage title={t.missing} body={t.notFound} t={t} />
+                    }
+                  />
+                </Routes>
+              </Suspense>
+            </RouteBoundary>
           </main>
           <footer>
             <span>UniFr Planner</span>

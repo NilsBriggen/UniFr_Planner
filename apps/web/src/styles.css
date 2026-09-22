@@ -147,6 +147,30 @@ p {
 .languages {
   display: flex;
 }
+.header-settings {
+  width: 44px;
+  padding: 10px;
+  flex-shrink: 0;
+}
+.study-navigation {
+  display: flex;
+  gap: 8px;
+  padding: 12px var(--page-gutter) 0;
+  flex-wrap: wrap;
+}
+.study-navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  font-size: 0.875rem;
+}
+.study-navigation a.active {
+  border-color: var(--color-orange);
+  font-weight: bold;
+}
 .button {
   display: inline-flex;
   align-items: center;
@@ -567,7 +591,7 @@ input {
     display: grid;
     flex: 1 1 140px;
     min-width: 0;
-    max-width: calc(100% - 144px);
+    max-width: calc(100% - 188px);
   }
   .plan-switcher span {
     display: none;
@@ -603,12 +627,12 @@ input {
     padding: 0 4px env(safe-area-inset-bottom);
   }
   .navigation a {
-    flex: 1 1 56px;
+    flex: 1 1 90px;
     min-width: max-content;
-    min-height: 76px;
+    min-height: 64px;
     border-left: 0;
     border-top: 3px solid transparent;
-    font-size: 0.625rem;
+    font-size: 0.75rem;
     padding: 8px 2px;
     overflow-wrap: normal;
     white-space: nowrap;

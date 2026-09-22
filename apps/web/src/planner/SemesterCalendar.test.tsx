@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import { IDBFactory } from "fake-indexeddb";
@@ -66,6 +67,7 @@ async function mountCalendar(
   await screen.findByRole("heading", {
     name: plannerMessages[language].conflictHeading,
   });
+  await userEvent.click(screen.getByText({en: "Print and download", de: "Drucken und herunterladen", fr: "Imprimer et télécharger"}[language], {selector: "summary"}));
   return app;
 }
 

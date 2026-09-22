@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Temporal } from "@js-temporal/polyfill";
 import { Button } from "../components";
@@ -27,7 +27,8 @@ import WeekTimetable from "./WeekTimetable";
 import { discoveryMessages } from "../discovery/messages";
 import SharePanel from "../sharing/SharePanel";
 import WeeklyDownloads from "./WeeklyDownloads";
-import StudySummary from "../requirements/StudySummary";
+import { experienceMessages } from "../experience-messages";
+import { defaultCalendarDate, readCalendarView } from "./calendar-view";
 
 function EventCard({
   event,
@@ -62,6 +63,16 @@ function EventCard({
   );
 }
 export default function SemesterCalendar({ language }: { language: Language }) {
+  const { plan } = usePlans();
+  const { term } = useParams();
+  return plan ? (
+    <Calendar
+      key={`${plan.id}:${plan.activeScenarioId}:${term}`}
+      language={language}
+    />
+  ) : null;
+}
+function Calendar({ language }: { language: Language }) {
   const { plan, busy, save } = usePlans();
   const navigate = useNavigate();
   const {
@@ -75,8 +86,27 @@ export default function SemesterCalendar({ language }: { language: Language }) {
     scenario && validTerm
       ? calendarFor(scenario.courses, term, language)
       : { events: [], cancelled: [], unresolved: [] };
-  const [view, setView] = useState<"week" | "agenda" | "day">("week");
-  const [selectedDate, setDate] = useState("");
+  const preferenceKey = `unifr.calendar:${plan?.id}:${scenario?.id}:${term}`;
+  const [presentation, setPresentation] = useState(() => {
+    try {
+      return readCalendarView(sessionStorage.getItem(preferenceKey), term);
+    } catch {
+      return readCalendarView(null, term);
+    }
+  });
+  const { view, date: selectedDate } = presentation;
+  const setDate = (date: string) =>
+    setPresentation((old) => ({ ...old, date }));
+  const setView = (view: typeof presentation.view) =>
+    setPresentation((old) => ({ ...old, view }));
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(preferenceKey, JSON.stringify(presentation));
+    } catch {
+      /* The timetable remains usable without presentation storage. */
+    }
+  }, [preferenceKey, presentation]);
+  const x = experienceMessages[language];
   const [error, setError] = useState(false);
   if (!plan || !scenario) return null;
   if (!validTerm)
@@ -108,8 +138,14 @@ export default function SemesterCalendar({ language }: { language: Language }) {
   const all = [...calendar.events, ...busyEvents].sort(
     (a, b) => Date.parse(a.start) - Date.parse(b.start),
   );
+  const today = localDate(new Date().toISOString());
   const date =
-    selectedDate || (all[0] ? localDate(all[0].start) : termRange(term).start);
+    selectedDate ||
+    defaultCalendarDate(
+      term,
+      all.map((event) => localDate(event.start)),
+      today,
+    );
   const plainDate = Temporal.PlainDate.from(date),
     monday = plainDate.subtract({ days: plainDate.dayOfWeek - 1 });
   const intersectsDay = (event: CalendarEvent, day: string) =>
@@ -167,7 +203,6 @@ export default function SemesterCalendar({ language }: { language: Language }) {
           </Link>
         </div>
       </header>
-      <StudySummary plan={plan} language={language} />
       <div className="semester-overview-stats">
         <span>
           <strong>
@@ -220,11 +255,19 @@ export default function SemesterCalendar({ language }: { language: Language }) {
               <div className="calendar-date-navigation">
                 {view === "week" && (
                   <Button
+                    disabled={date <= range.start}
                     className="icon-button"
                     aria-label={t.previous}
                     title={t.previous}
                     onClick={() =>
-                      setDate(plainDate.subtract({ days: 7 }).toString())
+                      setDate(
+                        [
+                          plainDate.subtract({ days: 7 }).toString(),
+                          range.start,
+                        ]
+                          .sort()
+                          .at(-1)!,
+                      )
                     }
                   >
                     <svg
@@ -249,18 +292,28 @@ export default function SemesterCalendar({ language }: { language: Language }) {
                     max={range.end}
                     value={date}
                     onChange={(e) => {
-                      if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value))
+                      if (
+                        /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) &&
+                        e.target.value >= range.start &&
+                        e.target.value <= range.end
+                      )
                         setDate(e.target.value);
                     }}
                   />
                 </label>
                 {view === "week" && (
                   <Button
+                    disabled={date >= range.end}
                     className="icon-button"
                     aria-label={t.next}
                     title={t.next}
                     onClick={() =>
-                      setDate(plainDate.add({ days: 7 }).toString())
+                      setDate(
+                        [
+                          plainDate.add({ days: 7 }).toString(),
+                          range.end,
+                        ].sort()[0],
+                      )
                     }
                   >
                     <svg
@@ -341,8 +394,8 @@ export default function SemesterCalendar({ language }: { language: Language }) {
             </section>
           )}
         </div>
-        <div className="calendar-footer no-print">
-          <span>{zone}</span>
+        <details className="calendar-exports no-print">
+          <summary>{x.exports}</summary>
           <div className="calendar-export">
             {calendar.unresolved.length ? (
               <Button disabled>{t.exportIcs}</Button>
@@ -359,23 +412,21 @@ export default function SemesterCalendar({ language }: { language: Language }) {
               </Download>
             )}
             <Button onClick={() => window.print()}>{t.print}</Button>
+            <WeeklyDownloads
+              input={{
+                name: plan.name,
+                term,
+                monday: monday.toString(),
+                events: all,
+                courses: scenario.courses,
+                language,
+                unresolved: calendar.unresolved.length > 0,
+              }}
+            />
           </div>
-        </div>
+        </details>
       </div>
       <div className="calendar-support">
-        <section className="weekly-download-panel no-print">
-          <WeeklyDownloads
-            input={{
-              name: plan.name,
-              term,
-              monday: monday.toString(),
-              events: all,
-              courses: scenario.courses,
-              language,
-              unresolved: calendar.unresolved.length > 0,
-            }}
-          />
-        </section>
         <section className="calendar-check" id="schedule-check">
           <h2>{t.conflictHeading}</h2>
           {calendar.unresolved.length > 0 && (
@@ -454,56 +505,59 @@ export default function SemesterCalendar({ language }: { language: Language }) {
           ))}
         </section>
         <section className="unavailable-entry no-print">
-          <h2>{t.unavailable}</h2>
-          <p>{t.busyHelp}</p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const form = e.currentTarget,
-                data = new FormData(form);
-              try {
-                const start = localInstant(String(data.get("start"))),
-                  end = localInstant(String(data.get("end")));
-                if (Date.parse(end) <= Date.parse(start))
-                  throw new Error("invalid end");
-                change(
-                  updateScenario(plan, (s) => ({
-                    ...s,
-                    unavailable: [
-                      ...s.unavailable,
-                      {
-                        id: crypto.randomUUID(),
-                        label: String(data.get("label")),
-                        start,
-                        end,
-                      },
-                    ],
-                  })),
-                );
-                setError(false);
-                form.reset();
-              } catch {
-                setError(true);
-              }
-            }}
-          >
-            <fieldset className="planner-fields" disabled={busy}>
-              <label>
-                {t.busyLabel}
-                <input name="label" required maxLength={200} />
-              </label>
-              <label>
-                {t.starts}
-                <input name="start" type="datetime-local" required />
-              </label>
-              <label>
-                {t.ends}
-                <input name="end" type="datetime-local" required />
-              </label>
-              <Button type="submit">{t.addBusy}</Button>
-            </fieldset>
-          </form>
-          {error && <p role="alert">{t.invalidPeriod}</p>}
+          <h2>{x.availability}</h2>
+          <details className="availability-form">
+            <summary>{t.addBusy}</summary>
+            <p>{t.busyHelp}</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.currentTarget,
+                  data = new FormData(form);
+                try {
+                  const start = localInstant(String(data.get("start"))),
+                    end = localInstant(String(data.get("end")));
+                  if (Date.parse(end) <= Date.parse(start))
+                    throw new Error("invalid end");
+                  change(
+                    updateScenario(plan, (s) => ({
+                      ...s,
+                      unavailable: [
+                        ...s.unavailable,
+                        {
+                          id: crypto.randomUUID(),
+                          label: String(data.get("label")),
+                          start,
+                          end,
+                        },
+                      ],
+                    })),
+                  );
+                  setError(false);
+                  form.reset();
+                } catch {
+                  setError(true);
+                }
+              }}
+            >
+              <fieldset className="planner-fields" disabled={busy}>
+                <label>
+                  {t.busyLabel}
+                  <input name="label" required maxLength={200} />
+                </label>
+                <label>
+                  {t.starts}
+                  <input name="start" type="datetime-local" required />
+                </label>
+                <label>
+                  {t.ends}
+                  <input name="end" type="datetime-local" required />
+                </label>
+                <Button type="submit">{t.addBusy}</Button>
+              </fieldset>
+            </form>
+            {error && <p role="alert">{t.invalidPeriod}</p>}
+          </details>
           <ul className="unavailable-list">
             {scenario.unavailable.map((period) => (
               <li key={period.id}>

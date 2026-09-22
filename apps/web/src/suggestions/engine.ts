@@ -80,7 +80,7 @@ export type SuggestionResult = {
   rejected: { id: string; reason: Rejection; detail: string }[];
   availability: "available" | "noData" | "noSafe";
 };
-export type Revision = { before: Plan; after: Plan; suggestionId: string };
+export { applySuggestion, undoRevision, type Revision } from "./revisions";
 const copy = <T>(value: T): T => JSON.parse(JSON.stringify(value));
 const flatten = (r: RequirementResult): RequirementResult[] => [
   r,
@@ -508,25 +508,4 @@ export function generateSuggestions(input: {
   if (result.suggestions.length) result.availability = "available";
   result.rejected.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   return result;
-}
-
-export function applySuggestion(plan: Plan, suggestion: Suggestion): Revision {
-  if (JSON.stringify(plan) !== suggestion.base)
-    throw new Error("stale comparison");
-  const before = activeScenario(plan).courses.find(
-    (c) => c.id === suggestion.before.id,
-  );
-  if (!before || before.pinned) throw new Error("pinned or missing course");
-  const after = updateScenario(plan, (s) => ({
-    ...s,
-    courses: s.courses.map((c) =>
-      c.id === before.id ? copy(suggestion.after) : c,
-    ),
-  }));
-  return { before: copy(plan), after, suggestionId: suggestion.id };
-}
-export function undoRevision(plan: Plan, revision: Revision): Plan {
-  if (JSON.stringify(plan) !== JSON.stringify(revision.after))
-    throw new Error("stale revision");
-  return copy(revision.before);
 }
