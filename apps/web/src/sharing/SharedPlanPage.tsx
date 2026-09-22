@@ -3,7 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Temporal } from "@js-temporal/polyfill";
 import type { Language } from "../i18n";
 import { Button } from "../components";
-import { activeScenario, importAsNew } from "../planner/domain";
+import {
+  activeScenario,
+  importAsNew,
+  planningSemester,
+} from "../planner/domain";
 import {
   calendarFor,
   detectConflicts,
@@ -80,7 +84,7 @@ export default function SharedPlanPage({ language }: { language: Language }) {
     scenario = activeScenario(plan);
   const term = plan.semesters.includes(selectedTerm)
     ? selectedTerm
-    : plan.semesters[0];
+    : planningSemester(plan);
   const calendar = calendarFor(scenario.courses, term, language);
   const events = [
     ...calendar.events,
@@ -98,7 +102,9 @@ export default function SharedPlanPage({ language }: { language: Language }) {
         : termRange(term).start),
   );
   const monday = day.subtract({ days: day.dayOfWeek - 1 }).toString();
-  const courses = scenario.courses.filter((c) => c.semester === term);
+  const courses = scenario.courses.filter(
+    (c) => c.semester === term && c.status !== "completed",
+  );
   async function importPlan(owner = false) {
     setActionError(false);
     try {

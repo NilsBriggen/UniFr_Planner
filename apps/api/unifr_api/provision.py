@@ -88,6 +88,8 @@ def provision(
                     not in {
                         "catalogue_snapshot",
                         "catalogue_head",
+                        "catalogue_archive_term",
+                        "catalogue_archive_discovery",
                         "catalogue_offering",
                         "catalogue_read_generation",
                         "catalogue_read_offering",

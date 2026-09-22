@@ -231,6 +231,7 @@ it("retains catalogue assignment history during copy, reschedule and JSON roundt
       detail_hash: "",
       course: { code: "UE-SIN.1", titles: { en: "Course" } },
       source_id: "offer",
+      snapshot_id: "snapshot-old",
       terms: ["AS-2026"],
       meetings: [],
       meeting_state: "unresolved",

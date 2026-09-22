@@ -22,12 +22,31 @@ future dates remain unresolved. A blank calendar does not claim that its schedul
 is conflict-free. Starting setup from a course returns to that course after the
 plan has been saved.
 
-Semester cards and their course actions precede summaries, scenario tools and
+Earned-credit totals and the selected planning semester precede semester cards, scenario tools and
 backup controls on the degree plan. Planning terminology is available in DE/FR/EN.
+
+## Starting midway through a degree
+
+Study start and planning semester are separate. Setup offers a skippable, resumable
+`/plan/completed` checklist when planning begins after study start. Existing plans default
+to the Zurich current semester within their range, then the nearest future or latest
+existing semester; this does not change the study cohort or degree requirements.
+
+Select archived courses semester by semester, review the earned credits and save them
+together. For unavailable archives or offline use, manual entry needs only a title and
+credits; the official course code is optional. Records without one get an internal ID
+that is hidden in the interface. The semester can be earlier/unspecified. Manual records
+can be edited or removed. A canonical duplicate requires explicit conversion of the
+existing course, and pinned courses must first be unpinned.
+
+Completed courses contribute to earned-credit totals and applicable degree requirements,
+but do not create timetable events, conflicts or current-semester workload. A manual
+record does not itself establish degree recognition. Planning semester and completion
+records survive JSON export/import, account sync and shared-plan import.
 
 ## Assisted course discovery
 
-With a saved plan, the catalogue opens on its first semester unless a semester
+With a saved plan, the catalogue opens on its planning semester unless a semester
 is already in the URL. The visible semester selector changes the catalogue and
 the running semester overview together. Filters and search remain in the URL;
 clearing the term explicitly allows browsing other semesters.

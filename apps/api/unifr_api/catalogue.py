@@ -28,6 +28,7 @@ from unifr_ingest.models import CatalogueSnapshot, Offering, SyncReport
 from unifr_ingest.sync import validate
 
 from .database import metadata
+from .catalogue_archive_schema import archive_terms
 from .catalogue_projection import (
     completed_at,
     facets as read_facets,
@@ -316,16 +317,36 @@ class SqlCatalogueRepository:
             raise RuntimeError("Retention requires the catalogue lock")
         with self.engine.begin() as connection:
             current = connection.scalar(select(head.c.snapshot_id))
+            protected = set(
+                connection.scalars(
+                    select(archive_terms.c.snapshot_id).where(
+                        archive_terms.c.snapshot_id.is_not(None)
+                    )
+                )
+            )
+            protected.add(current)
             counts: Counter[str] = Counter()
             expired = []
             for row in connection.execute(
-                select(snapshots.c.id, snapshots.c.status).order_by(
+                select(
+                    snapshots.c.id,
+                    snapshots.c.status,
+                    snapshots.c.report["source_hashes"]["archive_term"]
+                    .as_string()
+                    .label("archive_term"),
+                ).order_by(
                     snapshots.c.report["completed_at"].as_string().desc(), snapshots.c.id.desc()
                 )
             ):
+                # Archive heads do not consume the current catalogue retention
+                # budget. Superseded archives are replaceable immutable copies.
+                if row.archive_term:
+                    if row.id not in protected:
+                        expired.append(row.id)
+                    continue
                 counts[row.status] += 1
                 keep = 7 if row.status == "published" else 3
-                if counts[row.status] > keep and row.id != current:
+                if counts[row.status] > keep and row.id not in protected:
                     expired.append(row.id)
             if expired:
                 for table in (

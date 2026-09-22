@@ -59,13 +59,15 @@ export function PlanProvider({ children }: { children: ReactNode }) {
   const store = useRef<PlanStore | null>(null);
   const locked = useRef(false);
   const published = usePublishedCatalogue(
-    state.plans.some(
-      (p) =>
-        p.programme !== "SUGGESTIONS-DEMO" &&
-        p.scenarios.some((s) =>
-          s.courses.some((c) => c.status !== "completed"),
+    state.plans
+      .filter((p) => p.programme !== "SUGGESTIONS-DEMO")
+      .flatMap((p) =>
+        p.scenarios.flatMap((s) =>
+          s.courses
+            .filter((c) => c.status !== "completed" && c.offering)
+            .map((c) => c.code),
         ),
-    ),
+      ),
   );
   useEffect(() => {
     let active = true;

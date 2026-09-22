@@ -18,8 +18,8 @@ LOG = logging.getLogger(__name__)
 
 
 class ProgressSource(HttpCatalogueSource):
-    def listing(self, number: int) -> ListingPage:
-        page = super().listing(number)
+    def listing(self, number: int, *, semester: str = "") -> ListingPage:
+        page = super().listing(number, semester=semester)
         LOG.info("Listing %s/%s: %s reported", number, len(page.pages), page.reported_count)
         return page
 

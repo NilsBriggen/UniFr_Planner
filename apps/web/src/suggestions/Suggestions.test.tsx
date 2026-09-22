@@ -26,6 +26,7 @@ it("loads published alternatives for the selected CS plus BI plan and preserves 
     "fetch",
     vi.fn(async () =>
       Response.json({
+        terms: ["AS-2026", "SS-2027"],
         items: courses,
         total: 2,
         offset: 0,

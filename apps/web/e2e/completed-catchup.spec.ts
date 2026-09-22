@@ -107,6 +107,9 @@ test("manual entry works when historical archive requests fail", async ({
     .fill("Offline completed course");
   await page.getByLabel("Completed ECTS", { exact: true }).fill("4");
   await page.getByRole("button", { name: "Add completed course" }).click();
+  await expect(
+    page.getByRole("region", { name: "Recorded completed courses" }),
+  ).toContainText("Earned ECTS: 4 ECTS");
   await page.reload();
   await expect(
     page.getByRole("region", { name: "Recorded completed courses" }),

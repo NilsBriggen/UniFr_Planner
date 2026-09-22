@@ -1,19 +1,26 @@
 import { useEffect, useState } from "react";
-import { loadPublishedCatalogue, type PublishedCatalogue } from "./published";
+import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
+import { loadSavedCourses } from "./catalogue-loaders";
+import type { PublishedCatalogue } from "./published";
 
-export function usePublishedCatalogue(enabled: boolean) {
-  const [catalogue, setCatalogue] = useState<PublishedCatalogue>();
+export const catalogueRefreshEvent = "unifr:catalogue-refresh";
+export function usePublishedCatalogue(codes: string[]) {
+  const key = [...new Set(codes.map(canonicalCourseCode))].sort().join(",");
+  const [catalogue, setCatalogue] = useState<{
+    key: string;
+    value: PublishedCatalogue;
+  }>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
-    if (!enabled) return;
+    if (!key) return;
     const controller = new AbortController();
     setLoading(true);
     setError(false);
-    void loadPublishedCatalogue(controller.signal)
+    void loadSavedCourses(key.split(","), controller.signal)
       .then((value) => {
-        if (!controller.signal.aborted) setCatalogue(value);
+        if (!controller.signal.aborted) setCatalogue({ key, value });
       })
       .catch(() => {
         if (!controller.signal.aborted) setError(true);
@@ -22,10 +29,17 @@ export function usePublishedCatalogue(enabled: boolean) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [enabled, revision]);
+  }, [key, revision]);
   useEffect(() => {
-    if (!enabled) return;
-    const refresh = () => setRevision((value) => value + 1);
+    if (!key) return;
+    let lastRefresh = Date.now();
+    const refresh = () => {
+      // focus + visibilitychange commonly arrive together. Recheck at most once
+      // per minute in the background; the explicit refresh always runs.
+      if (Date.now() - lastRefresh < 60_000) return;
+      lastRefresh = Date.now();
+      setRevision((value) => value + 1);
+    };
     const visible = () => {
       if (document.visibilityState === "visible") refresh();
     };
@@ -39,11 +53,14 @@ export function usePublishedCatalogue(enabled: boolean) {
       document.removeEventListener("visibilitychange", visible);
       window.clearInterval(timer);
     };
-  }, [enabled]);
+  }, [key]);
   return {
-    catalogue,
-    loading,
-    error,
-    refresh: () => setRevision((value) => value + 1),
+    catalogue: key && catalogue?.key === key ? catalogue.value : undefined,
+    loading: !!key && loading,
+    error: !!key && error,
+    refresh: () => {
+      setRevision((value) => value + 1);
+      window.dispatchEvent(new Event(catalogueRefreshEvent));
+    },
   };
 }

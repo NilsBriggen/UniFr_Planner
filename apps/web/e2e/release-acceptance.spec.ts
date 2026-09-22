@@ -200,19 +200,33 @@ test("connected release: CS/BI credits, conflict, pinned alternative, weekly pro
   alternative.meetings[0].ends_at = "2026-09-21T13:00:00Z";
   candidateCourse.offerings.push(alternative);
   let overnight = false;
-  await page.route("**/api/v1/catalogue/courses?*", async (route) => {
-    const url = new URL(route.request().url());
-    if (url.searchParams.get("offset") !== "0") return route.continue();
-    const next = structuredClone(published);
-    if (overnight) {
-      next.status.snapshot_id = "release-overnight-fixture";
-      const changed = next.items.find((course) => course.code === "DEMO-001")!
-        .offerings[0];
-      changed.meetings[0].starts_at = "2026-09-21T13:00:00Z";
-      changed.meetings[0].ends_at = "2026-09-21T14:00:00Z";
-    }
-    await route.fulfill({ json: next });
-  });
+  await page.route(
+    /\/api\/v1\/catalogue\/(?:courses|discovery)\?/,
+    async (route) => {
+      const url = new URL(route.request().url());
+      if (
+        url.pathname.endsWith("/courses") &&
+        url.searchParams.get("offset") !== "0"
+      )
+        return route.continue();
+      const next = structuredClone(published);
+      if (overnight) {
+        next.status.snapshot_id = "release-overnight-fixture";
+        const changed = next.items.find((course) => course.code === "DEMO-001")!
+          .offerings[0];
+        changed.meetings[0].starts_at = "2026-09-21T13:00:00Z";
+        changed.meetings[0].ends_at = "2026-09-21T14:00:00Z";
+      }
+      for (const course of next.items)
+        for (const offering of course.offerings)
+          offering.snapshot_id = next.status.snapshot_id!;
+      const codes = url.searchParams.get("codes")?.split(",");
+      if (codes)
+        next.items = next.items.filter((course) => codes.includes(course.code));
+      next.total = next.items.length;
+      await route.fulfill({ json: next });
+    },
+  );
   await page.goto("/suggestions");
   const choices = page.getByRole("list", { name: s.nav, exact: true });
   await expect(choices).toBeVisible();

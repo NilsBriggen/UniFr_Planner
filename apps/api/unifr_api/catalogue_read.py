@@ -22,6 +22,7 @@ CLOCK = r"^(?:[01]\d|2[0-3]):[0-5]\d$"
 
 class CatalogueFilters(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    scope: Literal["current", "history"] = "current"
     q: str = Field(default="", max_length=200)
     codes: str | None = Field(default=None, max_length=10000)
     term: str | None = Field(default=None, max_length=40)
@@ -60,7 +61,9 @@ class CatalogueFilters(BaseModel):
 
 class CatalogueStatus(BaseModel):
     availability: Literal["available", "unavailable"] = "unavailable"
-    reason: Literal["no_published_snapshot", "database_unavailable"] | None = None
+    reason: (
+        Literal["no_published_snapshot", "database_unavailable", "archive_not_available"] | None
+    ) = None
     snapshot_id: str | None = None
     published_at: datetime | None = None
     age_seconds: int | None = None
@@ -96,11 +99,21 @@ class CatalogueDiscovery(BaseModel):
     status: CatalogueStatus
 
 
+class ArchiveCoverage(BaseModel):
+    term: str
+    status: Literal["pending", "loading", "available", "failed", "unavailable"]
+    snapshot_id: str | None = None
+    checked_at: str | None = None
+    refresh_failed: bool = False
+
+
 class CatalogueTerms(BaseModel):
     terms: list[str]
     faculties: list[str]
     languages: list[str]
     levels: list[str]
+    coverage: list[ArchiveCoverage] = Field(default_factory=list)
+    discovery_status: Literal["pending", "available", "failed"] | None = None
     status: CatalogueStatus
 
 
@@ -350,5 +363,9 @@ class CatalogueReadService:
                 for key, values in data.items():
                     result[key].update(values)
         return CatalogueTerms(
-            **{key: sorted(values) for key, values in result.items()}, status=self.status
+            terms=sorted(result["terms"]),
+            faculties=sorted(result["faculties"]),
+            languages=sorted(result["languages"]),
+            levels=sorted(result["levels"]),
+            status=self.status,
         )

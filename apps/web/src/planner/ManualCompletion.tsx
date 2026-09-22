@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
 import { Button } from "../components";
 import type { Language } from "../i18n";
@@ -26,6 +26,7 @@ export default function ManualCompletion({
   onDone?: () => void;
 }) {
   const { save, busy } = usePlans();
+  const codeHelpId = useId();
   const t = plannerMessages[language],
     c = catchupMessages[language];
   const [error, setError] = useState(false);
@@ -122,13 +123,13 @@ export default function ManualCompletion({
             {t.courseCode}
             <input
               aria-label={t.courseCode}
+              aria-describedby={codeHelpId}
               name="code"
               maxLength={200}
               defaultValue={
                 record && !isManualCode(record.code) ? record.code : ""
               }
             />
-            <small>{c.optionalCode}</small>
           </label>
           <label>
             {t.completedEcts}
@@ -158,6 +159,9 @@ export default function ManualCompletion({
             </Button>
           )}
         </fieldset>
+        <p id={codeHelpId} className="planner-help">
+          {t.courseCode}: {c.optionalCode}
+        </p>
       </form>
       {reserved && <p role="alert">{c.reserved}</p>}
       {pending && (

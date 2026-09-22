@@ -29,6 +29,17 @@
         "operationId": "catalogueCourses",
         "parameters": [
           {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": ["current", "history"],
+              "type": "string",
+              "default": "current",
+              "title": "Scope"
+            }
+          },
+          {
             "name": "q",
             "in": "query",
             "required": false,
@@ -37,6 +48,23 @@
               "maxLength": 200,
               "default": "",
               "title": "Q"
+            }
+          },
+          {
+            "name": "codes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 10000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Codes"
             }
           },
           {
@@ -266,6 +294,33 @@
               "type": "string",
               "title": "Course Code"
             }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": ["current", "history"],
+              "type": "string",
+              "default": "current",
+              "title": "Scope"
+            }
+          },
+          {
+            "name": "term",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Term"
+            }
           }
         ],
         "responses": {
@@ -316,6 +371,19 @@
       "get": {
         "summary": "Terms",
         "operationId": "catalogueTerms",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": ["current", "history"],
+              "type": "string",
+              "default": "current",
+              "title": "Scope"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -333,6 +401,274 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CatalogueError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/catalogue/discovery": {
+      "get": {
+        "summary": "Discovery",
+        "operationId": "catalogueDiscovery",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": ["current", "history"],
+              "type": "string",
+              "default": "current",
+              "title": "Scope"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "default": "",
+              "title": "Q"
+            }
+          },
+          {
+            "name": "codes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 10000
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Codes"
+            }
+          },
+          {
+            "name": "term",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Term"
+            }
+          },
+          {
+            "name": "faculty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Faculty"
+            }
+          },
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z]{2}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Language"
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "name": "ects_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 180,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ects Min"
+            }
+          },
+          {
+            "name": "ects_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "maximum": 180,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ects Max"
+            }
+          },
+          {
+            "name": "available_day",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 6,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Available Day"
+            }
+          },
+          {
+            "name": "available_from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Available From"
+            }
+          },
+          {
+            "name": "available_until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Available Until"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueDiscovery"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Catalogue unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueError"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2251,6 +2587,72 @@
         "required": ["plans", "username", "accountId", "exportedAt"],
         "title": "AccountArchive"
       },
+      "ArchiveCoverage": {
+        "properties": {
+          "term": {
+            "type": "string",
+            "title": "Term"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "loading",
+              "available",
+              "failed",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "snapshot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Snapshot Id"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "refresh_failed": {
+            "type": "boolean",
+            "title": "Refresh Failed",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": ["term", "status"],
+        "title": "ArchiveCoverage"
+      },
+      "CatalogueDiscovery": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CourseDetail"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "status": {
+            "$ref": "#/components/schemas/CatalogueStatus"
+          }
+        },
+        "type": "object",
+        "required": ["items", "status"],
+        "title": "CatalogueDiscovery"
+      },
       "CatalogueError": {
         "properties": {
           "detail": {
@@ -2274,7 +2676,11 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": ["no_published_snapshot", "database_unavailable"]
+                "enum": [
+                  "no_published_snapshot",
+                  "database_unavailable",
+                  "archive_not_available"
+                ]
               },
               {
                 "type": "null"
@@ -2382,6 +2788,25 @@
             },
             "type": "array",
             "title": "Levels"
+          },
+          "coverage": {
+            "items": {
+              "$ref": "#/components/schemas/ArchiveCoverage"
+            },
+            "type": "array",
+            "title": "Coverage"
+          },
+          "discovery_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": ["pending", "available", "failed"]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discovery Status"
           },
           "status": {
             "$ref": "#/components/schemas/CatalogueStatus"
@@ -2867,6 +3292,10 @@
             ],
             "title": "Detail Checked At"
           },
+          "snapshot_id": {
+            "type": "string",
+            "title": "Snapshot Id"
+          },
           "source_url": {
             "type": "string",
             "title": "Source Url"
@@ -2896,6 +3325,7 @@
           "calendar_url",
           "listing_fingerprint",
           "detail_hash",
+          "snapshot_id",
           "source_url",
           "meeting_state"
         ],

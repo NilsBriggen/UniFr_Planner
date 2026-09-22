@@ -72,6 +72,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/catalogue/discovery": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Discovery */
+    get: operations["catalogueDiscovery"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/account/register": {
     parameters: {
       query?: never;
@@ -372,6 +389,31 @@ export interface components {
       /** Exportedat */
       exportedAt: string;
     };
+    /** ArchiveCoverage */
+    ArchiveCoverage: {
+      /** Term */
+      term: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "pending" | "loading" | "available" | "failed" | "unavailable";
+      /** Snapshot Id */
+      snapshot_id?: string | null;
+      /** Checked At */
+      checked_at?: string | null;
+      /**
+       * Refresh Failed
+       * @default false
+       */
+      refresh_failed: boolean;
+    };
+    /** CatalogueDiscovery */
+    CatalogueDiscovery: {
+      /** Items */
+      items: components["schemas"]["CourseDetail"][];
+      status: components["schemas"]["CatalogueStatus"];
+    };
     /** CatalogueError */
     CatalogueError: {
       /** Detail */
@@ -386,7 +428,13 @@ export interface components {
        */
       availability: "available" | "unavailable";
       /** Reason */
-      reason?: ("no_published_snapshot" | "database_unavailable") | null;
+      reason?:
+        | (
+            | "no_published_snapshot"
+            | "database_unavailable"
+            | "archive_not_available"
+          )
+        | null;
       /** Snapshot Id */
       snapshot_id?: string | null;
       /** Published At */
@@ -418,6 +466,10 @@ export interface components {
       languages: string[];
       /** Levels */
       levels: string[];
+      /** Coverage */
+      coverage?: components["schemas"]["ArchiveCoverage"][];
+      /** Discovery Status */
+      discovery_status?: ("pending" | "available" | "failed") | null;
       status: components["schemas"]["CatalogueStatus"];
     };
     /** Course */
@@ -615,6 +667,8 @@ export interface components {
       calendar_hash?: string | null;
       /** Detail Checked At */
       detail_checked_at?: string | null;
+      /** Snapshot Id */
+      snapshot_id: string;
       /** Source Url */
       source_url: string;
       /**
@@ -754,7 +808,9 @@ export interface operations {
   catalogueCourses: {
     parameters: {
       query?: {
+        scope?: "current" | "history";
         q?: string;
+        codes?: string | null;
         term?: string | null;
         faculty?: string | null;
         language?: string | null;
@@ -804,7 +860,10 @@ export interface operations {
   };
   catalogueCourse: {
     parameters: {
-      query?: never;
+      query?: {
+        scope?: "current" | "history";
+        term?: string | null;
+      };
       header?: never;
       path: {
         course_code: string;
@@ -853,7 +912,9 @@ export interface operations {
   };
   catalogueTerms: {
     parameters: {
-      query?: never;
+      query?: {
+        scope?: "current" | "history";
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -867,6 +928,68 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["CatalogueTerms"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+      /** @description Catalogue unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueError"];
+        };
+      };
+    };
+  };
+  catalogueDiscovery: {
+    parameters: {
+      query?: {
+        scope?: "current" | "history";
+        q?: string;
+        codes?: string | null;
+        term?: string | null;
+        faculty?: string | null;
+        language?: string | null;
+        level?: string | null;
+        ects_min?: number | null;
+        ects_max?: number | null;
+        available_day?: number | null;
+        available_from?: string | null;
+        available_until?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CatalogueDiscovery"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
       /** @description Catalogue unavailable */

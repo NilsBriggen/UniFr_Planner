@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
 import { Button } from "../components";
+import { catalogueMessages } from "../catalogue-i18n";
 import type { Language } from "../i18n";
 import { usePlans } from "./context";
 import {
@@ -68,6 +69,7 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
       : "/plan";
   const [coverage, setCoverage] = useState<Coverage[] | null>(null);
   const [termsError, setTermsError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [q, setQ] = useState("");
   const [offset, setOffset] = useState(0);
   const [results, setResults] = useState<{
@@ -98,13 +100,14 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
   const queryKey = `${term}:${q}:${offset}:${publication?.snapshot_id ?? ""}`;
   useEffect(() => {
     const controller = new AbortController();
+    setTermsError(false);
     void historicalTerms(controller.signal)
       .then(setCoverage)
       .catch(() => {
         if (!controller.signal.aborted) setTermsError(true);
       });
     return () => controller.abort();
-  }, []);
+  }, [retry]);
   useEffect(() => {
     if (publication?.status !== "available" || !publication.snapshot_id) return;
     const controller = new AbortController();
@@ -162,6 +165,7 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
     publication?.status,
     publication?.snapshot_id,
     queryKey,
+    retry,
   ]);
   function chooseTerm(next: string) {
     const nextParams = new URLSearchParams(params);
@@ -265,6 +269,12 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
                       ? t.empty
                       : `${results.total} ${p.courseCount}`}
             </p>
+
+            {!loading && (failed || !available) && (
+              <Button onClick={() => setRetry((value) => value + 1)}>
+                {catalogueMessages[language].retry}
+              </Button>
+            )}
             {available && !loading && !failed && (
               <ul className="catchup-checklist">
                 {results.offerings.map((offering) => {
@@ -340,6 +350,7 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
                 })}
               </ul>
             )}
+
             {available && !loading && !failed && (
               <div className="actions">
                 <Button

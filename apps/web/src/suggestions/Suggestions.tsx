@@ -1,3 +1,4 @@
+import { useSuggestionCatalogue } from "../discovery/useDiscovery";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, StatusNotice } from "../components";
@@ -230,8 +231,11 @@ function Comparison({
 }
 export default function Suggestions({ language }: { language: Language }) {
   const t = suggestionMessages[language];
-  const { plan, save, ready, busy, apply, undo, revision, published } =
-    usePlans();
+  const { plan, save, ready, busy, apply, undo, revision } = usePlans();
+  const published = useSuggestionCatalogue(
+    plan?.semesters ?? [],
+    !!plan && plan.programme !== "SUGGESTIONS-DEMO",
+  );
   const catalogue = useMemo(
     () =>
       published.catalogue && !published.error && !published.loading

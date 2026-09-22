@@ -245,3 +245,75 @@ def test_archive_reports_do_not_replace_current_sync_status(tmp_path):
     assert reader.status.snapshot_id == "current"
     assert reader.status.latest_sync_outcome == "published"
     engine.dispose()
+
+
+def test_warm_current_reads_stay_bounded_with_five_years_of_archive_data(tmp_path):
+    """Controlled local benchmark; print p95 rather than timing-gating shared CI."""
+    from unifr_api.catalogue_archive import ArchiveRepository
+    from unifr_api.catalogue_archive_schema import archive_terms
+    from unifr_ingest.sync import listing_hash
+
+    engine = create_engine(f"sqlite:///{tmp_path}/five-years.sqlite")
+    metadata.create_all(engine)
+    repo = SqlCatalogueRepository(engine, allow_sqlite=True)
+    publish(repo, *populated("current-scale", 3750))
+    for year in range(2021, 2026):
+        for season in ("AS", "SS"):
+            term = f"{season}-{year}"
+            snap, report = populated(f"history-{term}", 1875)
+            pages = tuple(
+                page.model_copy(
+                    update={
+                        "entries": tuple(
+                            entry.model_copy(
+                                update={"terms": (term,), "code": f"H{entry.source_id}"}
+                            )
+                            for entry in page.entries
+                        )
+                    }
+                )
+                for page in snap.pages
+            )
+            snap = snap.model_copy(
+                update={
+                    "pages": pages,
+                    "offerings": tuple(
+                        off.model_copy(
+                            update={
+                                "terms": (term,),
+                                "course": off.course.model_copy(
+                                    update={"code": f"H{off.source_id}"}
+                                ),
+                            }
+                        )
+                        for off in snap.offerings
+                    ),
+                    "verified_listing_hash": listing_hash(pages),
+                }
+            )
+            report = report.model_copy(update={"source_hashes": {"archive_term": term}})
+            with engine.begin() as connection:
+                connection.execute(
+                    insert(archive_terms).values(
+                        term=term, source_value="fixture", status="pending", failures=0, progress={}
+                    )
+                )
+            repo.stage(snap, report)
+            with repo.lock():
+                ArchiveRepository(repo, term).publish(snap, report)
+    timings = {key: [] for key in ("status", "facets", "page")}
+    for _ in range(21):
+        started = perf_counter()
+        reader = CatalogueReadService(engine)
+        timings["status"].append((perf_counter() - started) * 1000)
+        assert reader.snapshot_ids == ("current-scale",)
+        started = perf_counter()
+        assert reader.terms().terms == ["AS-2026", "SS-2027"]
+        timings["facets"].append((perf_counter() - started) * 1000)
+        started = perf_counter()
+        page = reader.course_list(CatalogueFilters(term="AS-2026", limit=20))
+        assert page.total == 1875 and len(page.items) == 20
+        timings["page"].append((perf_counter() - started) * 1000)
+    p95 = {key: round(sorted(values[1:])[18], 1) for key, values in timings.items()}
+    print(f"3750 current + 18750 historical offerings over 5 years; warm p95 ms={p95}")
+    engine.dispose()

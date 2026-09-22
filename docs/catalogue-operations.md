@@ -146,3 +146,22 @@ The current release gate is a real public import followed by public API/browser 
 Check `/api/v1/status/catalogue` for the deployed generation, freshness and last outcome; do not
 infer deployment state from historical local reports. Fixture catalogues exercise the contract
 but must never be installed as authoritative production data.
+
+## Historical semesters
+
+Migrations 0006/0007 add immutable read projections, per-term archive heads, public discovery
+metadata and private resumable checkpoints. Deploy the migrated API before the web release.
+The scheduler discovers the public semester selector, queues past semesters newest first,
+and works in bounded slices between current-catalogue jobs using the same lock and rate
+limit. Initial backfill is gradual; manual completed-course entry is immediately available.
+
+Each semester must pass complete listing/detail validation and a fresh full-index recheck
+before its own head moves. A failed semester backs off independently, retains the prior
+head, and never emits current-course removal notices. Transport failures retain resumable
+checkpoints; invalid source changes restart that semester. Archives refresh every 30 days.
+Retention preserves every archive head and seven current publications independently.
+
+`GET /api/v1/catalogue/terms?scope=history` is the public coverage view. Missing coverage
+means no advertised/imported semester, not that a student earned no credits. API roles
+can read archive heads/discovery metadata and projections, but cannot read raw caches or
+checkpoints or write any catalogue table. No university credentials or outreach are used.

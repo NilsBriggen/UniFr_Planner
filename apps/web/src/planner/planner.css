@@ -480,3 +480,13 @@
   cursor: pointer;
   padding-block: 0.8rem;
 }
+
+.catchup-page .completed-entry {
+  margin-block: 32px;
+}
+.catchup-archive > .actions {
+  margin-block: 16px;
+}
+.planning-term-control {
+  margin-bottom: 20px;
+}

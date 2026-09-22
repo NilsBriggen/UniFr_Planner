@@ -2,9 +2,9 @@
 
 from collections.abc import Iterator
 from functools import lru_cache
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -19,6 +19,7 @@ from .catalogue_read import (
     CoursePage,
 )
 from .config import Settings
+from .catalogue_history import historical_reader, historical_terms
 
 router = APIRouter(prefix="/api/v1")
 
@@ -37,9 +38,11 @@ def catalogue_engine(url: str) -> Engine:
     )
 
 
-def reader() -> Iterator[CatalogueReadService | None]:
+def reader(request: Request) -> Iterator[CatalogueReadService | None]:
     try:
         service = CatalogueReadService(catalogue_engine(Settings().database_url))
+        if request.query_params.get("scope") == "history" and "/catalogue/" in request.url.path:
+            service = historical_reader(service, request.query_params.get("term"))
     except SQLAlchemyError:
         service = None
     yield service
@@ -78,7 +81,12 @@ def courses(service: Reader, filters: Annotated[CatalogueFilters, Query()]) -> C
         404: {"model": CatalogueError, "description": "Course not found"},
     },
 )
-def course(course_code: str, service: Reader) -> CourseDetail:
+def course(
+    course_code: str,
+    service: Reader,
+    scope: Literal["current", "history"] = "current",
+    term: str | None = None,
+) -> CourseDetail:
     found = available(service).course(course_code)
     if found is None:
         raise HTTPException(status_code=404, detail="Course not found in published catalogue")
@@ -90,7 +98,11 @@ def course(course_code: str, service: Reader) -> CourseDetail:
     operation_id="catalogueTerms",
     responses={503: {"model": CatalogueError, "description": "Catalogue unavailable"}},
 )
-def terms(service: Reader) -> CatalogueTerms:
+def terms(service: Reader, scope: Literal["current", "history"] = "current") -> CatalogueTerms:
+    if scope == "history":
+        if service is None:
+            raise HTTPException(status_code=503, detail="Catalogue database unavailable")
+        return historical_terms(service)
     return available(service).terms()
 
 

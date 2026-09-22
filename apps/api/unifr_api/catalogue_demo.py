@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import uvicorn
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, insert
 
 from unifr_ingest.models import (
     CatalogueSnapshot,
@@ -20,6 +20,9 @@ from unifr_ingest.models import (
 )
 from unifr_ingest.parsers import parse_calendar
 from .catalogue import SqlCatalogueRepository
+from .catalogue_archive import ArchiveRepository
+from .catalogue_archive_schema import archive_terms
+from unifr_ingest.sync import listing_hash
 from .database import metadata
 from . import account_repository  # noqa: F401 -- account demo tables
 from . import sharing  # noqa: F401 -- sharing demo tables
@@ -146,6 +149,84 @@ def seed(repository: SqlCatalogueRepository, *, rejected: bool = False) -> None:
     if not rejected:
         with repository.lock():
             repository.publish(snapshot, report)
+        seed_history(repository, snapshot, now)
+
+
+def seed_history(
+    repository: SqlCatalogueRepository, template: CatalogueSnapshot, now: datetime
+) -> None:
+    """Small historical positive control for browser catch-up and exact provenance."""
+    term, identifier = "AS-2024", "development-fixture-history-AS-2024"
+    values, entries = [], []
+    for index, (title, ects) in enumerate(
+        (("Historical programming", 6), ("Historical mathematics", 5))
+    ):
+        code, source_id = f"HIST-{index + 1:03}", str(980001 + index)
+        titles = {"en": title, "de": title, "fr": title}
+        values.append(
+            template.offerings[index].model_copy(
+                update={
+                    "source_id": source_id,
+                    "course": Course(code=code, titles=titles),
+                    "terms": (term,),
+                    "ects": ects,
+                    "meetings": (
+                        Meeting(
+                            starts_at=datetime(2024, 9, 23, 10, tzinfo=timezone.utc),
+                            ends_at=datetime(2024, 9, 23, 11, tzinfo=timezone.utc),
+                        ),
+                    ),
+                }
+            )
+        )
+        entries.append(
+            template.pages[0]
+            .entries[index]
+            .model_copy(
+                update={
+                    "source_id": source_id,
+                    "code": code,
+                    "title": title,
+                    "terms": (term,),
+                    "detail_url": f"https://www.unifr.ch/timetable/en/course.html?show={source_id}",
+                }
+            )
+        )
+    pages = (
+        ListingPage(
+            number=1,
+            page_size=12,
+            reported_count=2,
+            entries=tuple(entries),
+            raw_hash="historical-demo",
+        ),
+    )
+    snapshot = CatalogueSnapshot(
+        snapshot_id=identifier,
+        reported_count=2,
+        pages=pages,
+        offerings=tuple(values),
+        verified_listing_hash=listing_hash(pages),
+    )
+    report = SyncReport(
+        snapshot_id=identifier,
+        published=True,
+        outcome="published",
+        reported_count=2,
+        parsed_count=2,
+        pages_fetched=1,
+        completed_at=now,
+        source_hashes={"archive_term": term},
+    )
+    with repository.engine.begin() as connection:
+        connection.execute(
+            insert(archive_terms).values(
+                term=term, source_value="250", status="pending", failures=0, progress={}
+            )
+        )
+    repository.stage(snapshot, report)
+    with repository.lock():
+        ArchiveRepository(repository, term).publish(snapshot, report)
 
 
 def main() -> None:

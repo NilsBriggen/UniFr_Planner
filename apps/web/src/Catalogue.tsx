@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   api,
@@ -16,12 +16,14 @@ import { messages, type Language } from "./i18n";
 import "./catalogue.css";
 import CoursePlanner from "./planner/CoursePlanner";
 import { usePlans } from "./planner/context";
-import { loadPublishedCatalogue } from "./planner/published";
 import {
-  discoverCourses,
-  filterDiscovery,
-  offeringKey,
-} from "./discovery/engine";
+  planningSemester,
+  currentSemester,
+  semesterIndex,
+} from "./planner/domain";
+import { catchupMessages } from "./planner/catchup-messages";
+import { useDiscovery, useDiscoveryIndex } from "./discovery/useDiscovery";
+import { filterDiscovery, offeringKey } from "./discovery/engine";
 import { discoveryMessages } from "./discovery/messages";
 import { OfferingAdvice } from "./discovery/LessonPreview";
 import SemesterSummary from "./discovery/SemesterSummary";
@@ -398,7 +400,9 @@ function Search({
   language,
   invalid,
   change,
+  loading,
 }: {
+  loading: boolean;
   page?: CoursePage;
   terms: Terms;
   query: URLSearchParams;
@@ -411,14 +415,24 @@ function Search({
   const { plan } = usePlans();
   const term = plan?.semesters.includes(query.get("term") ?? "")
     ? query.get("term")!
-    : (plan?.semesters[0] ?? "AS-2026");
-  const discovery = useMemo(
-    () =>
-      plan && serverPage
-        ? discoverCourses(plan, serverPage.items, term, language)
-        : null,
-    [plan, serverPage, term, language],
+    : plan
+      ? planningSemester(plan)
+      : (query.get("term") ?? "");
+  const indexFilters = {
+    ...(Object.fromEntries(
+      [...query].filter(([key]) =>
+        filterKeys.includes(key as (typeof filterKeys)[number]),
+      ),
+    ) as Filters),
+    term: query.get("term") ?? "",
+  };
+  const index = useDiscoveryIndex(
+    indexFilters,
+    !!plan && !!indexFilters.term && !invalid,
   );
+  const assessed = useDiscovery(plan, index.catalogue, term, language);
+  const discovery = assessed.discovery;
+  const findingMatches = index.loading || assessed.loading;
   const hasMatches =
     discovery && [...discovery.assessments.values()].some((a) => a.match);
   const programme =
@@ -437,9 +451,9 @@ function Search({
       )
     : 0;
   const page =
-    filtered && serverPage
+    filtered && index.catalogue
       ? {
-          ...serverPage,
+          status: index.catalogue.status,
           items: filtered.slice(offset, offset + 20),
           offset,
           limit: 20,
@@ -541,6 +555,17 @@ function Search({
               <strong>{plan.programme}</strong>
               <br />
               {query.get("term") === term ? d.automatic : d.allTerms}
+              {semesterIndex(term) < semesterIndex(currentSemester()) && (
+                <>
+                  <br />
+                  <Link
+                    className="text-link"
+                    to={`/plan/completed?term=${encodeURIComponent(term)}`}
+                  >
+                    {catchupMessages[language].title}
+                  </Link>
+                </>
+              )}
             </p>
           </div>
         )}
@@ -691,6 +716,28 @@ function Search({
               </Button>
             ))}
         </div>
+        {findingMatches && (
+          <p role="status">
+            {
+              {
+                en: "Finding programme matches and checking lesson times…",
+                de: "Passende Kurse und Unterrichtszeiten werden geprüft…",
+                fr: "Recherche des cours et vérification des horaires…",
+              }[language]
+            }
+          </p>
+        )}
+        {(index.error || assessed.error) && (
+          <p role="status">
+            {
+              {
+                en: "Programme matches could not be loaded. You can still browse courses below.",
+                de: "Passende Kurse konnten nicht ermittelt werden. Der Katalog ist weiterhin nutzbar.",
+                fr: "Les cours recommandés n’ont pas pu être chargés. Vous pouvez parcourir le catalogue ci-dessous.",
+              }[language]
+            }
+          </p>
+        )}
         {discovery && (
           <>
             <div className="discovery-controls" aria-label={d.heading}>
@@ -749,7 +796,7 @@ function Search({
             <p className="result-count" role="status">
               {page.total} {t.results}
             </p>
-            {page.total === 0 ? (
+            {page.total === 0 && !findingMatches && !loading ? (
               <StatusNotice>
                 <h2>{t.none}</h2>
                 <p>{discovery ? d.empty : t.noneBody}</p>
@@ -870,7 +917,6 @@ export default function Catalogue({ language }: { language: Language }) {
   const [query, setQuery] = useSearchParams();
   const queryString = query.toString();
   const { plan, ready } = usePlans();
-  const hasPlan = !!plan;
   useEffect(() => {
     if (
       !course_code &&
@@ -880,16 +926,12 @@ export default function Catalogue({ language }: { language: Language }) {
       !query.has("scope")
     ) {
       const next = new URLSearchParams(query);
-      next.set("term", plan.semesters[0]);
+      next.set("term", planningSemester(plan));
       setQuery(next, { replace: true });
     }
   }, [course_code, ready, plan, query, setQuery]);
   const apiQueryString = [...query]
-    .filter(
-      ([key]) =>
-        [...filterKeys, "offset", "limit"].includes(key) &&
-        (!hasPlan || (key !== "offset" && key !== "limit")),
-    )
+    .filter(([key]) => [...filterKeys, "offset", "limit"].includes(key))
     .map(
       ([key, value]) =>
         `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
@@ -902,28 +944,28 @@ export default function Catalogue({ language }: { language: Language }) {
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
-    setState({ loading: true });
+    setState((previous) => ({
+      ...previous,
+      loading: true,
+      error: undefined,
+      course: undefined,
+    }));
     async function load() {
       try {
-        const { data: status, response } = await api.GET(
-          "/api/v1/status/catalogue",
-          { signal: controller.signal },
-        );
-        if (!status || !response.ok)
-          throw new Error("Catalogue status unavailable");
-        if (status.availability === "unavailable") {
-          if (active) setState({ loading: false, status });
-          return;
-        }
         if (course_code) {
-          const result = await api.GET(
-            "/api/v1/catalogue/courses/{course_code}",
-            { params: { path: { course_code } }, signal: controller.signal },
-          );
+          const [result, status] = await Promise.all([
+            api.GET("/api/v1/catalogue/courses/{course_code}", {
+              params: { path: { course_code } },
+              signal: controller.signal,
+            }),
+            api.GET("/api/v1/status/catalogue", { signal: controller.signal }),
+          ]);
+          if (!status.data || !status.response.ok)
+            throw new Error("Catalogue status unavailable");
           if (active)
             setState({
               loading: false,
-              status,
+              status: status.data,
               course: result.data,
               error: result.response.ok
                 ? undefined
@@ -935,41 +977,50 @@ export default function Catalogue({ language }: { language: Language }) {
           const params = Object.fromEntries(
             new URLSearchParams(apiQueryString),
           ) as Filters;
-          const [courses, terms] = await Promise.all([
-            api.GET("/api/v1/catalogue/courses", {
-              params: { query: params },
+          // These requests are independent. A slow facet response must not hide
+          // the first page, and status is already included with every page.
+          const termsPromise = api
+            .GET("/api/v1/catalogue/terms", { signal: controller.signal })
+            .then((result) => {
+              if (active && result.data)
+                setState((previous) => ({ ...previous, terms: result.data }));
+            })
+            .catch(() => {
+              /* Facets are optional; search remains available. */
+            });
+          const courses = await api.GET("/api/v1/catalogue/courses", {
+            params: { query: params },
+            signal: controller.signal,
+          });
+          let status = courses.data?.status;
+          if (!courses.response.ok && courses.response.status !== 422) {
+            const result = await api.GET("/api/v1/status/catalogue", {
               signal: controller.signal,
-            }),
-            api.GET("/api/v1/catalogue/terms", { signal: controller.signal }),
-          ]);
-          const complete =
-            hasPlan && courses.response.ok && courses.data
-              ? await loadPublishedCatalogue(controller.signal, params)
-              : null;
+            });
+            status = result.data;
+          }
           if (active)
-            setState({
+            setState((previous) => ({
+              ...previous,
               loading: false,
-              status: complete?.status ?? courses.data?.status ?? status,
-              page:
-                complete && courses.data
-                  ? {
-                      ...courses.data,
-                      items: complete.courses,
-                      total: complete.courses.length,
-                      offset: 0,
-                    }
-                  : courses.data,
-              terms: terms.data,
+              status,
+              page: courses.data ?? previous.page,
               error:
                 courses.response.status === 422
                   ? "invalid"
-                  : !courses.data || !terms.data
+                  : !courses.data && status?.availability !== "unavailable"
                     ? "transport"
                     : undefined,
-            });
+            }));
+          await termsPromise;
         }
       } catch {
-        if (active) setState({ loading: false, error: "transport" });
+        if (active)
+          setState((previous) => ({
+            ...previous,
+            loading: false,
+            error: "transport",
+          }));
       }
     }
     void load();
@@ -977,7 +1028,7 @@ export default function Catalogue({ language }: { language: Language }) {
       active = false;
       controller.abort();
     };
-  }, [course_code, apiQueryString, hasPlan, retry]);
+  }, [course_code, apiQueryString, retry]);
   const title = state.course
     ? localizedTitle(state.course, language)
     : messages[language].catalogue;
@@ -1025,10 +1076,19 @@ export default function Catalogue({ language }: { language: Language }) {
           status={state.status!}
         />
       )}
-      {state.terms && (
+      {!course_code && (
         <Search
           page={state.page}
-          terms={state.terms}
+          loading={state.loading}
+          terms={
+            state.terms ?? {
+              terms: [],
+              faculties: [],
+              languages: [],
+              levels: [],
+              status: state.status!,
+            }
+          }
           query={query}
           language={language}
           invalid={state.error === "invalid"}

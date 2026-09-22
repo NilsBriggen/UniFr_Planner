@@ -13,7 +13,7 @@ from typing import Any, Protocol
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import JSON, Column, Connection, ForeignKey, Integer, String, Table, Text
+from sqlalchemy import Connection
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.engine import Engine
 
@@ -22,29 +22,8 @@ from unifr_ingest.parsers import parse_detail
 from unifr_ingest.sync import listing_hash, validate
 
 from .catalogue import SqlCatalogueRepository, offerings, snapshots
-from .database import metadata
-
-archive_terms = Table(
-    "catalogue_archive_term",
-    metadata,
-    Column("term", String, primary_key=True),
-    Column("source_value", String, nullable=False),
-    Column("status", String, nullable=False),
-    Column("snapshot_id", ForeignKey("catalogue_snapshot.id")),
-    Column("checked_at", String),
-    Column("next_attempt_at", String),
-    Column("failures", Integer, nullable=False),
-    Column("error", Text),
-    Column("progress", JSON, nullable=False),
-)
-checkpoints = Table(
-    "catalogue_archive_checkpoint",
-    metadata,
-    Column("term", ForeignKey("catalogue_archive_term.term"), primary_key=True),
-    Column("kind", String, primary_key=True),
-    Column("ordinal", Integer, primary_key=True),
-    Column("data", JSON, nullable=False),
-)
+from .catalogue_archive_schema import archive_terms, checkpoints, archive_discovery
+from .catalogue_projection import completed_at, generations
 
 
 class ArchiveSource(Protocol):
@@ -145,6 +124,11 @@ class ArchiveRepository:
                 update(snapshots)
                 .where(snapshots.c.id == snapshot.snapshot_id)
                 .values(status="published", report=report.model_dump(mode="json"))
+            )
+            connection.execute(
+                update(generations)
+                .where(generations.c.snapshot_id == snapshot.snapshot_id)
+                .values(outcome=report.outcome, completed_at=completed_at(report))
             )
             connection.execute(
                 update(archive_terms)
@@ -306,6 +290,15 @@ def _step(
     adapter.publish(snapshot, report)
 
 
+def _discovery_status(repository: SqlCatalogueRepository, status: str, now: datetime) -> None:
+    # Public metadata is deliberately separate from private raw source cache.
+    with repository.engine.begin() as connection:
+        connection.execute(delete(archive_discovery).where(archive_discovery.c.id == 1))
+        connection.execute(
+            insert(archive_discovery).values(id=1, status=status, checked_at=now.isoformat())
+        )
+
+
 def run_slice(
     repository: SqlCatalogueRepository,
     source: ArchiveSource,
@@ -337,11 +330,13 @@ def run_slice(
         if discovery is None or now.timestamp() - discovery.fetched_at >= 86400:
             try:
                 discover(repository, source, now)
+                _discovery_status(repository, "available", now)
                 repository.cache_put(
                     "archive-semester-discovery",
                     CachedResponse(body="ok", fetched_at=now.timestamp()),
                 )
             except (ValueError, OSError, KeyError) as error:
+                _discovery_status(repository, "failed", now)
                 # Retry discovery in one hour, while already-discovered terms continue.
                 repository.cache_put(
                     "archive-semester-discovery",

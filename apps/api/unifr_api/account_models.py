@@ -66,7 +66,10 @@ def validate_plan(value: dict[str, Any]) -> dict[str, Any]:
             raise ValueError("Duplicate identifier")
 
     unique(value["semesters"])
-    if value.get("planningSemester") is not None and value["planningSemester"] not in value["semesters"]:
+    if (
+        value.get("planningSemester") is not None
+        and value["planningSemester"] not in value["semesters"]
+    ):
         raise ValueError("Unknown planning semester")
     unique([s["id"] for s in value["scenarios"]])
     if value["activeScenarioId"] not in [s["id"] for s in value["scenarios"]]:

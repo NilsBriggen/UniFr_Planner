@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
 import { createPlan } from "../src/planner/domain";
+import { plannerMessages } from "../src/planner/messages";
 import { accountMessages } from "../src/accounts/messages";
 
 test("the account creator can resume ownership in a fresh browser without sharing edit secrets", async ({
@@ -322,4 +323,84 @@ test("the selected week downloads as an editable workbook and a complete landsca
     fullPage: true,
   });
   await popup.close();
+});
+
+test("a continuing student's shared plan opens and imports the planning semester with earned credits intact", async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
+  await page.goto("/");
+  const snapshot = createPlan({
+    id: "continuing-share",
+    scenarioId: "main",
+    name: "Continuing student share",
+    programme: "CS",
+    startTerm: "AS-2024",
+    planningSemester: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  snapshot.scenarios[0].courses.push({
+    id: "earned",
+    code: "MANUAL-test-earned",
+    titles: { en: "Earlier completed course" },
+    ects: 5,
+    semester: "AS-2024",
+    status: "completed",
+    pinned: false,
+    offering: null,
+  });
+  const ownerKey = (
+    crypto.randomUUID().replaceAll("-", "") +
+    crypto.randomUUID().replaceAll("-", "")
+  ).slice(0, 43);
+  const shared = await page.evaluate(
+    async ({ snapshot, ownerKey }) => {
+      const response = await fetch("/api/v1/shares", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ snapshot, ownerKey }),
+      });
+      if (response.status !== 201) throw new Error("Test share failed");
+      return response.json();
+    },
+    { snapshot, ownerKey },
+  );
+  try {
+    await page.goto(`/shared/${shared.id}`);
+    await expect(
+      page.getByRole("combobox", { name: "Semester", exact: true }),
+    ).toHaveValue("AS-2026");
+    await expect(page.locator(".shared-course-list li")).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "Import as my plan", exact: true })
+      .click();
+    await expect(page).toHaveURL(/\/semester\/AS-2026$/);
+    await page.goto("/plan");
+    await expect(
+      page.getByRole("region", { name: "Completed", exact: true }),
+    ).toContainText("Earlier completed course");
+    const download = page.waitForEvent("download");
+    await page
+      .getByRole("button", { name: plannerMessages.en.exportJson, exact: true })
+      .click();
+    const copy = JSON.parse(
+      await readFile((await (await download).path())!, "utf8"),
+    );
+    expect(copy.planningSemester).toBe("AS-2026");
+    expect(copy.semesters[0]).toBe("AS-2024");
+    expect(copy.scenarios[0].courses[0].ects).toBe(5);
+  } finally {
+    await page.evaluate(
+      async ({ id, ownerKey }) => {
+        const response = await fetch(`/api/v1/shares/${id}`, {
+          method: "DELETE",
+          headers: { "X-Unifr-Share-Key": ownerKey },
+        });
+        if (response.status !== 204)
+          throw new Error("Test share cleanup failed");
+      },
+      { id: shared.id, ownerKey },
+    );
+  }
 });

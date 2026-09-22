@@ -82,7 +82,23 @@ def test_runtime_roles_can_operate_but_cannot_administer_or_cross_write(roles):
                 with pytest.raises(psycopg.errors.InsufficientPrivilege):
                     connection.execute(forbidden)
     with runtime(url, api, "api test password") as connection:
-        for private_table in ("catalogue_source_cache", "alembic_version"):
+        for public_table in (
+            "catalogue_archive_term",
+            "catalogue_archive_discovery",
+            "catalogue_read_generation",
+            "catalogue_read_offering",
+            "catalogue_read_facet",
+        ):
+            assert connection.execute(
+                sql.SQL("SELECT count(*) FROM {}").format(sql.Identifier(public_table))
+            ).fetchone() == (0,)
+            with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                connection.execute(sql.SQL("DELETE FROM {}").format(sql.Identifier(public_table)))
+        for private_table in (
+            "catalogue_source_cache",
+            "catalogue_archive_checkpoint",
+            "alembic_version",
+        ):
             with pytest.raises(psycopg.errors.InsufficientPrivilege):
                 connection.execute(
                     sql.SQL("SELECT * FROM {}").format(sql.Identifier(private_table))

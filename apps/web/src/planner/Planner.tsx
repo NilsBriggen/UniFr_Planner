@@ -154,7 +154,11 @@ export function Setup({ language }: { language: Language }) {
           </label>
           <label>
             {c.studyStart}
-            <select name="season" defaultValue={current.split("-")[0]}>
+            <select
+              name="season"
+              aria-label={c.studyStart}
+              defaultValue={current.split("-")[0]}
+            >
               <option value="AS">{t.autumn}</option>
               <option value="SS">{t.spring}</option>
             </select>
@@ -172,7 +176,11 @@ export function Setup({ language }: { language: Language }) {
           </label>
           <label>
             {c.planning}
-            <select name="planningSeason" defaultValue={current.split("-")[0]}>
+            <select
+              name="planningSeason"
+              aria-label={c.planning}
+              defaultValue={current.split("-")[0]}
+            >
               <option value="AS">{t.autumn}</option>
               <option value="SS">{t.spring}</option>
             </select>
@@ -521,6 +529,7 @@ export function PlanBoard({ language }: { language: Language }) {
           <label className="planning-term-control">
             {catchupMessages[language].planning}
             <select
+              aria-label={catchupMessages[language].planning}
               value={planningSemester(plan)}
               disabled={busy}
               onChange={(event) =>
@@ -532,10 +541,23 @@ export function PlanBoard({ language }: { language: Language }) {
               ))}
             </select>
           </label>
+          <Summary courses={scenario.courses} t={t} />
           <p className="planner-help">{t.boardHelp}</p>
           <fieldset disabled={busy} className="board-fieldset">
             <div className="semester-board">
-              {[...plan.semesters, null, "completed"].map((term) => {
+              {[
+                ...plan.semesters.filter(
+                  (term) =>
+                    semesterIndex(term) >=
+                    semesterIndex(planningSemester(plan)),
+                ),
+                ...plan.semesters.filter(
+                  (term) =>
+                    semesterIndex(term) < semesterIndex(planningSemester(plan)),
+                ),
+                null,
+                "completed",
+              ].map((term) => {
                 const courses = scenario.courses.filter((c) =>
                   term === "completed"
                     ? c.status === "completed"
@@ -647,7 +669,6 @@ export function PlanBoard({ language }: { language: Language }) {
               })}
             </div>
           </fieldset>
-          <Summary courses={scenario.courses} t={t} />
           <p className="planner-help">{t.workloadHelp}</p>
           {plan.scenarios.length > 1 && (
             <section className="scenario-comparison">

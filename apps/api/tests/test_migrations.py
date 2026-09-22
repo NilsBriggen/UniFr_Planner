@@ -8,13 +8,16 @@ from sqlalchemy import create_engine
 def test_baseline_migration_roundtrip(tmp_path, monkeypatch):
     config = Config("alembic.ini")
     scripts = ScriptDirectory.from_config(config)
-    assert scripts.get_current_head() == "0006_catalogue_read"
+    assert scripts.get_current_head() == "0007_catalogue_archive"
     url = f"sqlite:///{tmp_path}/migration.sqlite"
     monkeypatch.setenv("UNIFR_DATABASE_URL", url)
     command.upgrade(config, "head")
     engine = create_engine(url)
     with engine.connect() as connection:
-        assert MigrationContext.configure(connection).get_current_revision() == "0006_catalogue_read"
+        assert (
+            MigrationContext.configure(connection).get_current_revision()
+            == "0007_catalogue_archive"
+        )
         from sqlalchemy import inspect
 
         assert "catalogue_offering" in inspect(connection).get_table_names()

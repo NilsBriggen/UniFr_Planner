@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { messages } from "../src/i18n";
 import { plannerMessages } from "../src/planner/messages";
+import { catchupMessages } from "../src/planner/catchup-messages";
 
 for (const language of ["de", "fr", "en"] as const) {
   test(`returning student can resume and switch plans in ${language}`, async ({
@@ -15,7 +16,10 @@ for (const language of ["de", "fr", "en"] as const) {
     );
     await page.goto("/setup");
     await expect(
-      page.getByRole("combobox", { name: p.startTerm, exact: true }),
+      page.getByRole("combobox", {
+        name: catchupMessages[language].studyStart,
+        exact: true,
+      }),
     ).toBeVisible();
     await expect(
       page.getByRole("spinbutton", { name: p.startYear, exact: true }),

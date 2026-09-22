@@ -18,7 +18,7 @@ Text search is a literal case-insensitive substring across code, multilingual ti
 lecturer and faculty/domain. `%` and `_` have no wildcard meaning. Other metadata filters
 are exact and case-insensitive, and all filters must match the **same offering**. Course
 codes are sorted deterministically; pagination counts courses, with 20 per page by default
-and a maximum of 100. Unknown ECTS and levels cannot satisfy those filters. Levels are now
+and a maximum of 100. `codes` accepts comma-separated exact canonical course codes. Unknown ECTS and levels cannot satisfy those filters. Levels are now
 retained from the source detail's Level field. Older stored generations remain readable,
 with unknown level until imported again; no backfill infers metadata.
 
@@ -40,9 +40,19 @@ shows unavailable/rejected status, never a misleading empty catalogue.
 
 The read service resolves the published head once and reads immutable rows by that ID.
 It never reads staged offerings into search results and never changes publication guards.
-Filtering is currently in memory over that pinned database generation. For the observed
-catalogue size this is a simple bounded implementation; larger catalogues should move
-projections/indexed filters into SQL and avoid materializing full detail for list responses.
+Filtering, course counting and pagination use indexed SQL projections. Status and facets
+read only generation metadata. Full offering records are decoded only for the requested
+page or detail. `/catalogue/discovery?term=AS-2026` provides the complete compact semester
+index, cached by immutable generation; programme ranking and clash checks run in a browser
+worker. Search stays editable during loading, requests abort after 15 seconds, and saved-plan
+source checks request only exact `codes` (up to 100 canonical codes per batch).
+
+`scope=history` on courses, course detail and terms selects independent published archive
+heads. Each offering includes its own `snapshot_id` and source URL. Terms include `coverage`
+with pending/loading/available/failed states, last successful check, and failed-refresh flags.
+No published archive returns 503 for that semester; an available archive with no matches
+returns 200 and zero results. A failed refresh retains the prior valid archive. Archives
+never substitute current offerings for historical credits. See [archive operations](catalogue-operations.md).
 
 ## Generated client
 
