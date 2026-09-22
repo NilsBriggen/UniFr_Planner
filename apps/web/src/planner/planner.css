@@ -421,3 +421,62 @@
     overflow: visible;
   }
 }
+
+.planning-semester {
+  border-color: var(--color-blue);
+  border-width: 2px;
+}
+.planning-label {
+  font-weight: 700;
+}
+.planning-term-control {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.catchup-archive {
+  margin-block: 1.5rem;
+}
+.catchup-archive > label,
+.catchup-review label {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+  max-width: 38rem;
+}
+.catchup-checklist {
+  list-style: none;
+  padding: 0;
+}
+.catchup-checklist li {
+  border-bottom: 1px solid var(--color-line);
+  padding-block: 1rem;
+}
+.catchup-checklist label {
+  min-height: var(--control-height);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  cursor: pointer;
+}
+.catchup-checklist input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+.catchup-checklist small {
+  display: block;
+  margin-top: 0.3rem;
+}
+.catchup-page .actions {
+  flex-wrap: wrap;
+}
+.completed-term {
+  margin-top: 1rem;
+}
+.semester-column summary {
+  cursor: pointer;
+  padding-block: 0.8rem;
+}

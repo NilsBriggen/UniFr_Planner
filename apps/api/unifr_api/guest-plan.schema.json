@@ -99,6 +99,10 @@
         "pattern": "^(AS|SS)-20\\d{2}$"
       }
     },
+    "planningSemester": {
+      "type": "string",
+      "pattern": "^(AS|SS)-20\\d{2}$"
+    },
     "activeScenarioId": {
       "type": "string",
       "pattern": "^[\\w-]{1,100}$"

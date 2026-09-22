@@ -11,6 +11,8 @@ import { Button, StatusNotice } from "./components";
 import { messages, type Language, type Messages } from "./i18n";
 import Catalogue from "./Catalogue";
 import { PlanProvider, usePlans } from "./planner/context";
+import CompletedCourses from "./planner/CompletedCourses";
+import { planningSemester, currentSemester } from "./planner/domain";
 import { PlanBoard, Setup } from "./planner/Planner";
 import Requirements from "./requirements/Requirements";
 import Suggestions from "./suggestions/Suggestions";
@@ -266,7 +268,7 @@ function AppShell() {
                 key === "semester"
                   ? location.pathname.startsWith("/semester/")
                     ? location.pathname
-                    : `/semester/${plans.plan?.semesters[0] ?? `AS-${new Date().getFullYear()}`}`
+                    : `/semester/${plans.plan ? planningSemester(plans.plan) : currentSemester()}`
                   : path
               }
             >
@@ -311,6 +313,10 @@ function AppShell() {
               <Route path="/" element={<Home t={t} />} />
               <Route path="/setup" element={<Setup language={language} />} />
               <Route path="/plan" element={<PlanBoard language={language} />} />
+              <Route
+                path="/plan/completed"
+                element={<CompletedCourses language={language} />}
+              />
               <Route
                 path="/semester/:term"
                 element={

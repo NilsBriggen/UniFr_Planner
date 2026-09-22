@@ -6,9 +6,12 @@ import { Button } from "../components";
 import SharePanel from "../sharing/SharePanel";
 import {
   activeScenario,
-  addCourse,
   allocateCourse,
   createPlan,
+  currentSemester,
+  planningSemester,
+  semesterIndex,
+  isManualCode,
   duplicateScenario,
   importAsNew,
   parsePlan,
@@ -20,6 +23,8 @@ import {
 import { usePlans } from "./context";
 import { plannerMessages, type PlannerMessages } from "./messages";
 import "./planner.css";
+import ManualCompletion from "./ManualCompletion";
+import { catchupMessages } from "./catchup-messages";
 import { suggestionMessages } from "../suggestions/messages";
 
 export function Download({
@@ -81,25 +86,41 @@ export function Setup({ language }: { language: Language }) {
   const navigate = useNavigate();
   const [query] = useSearchParams();
   const [error, setError] = useState(false);
+  const [rangeError, setRangeError] = useState(false);
+  const current = currentSemester();
+  const c = catchupMessages[language];
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {
+      setRangeError(false);
+      const start = `${form.get("season")}-${form.get("year")}`;
+      const planning = `${form.get("planningSeason")}-${form.get("planningYear")}`;
+      const distance = semesterIndex(planning) - semesterIndex(start);
+      if (distance < 0 || distance >= 24) {
+        setRangeError(true);
+        return;
+      }
       const plan = createPlan({
         id: crypto.randomUUID(),
         scenarioId: crypto.randomUUID(),
         name: String(form.get("name")),
         programme: String(form.get("programme")),
-        startTerm: `${form.get("season")}-${form.get("year")}`,
-        semesterCount: Number(form.get("count")),
+        startTerm: start,
+        planningSemester: planning,
+        semesterCount: Math.max(Number(form.get("count")), distance + 1),
         targetEcts: Number(form.get("target")),
       });
       if (await save(plan)) {
         const returnTo = query.get("returnTo");
-        navigate(
+        const destination =
           returnTo && /^\/catalogue(?:\/[^/?#]+)?(?:\?[^#]*)?$/.test(returnTo)
             ? returnTo
-            : "/plan",
+            : "/plan";
+        navigate(
+          distance > 0
+            ? `/plan/completed?returnTo=${encodeURIComponent(destination)}`
+            : destination,
         );
       } else setError(true);
     } catch {
@@ -132,8 +153,8 @@ export function Setup({ language }: { language: Language }) {
             />
           </label>
           <label>
-            {t.startTerm}
-            <select name="season" defaultValue="AS">
+            {c.studyStart}
+            <select name="season" defaultValue={current.split("-")[0]}>
               <option value="AS">{t.autumn}</option>
               <option value="SS">{t.spring}</option>
             </select>
@@ -145,7 +166,25 @@ export function Setup({ language }: { language: Language }) {
               type="number"
               min="2000"
               max="2087"
-              defaultValue={new Date().getFullYear()}
+              defaultValue={current.split("-")[1]}
+              required
+            />
+          </label>
+          <label>
+            {c.planning}
+            <select name="planningSeason" defaultValue={current.split("-")[0]}>
+              <option value="AS">{t.autumn}</option>
+              <option value="SS">{t.spring}</option>
+            </select>
+          </label>
+          <label>
+            {c.planningYear}
+            <input
+              name="planningYear"
+              type="number"
+              min="2000"
+              max="2099"
+              defaultValue={current.split("-")[1]}
               required
             />
           </label>
@@ -177,6 +216,7 @@ export function Setup({ language }: { language: Language }) {
         </fieldset>
       </form>
       <SaveStatus language={language} />
+      {rangeError && <p role="alert">{c.rangeError}</p>}
       {error && <p role="alert">{t.actionError}</p>}
       <Link className="text-link" to="/plan">
         {t.import}
@@ -327,15 +367,18 @@ function CourseCard({
   change: (plan: Plan) => void;
 }) {
   const t = plannerMessages[language];
+  const code = isManualCode(course.code)
+    ? catchupMessages[language].noCode
+    : course.code;
   const title =
     course.titles[language] ??
     course.titles.en ??
     Object.values(course.titles)[0];
   return (
-    <article className="plan-course" aria-label={`${course.code} · ${title}`}>
+    <article className="plan-course" aria-label={`${code} · ${title}`}>
       <h3>{title}</h3>
       <p>
-        {course.code} · {course.ects ?? "?"} ECTS · {t[course.status]}
+        {code} · {course.ects ?? "?"} ECTS · {t[course.status]}
       </p>
       {course.offering?.development_fixture && (
         <p className="fixture-label">{t.fixture}</p>
@@ -349,7 +392,7 @@ function CourseCard({
       <div className="course-controls no-print">
         <Button
           aria-pressed={course.pinned}
-          aria-label={`${course.pinned ? t.unpin : t.pin} · ${course.code}`}
+          aria-label={`${course.pinned ? t.unpin : t.pin} · ${code}`}
           onClick={() => change(setPinned(plan, course.id, !course.pinned))}
         >
           {course.pinned ? t.pinned : t.pin}
@@ -358,7 +401,7 @@ function CourseCard({
         <label>
           {t.semester}
           <select
-            aria-label={`${t.semester} · ${course.code}`}
+            aria-label={`${t.semester} · ${code}`}
             value={course.semester ?? ""}
             disabled={course.pinned}
             onChange={(e) =>
@@ -387,7 +430,7 @@ function CourseCard({
         <label>
           {t.state}
           <select
-            aria-label={`${t.state} · ${course.code}`}
+            aria-label={`${t.state} · ${code}`}
             value={course.status}
             disabled={course.pinned}
             onChange={(e) => {
@@ -400,7 +443,7 @@ function CourseCard({
                     ? null
                     : status === "completed"
                       ? course.semester
-                      : (course.semester ?? plan.semesters[0]),
+                      : (course.semester ?? planningSemester(plan)),
                   status,
                 ),
               );
@@ -439,12 +482,18 @@ export function PlanBoard({ language }: { language: Language }) {
         {plan && (
           <div className="workspace-actions no-print">
             <SharePanel language={language} />
-            <Link className="text-link" to={`/semester/${plan.semesters[0]}`}>
+            <Link className="button" to="/plan/completed">
+              {catchupMessages[language].title}
+            </Link>
+            <Link
+              className="text-link"
+              to={`/semester/${planningSemester(plan)}`}
+            >
               {t.openCalendar}
             </Link>
             <Link
               className="button primary"
-              to={`/catalogue?term=${plan.semesters[0]}`}
+              to={`/catalogue?term=${planningSemester(plan)}`}
             >
               {t.addCourses}
             </Link>
@@ -469,6 +518,20 @@ export function PlanBoard({ language }: { language: Language }) {
               {t.target}: {plan.targetEcts} ECTS
             </p>
           </div>
+          <label className="planning-term-control">
+            {catchupMessages[language].planning}
+            <select
+              value={planningSemester(plan)}
+              disabled={busy}
+              onChange={(event) =>
+                change({ ...plan, planningSemester: event.target.value })
+              }
+            >
+              {plan.semesters.map((term) => (
+                <option key={term}>{term}</option>
+              ))}
+            </select>
+          </label>
           <p className="planner-help">{t.boardHelp}</p>
           <fieldset disabled={busy} className="board-fieldset">
             <div className="semester-board">
@@ -482,7 +545,7 @@ export function PlanBoard({ language }: { language: Language }) {
                   term === "completed" ? t.completed : (term ?? t.unscheduled);
                 return (
                   <section
-                    className="semester-column"
+                    className={`semester-column${term === planningSemester(plan) ? " planning-semester" : ""}`}
                     key={term ?? "unassigned"}
                     aria-label={label}
                   >
@@ -502,6 +565,11 @@ export function PlanBoard({ language }: { language: Language }) {
                         </div>
                       )}
                     </div>
+                    {term === planningSemester(plan) && (
+                      <p className="planning-label">
+                        {catchupMessages[language].planning}
+                      </p>
+                    )}
                     <p>
                       {courses.reduce((sum, c) => sum + (c.ects ?? 0), 0)} ECTS
                       · {courses.length} {t.courseCount}
@@ -509,15 +577,71 @@ export function PlanBoard({ language }: { language: Language }) {
                     {courses.length === 0 && (
                       <p className="planner-help">{t.emptySemester}</p>
                     )}
-                    {courses.map((course) => (
-                      <CourseCard
-                        key={course.id}
-                        course={course}
-                        plan={plan}
-                        language={language}
-                        change={change}
-                      />
-                    ))}
+                    {term === "completed" ? (
+                      [...plan.semesters, null].map((semester) => {
+                        const completed = courses.filter(
+                          (course) => course.semester === semester,
+                        );
+                        return (
+                          completed.length > 0 && (
+                            <section
+                              key={semester ?? "earlier"}
+                              className="completed-term"
+                            >
+                              <h3>
+                                {semester ?? catchupMessages[language].earlier}
+                              </h3>
+                              <p>
+                                <strong>
+                                  {catchupMessages[language].earned}:{" "}
+                                  {completed.reduce(
+                                    (sum, course) => sum + (course.ects ?? 0),
+                                    0,
+                                  )}{" "}
+                                  ECTS
+                                </strong>
+                              </p>
+                              {completed.map((course) => (
+                                <CourseCard
+                                  key={course.id}
+                                  course={course}
+                                  plan={plan}
+                                  language={language}
+                                  change={change}
+                                />
+                              ))}
+                            </section>
+                          )
+                        );
+                      })
+                    ) : term &&
+                      semesterIndex(term) <
+                        semesterIndex(planningSemester(plan)) ? (
+                      <details>
+                        <summary>
+                          {t.courseCount} ({courses.length})
+                        </summary>
+                        {courses.map((course) => (
+                          <CourseCard
+                            key={course.id}
+                            course={course}
+                            plan={plan}
+                            language={language}
+                            change={change}
+                          />
+                        ))}
+                      </details>
+                    ) : (
+                      courses.map((course) => (
+                        <CourseCard
+                          key={course.id}
+                          course={course}
+                          plan={plan}
+                          language={language}
+                          change={change}
+                        />
+                      ))
+                    )}
                   </section>
                 );
               })}
@@ -643,56 +767,7 @@ export function PlanBoard({ language }: { language: Language }) {
               </form>
             </fieldset>
           </section>
-          <section className="completed-entry no-print">
-            <h2>{t.addCompleted}</h2>
-            <p>{t.completedHelp}</p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const form = e.currentTarget;
-                const data = new FormData(form);
-                try {
-                  const next = addCourse(plan, {
-                    id: crypto.randomUUID(),
-                    code: String(data.get("code")),
-                    titles: { [language]: String(data.get("title")) },
-                    ects: Number(data.get("ects")),
-                    semester: null,
-                    status: "completed",
-                    pinned: false,
-                    offering: null,
-                  });
-                  change(next);
-                  form.reset();
-                } catch {
-                  setError(true);
-                }
-              }}
-            >
-              <fieldset className="planner-fields" disabled={busy}>
-                <label>
-                  {t.courseTitle}
-                  <input name="title" maxLength={200} required />
-                </label>
-                <label>
-                  {t.courseCode}
-                  <input name="code" maxLength={200} required />
-                </label>
-                <label>
-                  {t.completedEcts}
-                  <input
-                    name="ects"
-                    type="number"
-                    min="0"
-                    max="300"
-                    step="0.5"
-                    required
-                  />
-                </label>
-                <Button type="submit">{t.addCompleted}</Button>
-              </fieldset>
-            </form>
-          </section>
+          <ManualCompletion plan={plan} language={language} />
         </>
       )}
       {error && <p role="alert">{t.actionError}</p>}

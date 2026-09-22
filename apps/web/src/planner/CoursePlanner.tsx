@@ -10,6 +10,7 @@ import {
   addCourse,
   allocateCourse,
   fromOffering,
+  planningSemester,
   updateScenario,
   type Plan,
 } from "./domain";
@@ -59,7 +60,7 @@ function AddToSemester({
   const [semester, setSemester] = useState(
     preferredTerm && plan.semesters.includes(preferredTerm)
       ? preferredTerm
-      : (plan.semesters.find((term) => offering.terms.includes(term)) ?? ""),
+      : planningSemester(plan),
   );
   const [error, setError] = useState(false);
   const existing = activeScenario(plan).courses.find(
@@ -95,7 +96,9 @@ function AddToSemester({
             const course = fromOffering(
               offering,
               existing?.id ?? crypto.randomUUID(),
-              status.snapshot_id ?? "unknown",
+              (offering as Offering & { snapshot_id?: string }).snapshot_id ??
+                status.snapshot_id ??
+                "unknown",
               status.development_fixture,
             );
             // A deliberate new selection can put an unscheduled course back,

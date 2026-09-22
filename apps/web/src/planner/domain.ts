@@ -99,6 +99,7 @@ export const planSchema = z
     programme: text,
     targetEcts: z.number().min(1).max(600),
     semesters: z.array(term).min(1).max(24),
+    planningSemester: term.optional(),
     activeScenarioId: id,
     scenarios: z.array(scenarioSchema).min(1).max(20),
     requirements: z
@@ -115,6 +116,11 @@ export const planSchema = z
     const invalid = (message: string) =>
       ctx.addIssue({ code: "custom", message });
     const unique = (values: string[]) => new Set(values).size === values.length;
+    if (
+      plan.planningSemester &&
+      !plan.semesters.includes(plan.planningSemester)
+    )
+      invalid("unknown planning semester");
     if (plan.degreeSelection) {
       if (plan.schemaVersion !== 2 || plan.requirements)
         invalid(
@@ -206,6 +212,7 @@ export function createPlan(input: {
   name: string;
   programme: string;
   startTerm: string;
+  planningSemester?: string;
   semesterCount: number;
   targetEcts: number;
 }): Plan {
@@ -219,6 +226,9 @@ export function createPlan(input: {
     name: input.name,
     programme: input.programme,
     targetEcts: input.targetEcts,
+    ...(input.planningSemester
+      ? { planningSemester: input.planningSemester }
+      : {}),
     semesters: Array.from(
       { length: input.semesterCount },
       (_, n) =>
@@ -334,5 +344,68 @@ export function fromOffering(
       snapshot_id: snapshotId,
       development_fixture: developmentFixture,
     },
+  });
+}
+
+/** Calendar terms in Zurich, independently of the programme cohort. */
+export function currentSemester(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone: "Europe/Zurich",
+    year: "numeric",
+    month: "numeric",
+  }).formatToParts(now);
+  const year = Number(parts.find((p) => p.type === "year")!.value);
+  const month = Number(parts.find((p) => p.type === "month")!.value);
+  return month === 1
+    ? `AS-${year - 1}`
+    : month < 8
+      ? `SS-${year}`
+      : `AS-${year}`;
+}
+export function semesterIndex(value: string): number {
+  const [season, year] = value.split("-");
+  return Number(year) * 2 + (season === "AS" ? 1 : 0);
+}
+export function planningSemester(plan: Plan, now = new Date()): string {
+  if (plan.planningSemester && plan.semesters.includes(plan.planningSemester))
+    return plan.planningSemester;
+  const current = currentSemester(now);
+  const ordered = [...plan.semesters].sort(
+    (a, b) => semesterIndex(a) - semesterIndex(b),
+  );
+  return (
+    ordered.find((s) => semesterIndex(s) >= semesterIndex(current)) ??
+    ordered[ordered.length - 1]
+  );
+}
+export const isManualCode = (code: string) =>
+  /^MANUAL-[\da-f-]{36}$/i.test(code);
+/** Validate the entire batch before saving it. Existing records need explicit consent. */
+export function recordCompleted(
+  plan: Plan,
+  records: Selection[],
+  replaceIds: string[] = [],
+): Plan {
+  return updateScenario(plan, (scenario) => {
+    const courses = [...scenario.courses];
+    const seen = new Set<string>();
+    for (const record of records) {
+      if (record.status !== "completed") throw new Error("completion required");
+      const code = canonicalCourseCode(record.code);
+      if (seen.has(code)) throw new Error("duplicate course");
+      seen.add(code);
+      const index = courses.findIndex(
+        (c) => canonicalCourseCode(c.code) === code,
+      );
+      if (index < 0) courses.push(record);
+      else {
+        const existing = courses[index];
+        if (existing.pinned) throw new Error("course is pinned");
+        if (!replaceIds.includes(existing.id))
+          throw new Error("explicit completion required");
+        courses[index] = { ...record, id: existing.id };
+      }
+    }
+    return { ...scenario, courses };
   });
 }

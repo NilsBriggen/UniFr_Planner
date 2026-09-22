@@ -3,7 +3,12 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Temporal } from "@js-temporal/polyfill";
 import { Button } from "../components";
 import { messages, type Language } from "../i18n";
-import { activeScenario, updateScenario } from "./domain";
+import {
+  activeScenario,
+  updateScenario,
+  planningSemester,
+  currentSemester,
+} from "./domain";
 import { usePlans } from "./context";
 import {
   calendarFor,
@@ -58,7 +63,9 @@ function EventCard({
 export default function SemesterCalendar({ language }: { language: Language }) {
   const { plan, busy, save } = usePlans();
   const navigate = useNavigate();
-  const { term: parameter = "AS-2026" } = useParams();
+  const {
+    term: parameter = plan ? planningSemester(plan) : currentSemester(),
+  } = useParams();
   const term = canonicalTerm(parameter),
     t = plannerMessages[language];
   const scenario = plan ? activeScenario(plan) : undefined;
