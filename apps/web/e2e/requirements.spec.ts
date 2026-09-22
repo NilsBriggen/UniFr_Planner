@@ -3,15 +3,13 @@ import AxeBuilder from "@axe-core/playwright";
 import { createPlan } from "../src/planner/domain";
 import { requirementMessages } from "../src/requirements/messages";
 import { recipeMessages } from "../src/requirements/recipeMessages";
-import { plannerMessages } from "../src/planner/messages";
 import { importStudyPlan } from "./studies-helpers";
 
 for (const language of ["de", "fr", "en"] as const)
   test(`requirements ${language}: recover imported stale checklist without overrides`, async ({
     page,
   }) => {
-    const t = requirementMessages[language],
-      p = plannerMessages[language];
+    const t = requirementMessages[language];
     await page.addInitScript(
       (lang) => localStorage.setItem("unifr.language", lang),
       language,
