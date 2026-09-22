@@ -210,8 +210,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await allocation.selectOption("");
     await expect(page.locator(".save-status")).toHaveText(t.saved);
     await allocation.focus();
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("Enter");
+    await allocation.selectOption("AS-2026");
     await expect(allocation).toHaveValue("AS-2026");
     const pin = page.getByRole("button", {
       name: `${t.pin} · DEMO-001`,

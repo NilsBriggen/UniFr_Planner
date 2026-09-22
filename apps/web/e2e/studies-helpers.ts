@@ -65,7 +65,7 @@ export async function importStudyPlan(
 
 export async function openPlanTools(page: Page, language: Language = "en") {
   const tools = page.locator("details.plan-tools");
-  if (!(await tools.getAttribute("open"))) {
+  if ((await tools.getAttribute("open")) === null) {
     await tools.locator(":scope > summary").click();
   }
   return tools;
@@ -77,7 +77,7 @@ export async function openPlanJson(page: Page, language: Language = "en") {
     ? nested
     : page.locator("details.import-advanced");
   if (await nested.count()) await openPlanTools(page, language);
-  if (!(await advanced.getAttribute("open"))) {
+  if ((await advanced.getAttribute("open")) === null) {
     await advanced.locator("summary").first().click();
     await expect(advanced).toHaveAttribute("open", "");
   }
