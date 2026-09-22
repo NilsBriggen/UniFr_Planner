@@ -3,7 +3,7 @@ const en = {
   heading: "Find courses for your semester",
   semester: "Planning semester",
   overview: "Your semester",
-  recommended: "For my programme",
+  recommended: "Recommended for your degree",
   all: "All courses",
   fitsOnly: "Only courses that fit",
   hideAdded: "Hide added courses",
@@ -14,7 +14,7 @@ const en = {
   requirement: "In programme requirements",
   prerequisite: "Check prerequisites",
   matchesHelp:
-    "Related subjects are based on your plan’s programme label. Configure your degree for more precise matches.",
+    "Configure your studies to find courses for your outstanding requirements.",
   configure: "Configure programme",
   empty: "No courses match these choices.",
   broaden: "Show all courses",
@@ -29,11 +29,13 @@ const en = {
   unknownCount: "Courses with unresolved dates",
   meetings: "dates",
   details: "All lesson dates",
-  automatic: "Filtered to your semester. Programme matches appear first.",
+  automatic: "Filtered to your semester and outstanding degree requirements.",
   allTerms:
     "Browsing other semesters too. New courses will be added to the planning semester you choose.",
   requirementsError:
     "Programme requirements could not be read. All courses remain available.",
+  manualSemester: "Filtered to your selected semester.",
+  viewRequirements: "View outstanding requirements",
   overviewHelp: "Removing a course here keeps it in your plan as unscheduled.",
   week: "Weekly timetable",
   today: "This week",
@@ -45,13 +47,13 @@ const en = {
   viewCourse: "Course details",
   moreDates: "More lesson times",
   noMatches:
-    "No programme matches in these results. Browse all courses or adjust the programme.",
+    "No courses could be recommended from these results. Requirements may already be covered, unavailable this semester or missing course mappings; this does not mean your degree is complete.",
 };
 const de: typeof en = {
   heading: "Kurse für dein Semester finden",
   semester: "Semester planen",
   overview: "Dein Semester",
-  recommended: "Für meinen Studiengang",
+  recommended: "Empfohlen für dein Studium",
   all: "Alle Kurse",
   fitsOnly: "Nur zeitlich passende Kurse",
   hideAdded: "Hinzugefügte Kurse ausblenden",
@@ -62,7 +64,7 @@ const de: typeof en = {
   requirement: "In den Studienanforderungen",
   prerequisite: "Voraussetzungen prüfen",
   matchesHelp:
-    "Verwandte Fächer basieren auf der Studiengangsbezeichnung deines Plans. Richte dein Studium für genauere Treffer ein.",
+    "Richte dein Studium ein, um Kurse für deine offenen Anforderungen zu finden.",
   configure: "Studiengang einrichten",
   empty: "Keine Kurse passen zu dieser Auswahl.",
   broaden: "Alle Kurse anzeigen",
@@ -78,11 +80,13 @@ const de: typeof en = {
   meetings: "Termine",
   details: "Alle Unterrichtstermine",
   automatic:
-    "Auf dein Semester gefiltert. Passende Studienfächer stehen zuerst.",
+    "Auf dein Semester und deine offenen Studienanforderungen abgestimmt.",
   allTerms:
     "Auch Kurse anderer Semester werden angezeigt. Neue Kurse werden dem ausgewählten Planungssemester hinzugefügt.",
   requirementsError:
     "Studienanforderungen konnten nicht gelesen werden. Alle Kurse bleiben verfügbar.",
+  manualSemester: "Auf dein gewähltes Semester gefiltert.",
+  viewRequirements: "Offene Anforderungen ansehen",
   overviewHelp:
     "Entfernte Kurse bleiben im Plan als nicht zugeordnet erhalten.",
   week: "Wochenplan",
@@ -95,13 +99,13 @@ const de: typeof en = {
   viewCourse: "Kursdetails",
   moreDates: "Weitere Unterrichtszeiten",
   noMatches:
-    "Keine passenden Studienfächer in diesen Ergebnissen. Zeige alle Kurse an oder passe den Studiengang an.",
+    "Aus diesen Ergebnissen lassen sich keine Kurse empfehlen. Anforderungen können bereits abgedeckt sein, dieses Semester nicht angeboten werden oder noch keine Kurszuordnung haben. Dein Abschluss ist damit nicht automatisch vollständig.",
 };
 const fr: typeof en = {
   heading: "Trouver des cours pour votre semestre",
   semester: "Semestre à planifier",
   overview: "Votre semestre",
-  recommended: "Pour mon cursus",
+  recommended: "Recommandés pour votre cursus",
   all: "Tous les cours",
   fitsOnly: "Uniquement les cours compatibles",
   hideAdded: "Masquer les cours ajoutés",
@@ -112,7 +116,7 @@ const fr: typeof en = {
   requirement: "Dans les exigences du cursus",
   prerequisite: "Vérifier les prérequis",
   matchesHelp:
-    "Les matières apparentées se basent sur le nom du programme de votre plan. Configurez votre cursus pour des résultats plus précis.",
+    "Configurez vos études pour trouver des cours répondant à vos exigences restantes.",
   configure: "Configurer le cursus",
   empty: "Aucun cours ne correspond à ces choix.",
   broaden: "Afficher tous les cours",
@@ -128,11 +132,13 @@ const fr: typeof en = {
   meetings: "dates",
   details: "Toutes les dates de cours",
   automatic:
-    "Filtré sur votre semestre. Les cours liés à votre cursus apparaissent en premier.",
+    "Filtré sur votre semestre et les exigences restantes de votre cursus.",
   allTerms:
     "Les autres semestres sont aussi affichés. Les nouveaux cours seront ajoutés au semestre de planification choisi.",
   requirementsError:
     "Les exigences du cursus n’ont pas pu être lues. Tous les cours restent disponibles.",
+  manualSemester: "Filtré sur le semestre choisi.",
+  viewRequirements: "Voir les exigences restantes",
   overviewHelp:
     "Les cours retirés restent dans votre plan sans semestre attribué.",
   week: "Horaire hebdomadaire",
@@ -145,6 +151,6 @@ const fr: typeof en = {
   viewCourse: "Détails du cours",
   moreDates: "Autres horaires",
   noMatches:
-    "Aucun cours correspondant au cursus dans ces résultats. Affichez tous les cours ou adaptez le programme.",
+    "Aucun cours ne peut être recommandé parmi ces résultats. Les exigences peuvent être déjà couvertes, indisponibles ce semestre ou sans correspondance documentée. Cela ne signifie pas que votre diplôme est terminé.",
 };
 export const discoveryMessages: Record<Language, typeof en> = { en, de, fr };

@@ -8,8 +8,22 @@ export a backup before changing devices.
 
 ## Planning a semester
 
-Create a local plan, then choose **Add courses** on a semester card. This opens
-the catalogue filtered to that semester. Each offering has a semester selector
+Create a local plan by configuring your studies: degree level, main programme,
+variant, degree structure, and required minors or specialisations. This is the same
+configuration used by **Study requirements**. Each component keeps its own starting
+semester and pinned curriculum edition. Degree credits come from the selected
+structure; the programme name is display metadata, not an academic matching rule.
+
+Review the combination and any unresolved source details, choose the planning
+semester and save. The complete plan is saved once. Continuing students can record
+past credits before proceeding to the semester catalogue. An explicit **My programme
+or combination is missing** option creates a manual plan without degree recommendations.
+Existing plans remain usable and offer a non-blocking configuration prompt. Changing
+studies preserves course records and requires explicit handling of personal requirement
+evidence when switching curricula.
+
+After setup, choose semester courses directly. **Add courses** on any semester card
+also opens the catalogue filtered to that semester. Each offering has a semester selector
 and **Add to plan** action directly in the results and on its detail page.
 The selected semester is saved together with the course; a matching published
 semester is selected by default when browsing without a semester filter.
@@ -51,12 +65,21 @@ is already in the URL. The visible semester selector changes the catalogue and
 the running semester overview together. Filters and search remain in the URL;
 clearing the term explicitly allows browsing other semesters.
 
-Programme matches are ranked and filtered across the complete matching
-catalogue, before pagination. Configured degree requirements supply course-code
-and source-assignment matches. A personal Computer Science or Business
-Informatics programme label supplies only a clearly marked related-subject
-hint; it does not certify credit recognition or prerequisites. If no matches
-exist, the default view shows all courses and explains why.
+Recommendations are ranked and filtered across the complete matching catalogue,
+before pagination. They use the saved requirements, exact course codes and catalogue
+assignment evidence. A candidate must advance an outstanding requirement after the
+same allocation rules used by the requirements view are evaluated. Completed and
+already scheduled courses do not appear as new recommendations; unscheduled records
+can be assigned without duplication. Required courses precede electives and additional
+studies, with prerequisite readiness, timetable fit and credit contribution as further
+ranking criteria. Additional studies stay outside the degree total.
+
+Configured plans default to **Recommended for your degree**; **All courses** remains
+available. Without configuration the catalogue offers all courses and a setup prompt,
+without guessing from the programme name. No recommendations can mean covered
+requirements, absent offerings or incomplete mappings; an empty list never establishes
+degree completion. Recommendations explain their requirement contribution, while
+source-review gaps and unknown prerequisites remain visible.
 
 Each result shows grouped lesson times, rooms, actual date counts and known
 clashes. **Only courses that fit** checks dated meetings, personal unavailable
@@ -171,8 +194,9 @@ the stale guard applies specifically to suggestion apply/undo transactions.
 Completed/current/planned/unscheduled ECTS remain separate. Unknown ECTS are
 counted and never treated as known zero. Workload is an estimate of 25–30 hours
 per known current/planned ECTS, not a degree-recognition decision. Programme and
-target credits are personal labels. The requirements page can now bind explicit
-programme revisions and retain personal allocation evidence per scenario; see
+target credits are derived from the selected degree; only manual fallback plans use
+personal labels and targets. The requirements page binds explicit programme
+revisions and retains personal allocation evidence per scenario; see
 [programme research](programme-research.md) for supported sources and unresolved
 rules. Existing plans remain unbound until the user selects a programme.
 

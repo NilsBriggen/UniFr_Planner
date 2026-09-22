@@ -27,6 +27,7 @@ import WeekTimetable from "./WeekTimetable";
 import { discoveryMessages } from "../discovery/messages";
 import SharePanel from "../sharing/SharePanel";
 import WeeklyDownloads from "./WeeklyDownloads";
+import StudySummary from "../requirements/StudySummary";
 
 function EventCard({
   event,
@@ -166,6 +167,7 @@ export default function SemesterCalendar({ language }: { language: Language }) {
           </Link>
         </div>
       </header>
+      <StudySummary plan={plan} language={language} />
       <div className="semester-overview-stats">
         <span>
           <strong>

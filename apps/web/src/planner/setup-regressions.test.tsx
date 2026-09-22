@@ -1,0 +1,181 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import { IDBFactory } from "fake-indexeddb";
+import App from "../App";
+import { DegreeSelectionForm } from "../requirements/RecipeChooser";
+import { createPlan } from "./domain";
+import { PlanStore } from "./storage";
+import { recipeRegistry } from "../../../../packages/domain/src/registry";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+async function setup() {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "en");
+  render(
+    <MemoryRouter initialEntries={["/setup"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  await waitFor(() =>
+    expect(screen.getByLabelText("Main programme")).toBeEnabled(),
+  );
+}
+
+it("keeps the structured study draft when switching to the manual fallback and back", async () => {
+  await setup();
+  fireEvent.change(screen.getByLabelText("Main programme"), {
+    target: { value: "bachelor-digitinf-informatics" },
+  });
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
+  fireEvent.change(screen.getByLabelText("Programme"), {
+    target: { value: "External programme" },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Choose a listed degree" }),
+  );
+  expect(screen.getByLabelText("Main programme")).toHaveValue(
+    "bachelor-digitinf-informatics",
+  );
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
+  expect(screen.getByLabelText("Programme")).toHaveValue("External programme");
+});
+
+it("keeps setup usable while invalid values are being typed", async () => {
+  await setup();
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
+  for (const label of ["Plan name", "Programme"]) {
+    fireEvent.change(screen.getByLabelText(label), { target: { value: " " } });
+    expect(screen.getByLabelText(label)).toHaveValue(" ");
+  }
+  for (const year of ["9999", "2099", "2088", "0000", ""]) {
+    fireEvent.change(screen.getByLabelText("Entry year"), {
+      target: { value: year },
+    });
+    expect(
+      screen.getByRole("button", { name: "Create local plan" }),
+    ).toBeVisible();
+  }
+  fireEvent.change(screen.getByLabelText("Degree target (ECTS)"), {
+    target: { value: "0" },
+  });
+  expect(
+    screen.getByRole("button", { name: "Choose a listed degree" }),
+  ).toBeEnabled();
+});
+
+it("keeps an unavailable curriculum pinned until an explicit migration review", async () => {
+  const plan = createPlan({
+    id: "old",
+    scenarioId: "main",
+    name: "Old degree",
+    programme: "Law",
+    startTerm: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  plan.degreeSelection = {
+    structureId: "ba-180",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-ius-law",
+        variantId: "major-180",
+        startSemester: "AS-2026",
+        recipeVersion: "previous-edition",
+      },
+    ],
+  };
+  const onCommit = vi.fn().mockResolvedValue(true);
+  render(<DegreeSelectionForm plan={plan} language="en" onCommit={onCommit} />);
+  expect(screen.getByRole("button", { name: "Preview degree" })).toBeDisabled();
+  expect(onCommit).not.toHaveBeenCalled();
+  expect(plan.degreeSelection.components[0].recipeVersion).toBe(
+    "previous-edition",
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Review with current curriculum" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Preview degree" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Save degree selection" }),
+  );
+  await waitFor(() => expect(onCommit).toHaveBeenCalledOnce());
+  expect(onCommit.mock.calls[0][0].selection.components[0].recipeVersion).toBe(
+    recipeRegistry.edition,
+  );
+  expect(plan.degreeSelection.components[0].recipeVersion).toBe(
+    "previous-edition",
+  );
+});
+
+it.each([
+  ["bachelor", "bachelor-ius-law", "major-180", "ba-180", 180],
+  ["master", "master-sci-biochemistry", "major-120", "ma-120", 120],
+])(
+  "creates a %s degree after a failed save without losing the configuration",
+  async (level, programme, variant, structure, ects) => {
+    await setup();
+    fireEvent.change(screen.getByLabelText("Degree"), {
+      target: { value: level },
+    });
+    fireEvent.change(screen.getByLabelText("Main programme"), {
+      target: { value: programme },
+    });
+    fireEvent.change(screen.getByLabelText("Variant / track"), {
+      target: { value: variant },
+    });
+    fireEvent.change(screen.getByLabelText("Degree structure"), {
+      target: { value: structure },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Preview degree" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continue to planning" }),
+    );
+    fireEvent.change(screen.getByLabelText("Plan name"), {
+      target: { value: "My configured studies" },
+    });
+    const save = vi
+      .spyOn(PlanStore.prototype, "save")
+      .mockRejectedValueOnce(new Error("Disk full"));
+    fireEvent.click(screen.getByRole("button", { name: "Create local plan" }));
+    await waitFor(() => expect(save).toHaveBeenCalledOnce());
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Create local plan" }),
+      ).toBeEnabled(),
+    );
+    expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(0);
+    expect(screen.getByLabelText("Plan name")).toHaveValue(
+      "My configured studies",
+    );
+    expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Create local plan" }));
+    await waitFor(async () =>
+      expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(1),
+    );
+    const plan = (await new PlanStore(indexedDB).load()).plans[0];
+    expect(plan.targetEcts).toBe(ects);
+    expect(plan.degreeSelection?.structureId).toBe(structure);
+    expect(plan.degreeSelection?.components[0]).toMatchObject({
+      programmeId: programme,
+      variantId: variant,
+      recipeVersion: recipeRegistry.edition,
+    });
+  },
+);

@@ -1,3 +1,4 @@
+import { chooseManualSetup } from "./studies-helpers";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -6,6 +7,7 @@ test("semester discovery explains lesson times and updates its overview as cours
 }, info) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await page.goto("/setup");
+  await chooseManualSetup(page, "en");
   await page.getByLabel("Plan name", { exact: true }).fill("CS + BI semester");
   await page
     .getByLabel("Programme", { exact: true })

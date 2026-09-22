@@ -14,6 +14,11 @@ import { Button, StatusNotice } from "./components";
 import { catalogueMessages, type CatalogueMessages } from "./catalogue-i18n";
 import { messages, type Language } from "./i18n";
 import "./catalogue.css";
+import StudySummary from "./requirements/StudySummary";
+import {
+  hasStudyConfiguration,
+  studyLabel,
+} from "./requirements/study-summary";
 import CoursePlanner from "./planner/CoursePlanner";
 import { usePlans } from "./planner/context";
 import {
@@ -434,11 +439,9 @@ function Search({
   const discovery = assessed.discovery;
   const findingMatches = index.loading || assessed.loading;
   const hasMatches =
-    discovery && [...discovery.assessments.values()].some((a) => a.match);
+    discovery && [...discovery.assessments.values()].some((a) => a.recommended);
   const programme =
-    !!discovery?.hasProgramme &&
-    query.get("focus") !== "all" &&
-    (query.get("focus") === "programme" || !!hasMatches);
+    !!plan && hasStudyConfiguration(plan) && query.get("focus") !== "all";
   const fits = query.get("fits") === "1",
     hideAdded = query.get("hide_added") === "1";
   const filtered = discovery
@@ -552,9 +555,13 @@ function Search({
               </select>
             </label>
             <p className="discovery-help">
-              <strong>{plan.programme}</strong>
+              <strong>{studyLabel(plan, language)}</strong>
               <br />
-              {query.get("term") === term ? d.automatic : d.allTerms}
+              {query.get("term") === term
+                ? hasStudyConfiguration(plan)
+                  ? d.automatic
+                  : d.manualSemester
+                : d.allTerms}
               {semesterIndex(term) < semesterIndex(currentSemester()) && (
                 <>
                   <br />
@@ -569,6 +576,7 @@ function Search({
             </p>
           </div>
         )}
+        {plan && <StudySummary plan={plan} language={language} />}
         <form
           ref={formRef}
           key={query.toString()}
@@ -778,13 +786,13 @@ function Search({
                 </label>
               </div>
             </div>
-            {!plan?.requirements && !plan?.degreeSelection && (
+            {discovery.hasProgramme && !hasMatches && !programme && (
               <p className="discovery-help">
-                {d.matchesHelp} <Link to="/requirements">{d.configure}</Link>
+                {d.noMatches}{" "}
+                <Link className="text-link" to="/requirements">
+                  {d.viewRequirements}
+                </Link>
               </p>
-            )}
-            {discovery.hasProgramme && !hasMatches && (
-              <p className="discovery-help">{d.noMatches}</p>
             )}
             {discovery.requirementError && (
               <p role="alert">{d.requirementsError}</p>
@@ -799,7 +807,16 @@ function Search({
             {page.total === 0 && !findingMatches && !loading ? (
               <StatusNotice>
                 <h2>{t.none}</h2>
-                <p>{discovery ? d.empty : t.noneBody}</p>
+                <p>
+                  {discovery ? (programme ? d.noMatches : d.empty) : t.noneBody}
+                </p>
+                {programme && (
+                  <p>
+                    <Link className="text-link" to="/requirements">
+                      {d.viewRequirements}
+                    </Link>
+                  </p>
+                )}
                 {discovery && (
                   <Button
                     onClick={() => {

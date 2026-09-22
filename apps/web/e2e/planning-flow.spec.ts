@@ -1,3 +1,4 @@
+import { chooseManualSetup } from "./studies-helpers";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -7,10 +8,13 @@ test("a student adds courses from a semester and opens the saved weekly timetabl
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await page.goto("/");
   await page.getByRole("link", { name: "Start planning", exact: true }).click();
+  await chooseManualSetup(page);
   await page.getByLabel("Plan name", { exact: true }).fill("My CS semester");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
   await page.getByLabel("Entry year", { exact: true }).fill("2026");
   await page.getByRole("button", { name: "Create local plan" }).click();
+  await expect(page).toHaveURL(/catalogue\?term=AS-2026$/);
+  await page.goto("/plan");
   const semester = page.getByRole("region", { name: "AS-2026", exact: true });
   await semester
     .getByRole("link", { name: "Add courses", exact: true })
@@ -88,6 +92,7 @@ test("starting from a course returns to that course after creating a plan", asyn
       exact: true,
     })
     .click();
+  await chooseManualSetup(page);
   await page.getByLabel("Plan name", { exact: true }).fill("From a course");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
   await page.getByLabel("Entry year", { exact: true }).fill("2026");

@@ -1,5 +1,8 @@
 export const recipeMessages = {
   en: {
+    editionUnavailable:
+      "This plan uses a curriculum edition that is unavailable here. Its saved selection is unchanged. Review the current curriculum only if you intend to change editions.",
+    reviewCurrentEdition: "Review with current curriculum",
     diagnostics: "Technical review details",
     applicabilityGap:
       "The applicable starting semesters have not been confirmed.",
@@ -10,6 +13,7 @@ export const recipeMessages = {
       "The source requirements and this component’s credit total differ; faculty clarification is required.",
     reviewGap:
       "Some requirements still need to be checked against the official sources.",
+    teachingTrack: "Teacher education",
     title: "Choose a degree",
     degree: "Degree",
     faculty: "Faculty",
@@ -62,6 +66,9 @@ export const recipeMessages = {
     },
   },
   de: {
+    editionUnavailable:
+      "Dieser Plan verwendet eine hier nicht verfügbare Studienplanversion. Die gespeicherte Auswahl bleibt unverändert. Prüfe den aktuellen Studienplan nur, wenn du die Version wechseln möchtest.",
+    reviewCurrentEdition: "Mit aktuellem Studienplan prüfen",
     diagnostics: "Technische Prüfdetails",
     applicabilityGap: "Die gültigen Startsemester sind noch nicht bestätigt.",
     curriculumGap:
@@ -71,6 +78,7 @@ export const recipeMessages = {
       "Die Anforderungen der Quelle weichen vom ECTS-Umfang dieser Komponente ab; die Fakultät muss dies klären.",
     reviewGap:
       "Einige Anforderungen müssen noch anhand der offiziellen Quellen geprüft werden.",
+    teachingTrack: "Lehrpersonenausbildung",
     title: "Abschluss wählen",
     degree: "Abschluss",
     faculty: "Fakultät",
@@ -124,6 +132,9 @@ export const recipeMessages = {
     },
   },
   fr: {
+    editionUnavailable:
+      "Ce plan utilise une version du cursus indisponible ici. La sélection enregistrée reste inchangée. Consultez le cursus actuel uniquement si vous souhaitez changer de version.",
+    reviewCurrentEdition: "Examiner avec le cursus actuel",
     diagnostics: "Détails techniques de la vérification",
     applicabilityGap:
       "Les semestres de début applicables ne sont pas encore confirmés.",
@@ -134,6 +145,7 @@ export const recipeMessages = {
       "Les exigences de la source diffèrent du total de crédits de cette composante ; une clarification de la faculté est nécessaire.",
     reviewGap:
       "Certaines exigences doivent encore être vérifiées dans les sources officielles.",
+    teachingTrack: "Formation à l’enseignement",
     title: "Choisir un cursus",
     degree: "Diplôme",
     faculty: "Faculté",

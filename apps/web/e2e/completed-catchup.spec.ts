@@ -1,3 +1,4 @@
+import { chooseManualSetup } from "./studies-helpers";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -6,6 +7,7 @@ test("2024 study start plans 2026 and records historical plus manual completion 
 }, info) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await page.goto("/setup");
+  await chooseManualSetup(page, "en");
   await page.getByLabel("Plan name", { exact: true }).fill("Continuing degree");
   await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
   await page.getByLabel("Study start", { exact: true }).selectOption("AS");
@@ -65,6 +67,8 @@ test("2024 study start plans 2026 and records historical plus manual completion 
     ).violations,
   ).toEqual([]);
   await page.getByRole("link", { name: "Done", exact: true }).click();
+  await expect(page).toHaveURL(/catalogue\?term=AS-2026$/);
+  await page.goto("/plan");
   await expect(
     page.getByLabel("Planning semester", { exact: true }),
   ).toHaveValue("AS-2026");
@@ -92,6 +96,7 @@ test("manual entry works when historical archive requests fail", async ({
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await page.route("**/api/v1/catalogue/**", (route) => route.abort());
   await page.goto("/setup");
+  await chooseManualSetup(page, "en");
   await page.getByLabel("Plan name", { exact: true }).fill("Offline archive");
   await page.getByLabel("Programme", { exact: true }).fill("CS");
   await page.getByLabel("Entry year", { exact: true }).fill("2024");

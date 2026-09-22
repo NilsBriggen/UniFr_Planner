@@ -1,0 +1,39 @@
+.study-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  padding: 1rem 1.2rem;
+  margin-block: 1rem;
+  border: 1px solid var(--color-line, #bdc5ca);
+  border-radius: 6px;
+  background: white;
+  overflow-wrap: anywhere;
+}
+.study-summary > div {
+  min-width: 0;
+}
+.study-summary .eyebrow {
+  margin: 0 0 0.3rem;
+}
+.study-summary-title {
+  margin: 0;
+  font-weight: 600;
+}
+.study-summary-help {
+  margin: 0.4rem 0 0;
+  max-width: 65ch;
+  color: var(--color-muted, #525b63);
+}
+.study-summary-actions {
+  display: flex;
+  gap: 0.65rem 1.2rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.study-summary-actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}

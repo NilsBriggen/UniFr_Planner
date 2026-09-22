@@ -1,3 +1,4 @@
+import { chooseManualSetup } from "./studies-helpers";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import { accountMessages } from "../src/accounts/messages";
@@ -32,6 +33,7 @@ async function exportPlan(page: Page): Promise<Plan> {
 async function createStudentPlan(page: Page) {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await page.goto("/setup");
+  await chooseManualSetup(page, "en");
   await page
     .getByLabel(p.planName, { exact: true })
     .fill("Release acceptance student");
@@ -40,6 +42,8 @@ async function createStudentPlan(page: Page) {
     .fill("CS + Business Informatics");
   await page.getByLabel(p.startYear, { exact: true }).fill("2026");
   await page.getByRole("button", { name: p.create, exact: true }).click();
+  await expect(page).toHaveURL(/catalogue/);
+  await page.goto("/plan");
   await expect(
     page.getByRole("heading", {
       name: "Release acceptance student",

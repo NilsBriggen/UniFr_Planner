@@ -258,8 +258,15 @@ export function discoverCourses(
               r.allocations.some((a) => a.courseId === candidate.id),
             )
           ) {
-            recommendationKind = degreeGains.some(
-              (r) => r.node.kind === "course" || r.node.kind === "project",
+            // A newly selected one_of leaf is absent from the baseline. Use
+            // the candidate's allocation beneath gaining obligations so all
+            // compulsory alternatives receive the same label and priority.
+            recommendationKind = degreeGains.some((gain) =>
+              resultNodes(gain).some(
+                (r) =>
+                  (r.node.kind === "course" || r.node.kind === "project") &&
+                  r.allocations.some((a) => a.courseId === candidate.id),
+              ),
             )
               ? "required"
               : degreeGains.length

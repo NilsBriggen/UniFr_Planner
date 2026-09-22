@@ -4,7 +4,7 @@ import {
   majorProgrammes,
   slotOptions,
 } from "./recipeOptions";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { recipeRegistry } from "../../../../packages/domain/src/registry";
 import {
   composeDegree,
@@ -18,25 +18,6 @@ import { usePlans } from "../planner/context";
 import { bindDegreeSelection } from "./adapter";
 import { recipeMessages } from "./recipeMessages";
 
-export function degreeProgrammeLabel(
-  degree: ResolvedDegree,
-  language: Language,
-) {
-  return degree.selection.components
-    .map((component) => {
-      const programme = recipeRegistry.programmes.find(
-        (candidate) => candidate.id === component.programmeId,
-      );
-      return (
-        programme?.titles?.[language] ??
-        programme?.title ??
-        component.programmeId
-      );
-    })
-    .join(" + ")
-    .slice(0, 200);
-}
-
 export function DegreeSelectionForm({
   plan,
   language,
@@ -44,6 +25,7 @@ export function DegreeSelectionForm({
   onCommit,
   onClearEvidence,
   commitLabel,
+  compactPreview = false,
 }: {
   plan: Plan;
   language: Language;
@@ -51,6 +33,7 @@ export function DegreeSelectionForm({
   onCommit: (degree: ResolvedDegree) => Promise<boolean>;
   onClearEvidence?: () => Promise<boolean>;
   commitLabel?: string;
+  compactPreview?: boolean;
 }) {
   const t = recipeMessages[language];
   const original = plan.degreeSelection?.components.find(
@@ -84,9 +67,18 @@ export function DegreeSelectionForm({
     }
   });
   const [error, setError] = useState("");
+  const unavailableEdition =
+    plan.degreeSelection?.components.some(
+      (component) => component.recipeVersion !== recipeRegistry.edition,
+    ) ?? false;
+  const [useCurrentEdition, setUseCurrentEdition] = useState(false);
+
   const major = recipeRegistry.programmes.find((p) => p.id === main);
   const track = major?.variants.find((v) => v.id === variant);
-  const structures = major && track ? inheritedStructures(major, track) : [];
+  const structures = useMemo(
+    () => (major && track ? inheritedStructures(major, track) : []),
+    [major, track],
+  );
   const layout = recipeRegistry.structures.find((s) => s.id === structure);
   const hasEvidence = plan.scenarios.some(
     (s) =>
@@ -153,11 +145,27 @@ export function DegreeSelectionForm({
     >
       <h2>{t.title}</h2>
       {plan.requirements && <p>{t.migration}</p>}
+      {unavailableEdition && !useCurrentEdition && (
+        <div className="recipe-edition-notice">
+          <p role="status">{t.editionUnavailable}</p>
+          <Button
+            disabled={busy}
+            onClick={() => {
+              setUseCurrentEdition(true);
+              invalidate();
+            }}
+          >
+            {t.reviewCurrentEdition}
+          </Button>
+        </div>
+      )}
       <form
         className="planner-form"
         onSubmit={(e) => {
           e.preventDefault();
           try {
+            if (unavailableEdition && !useCurrentEdition)
+              throw new Error(t.editionUnavailable);
             const majorSlot = layout?.slots.find((s) => s.role === "major");
             if (!majorSlot) throw new Error(t.error);
             const selection = {
@@ -168,11 +176,17 @@ export function DegreeSelectionForm({
                   programmeId: main,
                   variantId: variant,
                   startSemester: semester,
-                  recipeVersion: recipeRegistry.edition,
+                  recipeVersion: useCurrentEdition
+                    ? recipeRegistry.edition
+                    : (original?.recipeVersion ?? recipeRegistry.edition),
                 },
-                ...Object.values(choices).filter(
-                  (c) => c.slotId !== majorSlot.id,
-                ),
+                ...Object.values(choices)
+                  .filter((c) => c.slotId !== majorSlot.id)
+                  .map((component) =>
+                    useCurrentEdition
+                      ? { ...component, recipeVersion: recipeRegistry.edition }
+                      : component,
+                  ),
               ],
             };
             setPreview(composeDegree(recipeRegistry, selection));
@@ -260,7 +274,8 @@ export function DegreeSelectionForm({
                 .filter((v) => v.role === "major")
                 .map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.ects} ECTS · {v.id}
+                    {v.ects} ECTS
+                    {v.id.endsWith("-teaching") ? ` · ${t.teachingTrack}` : ""}
                   </option>
                 ))}
             </select>
@@ -403,7 +418,12 @@ export function DegreeSelectionForm({
                 </fieldset>
               );
             })}
-        <Button type="submit" disabled={busy || !layout}>
+        <Button
+          type="submit"
+          disabled={
+            busy || !layout || (unavailableEdition && !useCurrentEdition)
+          }
+        >
           {t.preview}
         </Button>
       </form>
@@ -414,28 +434,32 @@ export function DegreeSelectionForm({
           <p>
             {t.counted}: {preview.targetEcts} ECTS
           </p>
-          <p>
-            {t.additional}: {preview.additionalEcts} ECTS
-          </p>
+          {(!compactPreview || preview.additionalEcts > 0) && (
+            <p>
+              {t.additional}: {preview.additionalEcts} ECTS
+            </p>
+          )}
           {preview.status === "prohibited" ? (
             <p role="alert">{t.prohibited}</p>
           ) : (
             preview.status === "needs_clarification" && <p>{t.incomplete}</p>
           )}
-          <h4>{t.pinned}</h4>
-          <ul>
-            {preview.selection.components.map((c) => {
-              const p = recipeRegistry.programmes.find(
-                (p) => p.id === c.programmeId,
-              )!;
-              return (
-                <li key={c.slotId}>
-                  {p.titles?.[language] ?? p.title} · {c.variantId} ·{" "}
-                  {c.startSemester} · {c.recipeVersion}
-                </li>
-              );
-            })}
-          </ul>
+          <details open={!compactPreview}>
+            <summary>{t.pinned}</summary>
+            <ul>
+              {preview.selection.components.map((c) => {
+                const p = recipeRegistry.programmes.find(
+                  (p) => p.id === c.programmeId,
+                )!;
+                return (
+                  <li key={c.slotId}>
+                    {p.titles?.[language] ?? p.title} · {c.variantId} ·{" "}
+                    {c.startSemester} · {c.recipeVersion}
+                  </li>
+                );
+              })}
+            </ul>
+          </details>
           {preview.appliedRules.length > 0 && (
             <>
               <h4>{t.rules}</h4>
@@ -449,9 +473,15 @@ export function DegreeSelectionForm({
               </ul>
             </>
           )}
-          {preview.issues.length > 0 && (
-            <ReviewGaps degree={preview} language={language} />
-          )}
+          {preview.issues.length > 0 &&
+            (compactPreview ? (
+              <details>
+                <summary>{t.gaps}</summary>
+                <ReviewGaps degree={preview} language={language} />
+              </details>
+            ) : (
+              <ReviewGaps degree={preview} language={language} />
+            ))}
           <details>
             <summary>{t.sources}</summary>
             <ul>

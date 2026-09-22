@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { writeFile } from "node:fs/promises";
+import { configuredStudyPlan, importStudyPlan } from "./studies-helpers";
 
 test("search stays usable while a complete 3750-course index finds a match beyond page one", async ({
   page,
@@ -55,10 +56,7 @@ test("search stays usable while a complete 3750-course index finds a match beyon
       },
     }),
   );
-  await page.goto("/setup");
-  await page.getByLabel("Plan name", { exact: true }).fill("Large catalogue");
-  await page.getByLabel("Programme", { exact: true }).fill("Computer Science");
-  await page.getByRole("button", { name: "Create local plan" }).click();
+  await importStudyPlan(page, configuredStudyPlan("Large catalogue"));
   const started = Date.now();
   await page
     .getByRole("navigation")

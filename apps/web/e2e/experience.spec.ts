@@ -1,3 +1,4 @@
+import { chooseManualSetup } from "./studies-helpers";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { messages } from "../src/i18n";
@@ -15,6 +16,7 @@ for (const language of ["de", "fr", "en"] as const) {
       language,
     );
     await page.goto("/setup");
+    await chooseManualSetup(page, language);
     await expect(
       page.getByRole("combobox", {
         name: catchupMessages[language].studyStart,
@@ -33,11 +35,17 @@ for (const language of ["de", "fr", "en"] as const) {
     ).toEqual([]);
     for (const name of ["First degree", "Second degree"]) {
       await page.goto("/setup");
+      await chooseManualSetup(page, language);
       await page.getByLabel(p.planName, { exact: true }).fill(name);
       await page
         .getByLabel(p.programme, { exact: true })
         .fill("Computer Science");
       await page.getByRole("button", { name: p.create, exact: true }).click();
+      await expect(page).toHaveURL(/catalogue/);
+      await page
+        .getByRole("navigation")
+        .getByRole("link", { name: t.plan, exact: true })
+        .click();
       await expect(
         page.getByRole("heading", { name, exact: true }),
       ).toBeVisible();

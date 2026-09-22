@@ -26,12 +26,16 @@ import "./planner.css";
 import ManualCompletion from "./ManualCompletion";
 import { catchupMessages } from "./catchup-messages";
 import { suggestionMessages } from "../suggestions/messages";
-import {
-  DegreeSelectionForm,
-  degreeProgrammeLabel,
-} from "../requirements/RecipeChooser";
+import { DegreeSelectionForm } from "../requirements/RecipeChooser";
 import { bindDegreeSelection } from "../requirements/adapter";
 import { setupMessages } from "./setupMessages";
+import StudySummary from "../requirements/StudySummary";
+import {
+  studyLabel,
+  degreeProgrammeLabel,
+} from "../requirements/study-summary";
+import ReviewGaps from "../requirements/ReviewGaps";
+import { recipeMessages } from "../requirements/recipeMessages";
 import type { ResolvedDegree } from "../../../../packages/domain/src/recipes";
 
 export function Download({
@@ -108,18 +112,19 @@ export function Setup({ language }: { language: Language }) {
     planning: current,
     count: 6,
   });
-  const draftStart = /^(AS|SS)-\d{4}$/.test(settings.start)
-    ? settings.start
-    : current;
-  const draft = createPlan({
-    id: "setup-draft",
-    scenarioId: "setup-scenario",
-    name: settings.name || t.planExample,
-    programme: settings.programme || t.programmeExample,
-    startTerm: draftStart,
-    semesterCount: 24,
-    targetEcts: 180,
-  });
+  // The chooser's initial metadata stays valid while settings are being typed.
+  // Editable fields are validated only when the final plan is created.
+  const [draft] = useState(() =>
+    createPlan({
+      id: "setup-draft",
+      scenarioId: "setup-scenario",
+      name: "Study configuration",
+      programme: "Study configuration",
+      startTerm: current,
+      semesterCount: 1,
+      targetEcts: 180,
+    }),
+  );
   function destination(planning: string, configured: boolean) {
     const returnTo = query.get("returnTo");
     if (returnTo && /^\/catalogue(?:\/[^/?#]+)?(?:\?[^#]*)?$/.test(returnTo))
@@ -174,23 +179,62 @@ export function Setup({ language }: { language: Language }) {
       <p className="eyebrow">UniFr Planner</p>
       <h1>{messages[language].setup}</h1>
       <p className="setup-intro">{t.programmeHelp}</p>
-      {!manual && (
-        <div hidden={step !== "studies"}>
-          <h2>{setup.studies}</h2>
-          <DegreeSelectionForm
-            plan={draft}
-            language={language}
-            busy={!ready || busy}
-            commitLabel={setup.continue}
-            onCommit={async (resolved) => {
-              setDegree(resolved);
-              setStep("settings");
-              return true;
-            }}
-          />
-        </div>
-      )}
+      <div hidden={manual || step !== "studies"}>
+        <h2>{setup.studies}</h2>
+        <DegreeSelectionForm
+          plan={draft}
+          language={language}
+          busy={!ready || busy}
+          compactPreview
+          commitLabel={setup.continue}
+          onCommit={async (resolved) => {
+            setDegree(resolved);
+            setStep("settings");
+            return true;
+          }}
+        />
+      </div>
       {(manual || step === "settings") && <h2>{setup.settings}</h2>}
+      {!manual && step === "settings" && degree && (
+        <section
+          className="setup-review"
+          aria-label={recipeMessages[language].preview}
+        >
+          <h3>
+            {studyLabel(
+              { ...draft, degreeSelection: degree.selection },
+              language,
+            )}
+          </h3>
+          <p>
+            <strong>{degree.targetEcts} ECTS</strong> ·{" "}
+            {recipeMessages[language].counted}
+          </p>
+          {degree.additionalEcts > 0 && (
+            <p>
+              {degree.additionalEcts} ECTS ·{" "}
+              {recipeMessages[language].additional}
+            </p>
+          )}
+          <p>
+            {catchupMessages[language].studyStart}:{" "}
+            {
+              degree.selection.components.find(
+                (component) => component.slotId === "major",
+              )?.startSemester
+            }
+          </p>
+          {degree.status === "needs_clarification" && (
+            <p>{recipeMessages[language].incomplete}</p>
+          )}
+          {degree.issues.length > 0 && (
+            <details>
+              <summary>{recipeMessages[language].gaps}</summary>
+              <ReviewGaps degree={degree} language={language} />
+            </details>
+          )}
+        </section>
+      )}
       {(manual || step === "settings") && (
         <form
           className="setup-form"
@@ -607,7 +651,9 @@ export function PlanBoard({ language }: { language: Language }) {
     <section className="page planner-page degree-page">
       <header className="workspace-heading">
         <div>
-          <p className="eyebrow">{plan?.programme ?? "UniFr Planner"}</p>
+          <p className="eyebrow">
+            {plan ? studyLabel(plan, language) : "UniFr Planner"}
+          </p>
           <h1>{messages[language].plan}</h1>
           <SaveStatus language={language} />
         </div>
@@ -650,6 +696,7 @@ export function PlanBoard({ language }: { language: Language }) {
               {t.target}: {plan.targetEcts} ECTS
             </p>
           </div>
+          <StudySummary plan={plan} language={language} />
           <label className="planning-term-control">
             {catchupMessages[language].planning}
             <select

@@ -109,14 +109,8 @@ export function useDiscovery(
     state?.language === language
       ? state
       : undefined;
-  const previous =
-    state?.catalogue === catalogue &&
-    state?.term === term &&
-    state?.language === language
-      ? state?.discovery
-      : undefined;
   return {
-    discovery: current?.discovery ?? previous,
+    discovery: current?.discovery,
     error: current?.error,
     loading: !!plan && !!catalogue && !current,
   };

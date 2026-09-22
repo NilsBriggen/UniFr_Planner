@@ -1,3 +1,4 @@
+import { chooseManualSetup, configuredStudyPlan } from "./studies-helpers";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
@@ -25,15 +26,7 @@ test("the account creator can resume ownership in a fresh browser without sharin
     },
     { username, password },
   );
-  const snapshot = createPlan({
-    id: "account-owned",
-    scenarioId: "main",
-    name: "Account-owned share",
-    programme: "CS",
-    startTerm: "AS-2026",
-    semesterCount: 6,
-    targetEcts: 180,
-  });
+  const snapshot = configuredStudyPlan("Account-owned share");
   const shared = await page.evaluate(async (snapshot) => {
     const response = await fetch("/api/v1/shares", {
       method: "POST",
@@ -86,6 +79,10 @@ test("the account creator can resume ownership in a fresh browser without sharin
           ).snapshot.scenarios[0].travelMinutes,
       )
       .toBe(25);
+    expect(
+      (await (await owner.request.get(`/api/v1/shares/${shared.id}`)).json())
+        .snapshot.degreeSelection,
+    ).toEqual(snapshot.degreeSelection);
     await owner
       .getByRole("button", { name: "Share plan", exact: true })
       .click();
@@ -124,6 +121,7 @@ test("share owner updates automatically while another guest can only import a co
 }, info) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await page.goto("/setup");
+  await chooseManualSetup(page);
   await page
     .getByLabel("Plan name", { exact: true })
     .fill("Shared CS semester");
@@ -134,6 +132,8 @@ test("share owner updates automatically while another guest can only import a co
   await page
     .getByRole("button", { name: "Create local plan", exact: true })
     .click();
+  await expect(page).toHaveURL(/catalogue/);
+  await page.goto("/plan");
   await expect(
     page
       .getByRole("heading", { name: "Shared CS semester", exact: true })
@@ -270,6 +270,7 @@ test("the selected week downloads as an editable workbook and a complete landsca
 }, info) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await page.goto("/setup");
+  await chooseManualSetup(page);
   await page
     .getByLabel("Plan name", { exact: true })
     .fill("My weekly printout");
@@ -278,6 +279,8 @@ test("the selected week downloads as an editable workbook and a complete landsca
   await page
     .getByRole("button", { name: "Create local plan", exact: true })
     .click();
+  await expect(page).toHaveURL(/catalogue/);
+  await page.goto("/plan");
   await expect(
     page
       .getByRole("heading", { name: "My weekly printout", exact: true })

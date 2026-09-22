@@ -1,3 +1,4 @@
+import { chooseManualSetup } from "./studies-helpers";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { plannerMessages } from "../src/planner/messages";
@@ -172,9 +173,12 @@ for (const language of ["de", "fr", "en"] as const) {
       language,
     );
     await page.goto("/setup");
+    await chooseManualSetup(page, language);
     await page.getByLabel(t.planName, { exact: true }).fill("My degree");
     await page.getByLabel(t.programme, { exact: true }).fill("Informatics");
     await page.getByRole("button", { name: t.create, exact: true }).click();
+    await expect(page).toHaveURL(/catalogue/);
+    await page.goto("/plan");
     await expect(
       page.getByRole("heading", { name: "My degree", exact: true }),
     ).toBeVisible();

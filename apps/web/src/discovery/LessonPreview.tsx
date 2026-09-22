@@ -3,6 +3,7 @@ import type { Language } from "../i18n";
 import type { CalendarResult } from "../planner/calendar";
 import { lessonGroups, type Assessment } from "./engine";
 import { discoveryMessages } from "./messages";
+import { recommendationMessages } from "./recommendation-messages";
 
 export function LessonPreview({
   calendar,
@@ -57,15 +58,34 @@ export function OfferingAdvice({
   language: Language;
 }) {
   const t = discoveryMessages[language];
+  const r = recommendationMessages[language];
   return (
     <>
       {a.match && (
         <p className="match-note">
-          {t[a.match === "requirements" ? "requirement" : "related"]}
+          {a.recommended && a.recommendationKind
+            ? r[a.recommendationKind]
+            : t.requirement}
           {a.requirementTitles.length > 0 &&
             ` · ${a.requirementTitles.join(" / ")}`}
         </p>
       )}
+      {a.recommended && a.contributionEcts !== 0 && (
+        <p className="recommendation-contribution">
+          {a.contributionEcts === null
+            ? r.unknownCredits
+            : `${a.contributionEcts.toLocaleString(language)} ${r.contribution}`}
+        </p>
+      )}
+      {a.selectedStatus && (
+        <p className="discovery-help">{r[a.selectedStatus]}</p>
+      )}
+      {a.match &&
+        !a.recommended &&
+        !a.selectedStatus &&
+        a.prerequisiteState !== "unmet" && (
+          <p className="discovery-help">{r.covered}</p>
+        )}
       <LessonPreview calendar={a.calendar} language={language} />
       {(a.fit !== "unknown" || !a.calendar.unresolved.length) && (
         <p className={`fit-note ${a.fit}`}>
@@ -76,8 +96,13 @@ export function OfferingAdvice({
               : t.unknown}
         </p>
       )}
-      {a.prerequisitesUnknown && (
-        <p className="prerequisite-note">{t.prerequisite}</p>
+      {a.prerequisiteState !== "satisfied" && (
+        <p className="prerequisite-note">
+          {r[a.prerequisiteState === "unmet" ? "unmet" : "unknown"]}
+        </p>
+      )}
+      {a.match && a.reviewState === "needs_clarification" && (
+        <p className="discovery-help">{r.review}</p>
       )}
     </>
   );

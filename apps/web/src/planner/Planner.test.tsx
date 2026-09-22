@@ -206,7 +206,7 @@ it("keeps manual setup explicit and requires its programme and ECTS", async () =
   );
   expect(screen.getByLabelText("Programme")).toBeRequired();
   expect(screen.getByLabelText("Degree target (ECTS)")).toBeRequired();
-  expect(screen.queryByLabelText("Degree")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Degree")).not.toBeVisible();
 });
 it("validates imports and previews before adding a new plan", async () => {
   const user = userEvent.setup();

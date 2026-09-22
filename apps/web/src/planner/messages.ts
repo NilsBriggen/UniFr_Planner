@@ -14,7 +14,7 @@ const en = {
   localHelp:
     "Your plans stay in this browser. Export a JSON backup to keep them safe when changing devices or clearing browser data.",
   programmeHelp:
-    "Give your plan a name and set its duration. Next, add courses to a semester and open your weekly timetable. You can configure degree requirements afterwards.",
+    "Choose your degree and subjects so we can recommend courses for your outstanding requirements. Then select the semester you want to plan.",
   saved: "Saved on this device",
   unreadable:
     "Some saved plans could not be opened. They remain on this device; other plans are available.",
@@ -122,7 +122,7 @@ const de: PlannerMessages = {
   localHelp:
     "Deine Pläne bleiben in diesem Browser. Exportiere eine JSON-Sicherung vor einem Gerätewechsel oder dem Löschen von Browserdaten.",
   programmeHelp:
-    "Benenne deinen Plan und lege seine Dauer fest. Füge danach Kurse zu einem Semester hinzu und öffne deinen Wochenplan. Die Studienanforderungen kannst du später einrichten.",
+    "Wähle Abschluss und Fächer, damit wir Kurse für deine offenen Studienanforderungen empfehlen können. Wähle danach das Semester, das du planen möchtest.",
   saved: "Auf diesem Gerät gespeichert",
   unreadable:
     "Einige gespeicherte Pläne konnten nicht geöffnet werden. Sie bleiben auf diesem Gerät; andere Pläne sind verfügbar.",
@@ -230,7 +230,7 @@ const fr: PlannerMessages = {
   localHelp:
     "Vos plans restent dans ce navigateur. Exportez une sauvegarde JSON avant de changer d’appareil ou d’effacer les données du navigateur.",
   programmeHelp:
-    "Nommez votre plan et définissez sa durée. Ajoutez ensuite des cours à un semestre et ouvrez votre horaire hebdomadaire. Vous pourrez configurer les exigences du cursus plus tard.",
+    "Choisissez votre diplôme et vos matières pour obtenir des recommandations répondant à vos exigences restantes. Sélectionnez ensuite le semestre à planifier.",
   saved: "Enregistré sur cet appareil",
   unreadable:
     "Certains plans enregistrés n’ont pas pu être ouverts. Ils restent sur cet appareil ; les autres plans sont disponibles.",

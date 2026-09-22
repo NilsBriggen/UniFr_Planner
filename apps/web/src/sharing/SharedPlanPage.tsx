@@ -21,6 +21,7 @@ import { useSharing } from "./context";
 import { shareRequest, type SharedPlan } from "./model";
 import { shareMessages } from "./messages";
 import "./sharing.css";
+import { studyLabel } from "../requirements/study-summary";
 
 export default function SharedPlanPage({ language }: { language: Language }) {
   const { id = "" } = useParams(),
@@ -126,7 +127,7 @@ export default function SharedPlanPage({ language }: { language: Language }) {
         <div>
           <p className="eyebrow">{t.shared}</p>
           <h1>{plan.name}</h1>
-          <p>{plan.programme}</p>
+          <p>{studyLabel(plan, language)}</p>
         </div>
         <div className="workspace-actions">
           <Button

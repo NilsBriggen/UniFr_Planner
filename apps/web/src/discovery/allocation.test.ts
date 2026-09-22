@@ -256,8 +256,13 @@ it("uses refreshed assignment eligibility in schedule-improvement degree impact"
 it("allows every unfilled one_of alternative and carries ancestor review gaps", () => {
   const p = plan();
   expect(selectedChoices(evaluatePlanRequirements(p))).toEqual({});
-  expect(assess(p, course("A")).recommended).toBe(true);
-  expect(assess(p, course("B")).recommended).toBe(true);
+  for (const code of ["A", "B"])
+    expect(assess(p, course(code))).toMatchObject({
+      recommended: true,
+      recommendationKind: "required",
+      contributionEcts: 6,
+    });
+  expect(assess(p, course("POOL-A", true)).recommendationKind).toBe("elective");
   expect(evaluatePlanRequirements(p)?.status).toBe("needs_clarification");
   expect(assess(p, course("FIRST")).reviewState).toBe("needs_clarification");
 });
