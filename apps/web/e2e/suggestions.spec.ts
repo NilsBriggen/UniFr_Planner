@@ -1,3 +1,4 @@
+import { openPlanJson, openPlanTools } from "./studies-helpers";
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { suggestionMessages } from "../src/suggestions/messages";
@@ -40,11 +41,13 @@ for (const language of ["de", "fr", "en"] as const) {
       language,
     );
     await page.goto("/plan");
+    await openPlanJson(page, language);
     await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(plan));
     await page.getByRole("button", { name: p.preview, exact: true }).click();
     await page
       .getByRole("button", { name: p.confirmImport, exact: true })
       .click();
+    await openPlanTools(page, language);
     await page.getByRole("link", { name: t.nav, exact: true }).click();
     const original = await savedPlans(page);
     await page
@@ -202,20 +205,24 @@ for (const language of ["de", "fr", "en"] as const) {
       c.pinned = true;
     });
     await page.goto("/plan");
+    await openPlanJson(page, language);
     await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(plan));
     await page.getByRole("button", { name: p.preview, exact: true }).click();
     await page
       .getByRole("button", { name: p.confirmImport, exact: true })
       .click();
+    await openPlanTools(page, language);
     await page.getByRole("link", { name: t.nav, exact: true }).click();
     await expect(page.getByText(t.noSafe, { exact: true })).toBeVisible();
     await page.goto("/plan");
     plan.programme = "Real degree";
+    await openPlanJson(page, language);
     await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(plan));
     await page.getByRole("button", { name: p.preview, exact: true }).click();
     await page
       .getByRole("button", { name: p.confirmImport, exact: true })
       .click();
+    await openPlanTools(page, language);
     await page.getByRole("link", { name: t.nav, exact: true }).click();
     await expect(page.getByText(t.noData, { exact: true })).toBeVisible();
     await expect(page.getByText(t.noSafe, { exact: true })).toHaveCount(0);
