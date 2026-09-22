@@ -9,11 +9,8 @@ import {
 import type { Plan } from "./domain";
 import { PlanConflictError, PlanStore } from "./storage";
 import { usePublishedCatalogue } from "./usePublishedCatalogue";
-import {
-  applySuggestion,
-  type Revision,
-  type Suggestion,
-} from "../suggestions/engine";
+import { applySuggestion, type Revision } from "../suggestions/revisions";
+import type { Suggestion } from "../suggestions/engine";
 
 type PlansContext = {
   published: ReturnType<typeof usePublishedCatalogue>;

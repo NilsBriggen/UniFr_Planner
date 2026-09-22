@@ -1,3 +1,4 @@
+import { semesterLabel } from "../planner/SemesterField";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components";
@@ -54,11 +55,12 @@ export default function SemesterSummary({
       >
         <summary>
           <span>
-            <strong>{term}</strong> · {credits} ECTS
+            <strong>{semesterLabel(term, language)}</strong> · {credits} ECTS
           </span>
           <span>
             {unknownCredits > 0 && `${unknownCredits} ${p.unknown} · `}
             {pairs.size} {t.conflictCount}
+            {unresolved > 0 && ` · ${unresolved} ${t.unknownCount}`}
           </span>
         </summary>
         <p>

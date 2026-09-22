@@ -45,6 +45,8 @@ export const catalogueMessages = {
     transportBody:
       "Die Verbindung zum Katalog ist nicht verfügbar. Deine Suchauswahl bleibt erhalten.",
     stale: "Veraltet",
+    staleBody:
+      "Dieser Katalogstand ist älter. Prüfe aktuelle Angaben im offiziellen Vorlesungsverzeichnis.",
     age: "Alter",
     days: "Tage",
     updated: "Veröffentlicht",
@@ -130,6 +132,8 @@ export const catalogueMessages = {
     transportBody:
       "La connexion au catalogue est indisponible. Vos critères de recherche sont conservés.",
     stale: "Ancien",
+    staleBody:
+      "Cette version du catalogue est ancienne. Vérifiez les informations actuelles dans le programme officiel des cours.",
     age: "Âge",
     days: "jours",
     updated: "Publié",
@@ -215,6 +219,8 @@ export const catalogueMessages = {
     transportBody:
       "The catalogue connection is unavailable. Your search choices are preserved.",
     stale: "Stale",
+    staleBody:
+      "This catalogue snapshot is older. Check current details in the official course catalogue.",
     age: "Age",
     days: "days",
     updated: "Published",

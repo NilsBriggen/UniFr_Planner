@@ -1,3 +1,4 @@
+import { semesterLabel } from "./SemesterField";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Temporal } from "@js-temporal/polyfill";
@@ -187,7 +188,8 @@ function Calendar({ language }: { language: Language }) {
         <div>
           <p className="eyebrow">
             {plan.name}
-            {scenario.name !== plan.name && ` · ${scenario.name}`} · {term}
+            {scenario.name !== plan.name && ` · ${scenario.name}`} ·{" "}
+            {semesterLabel(term, language)}
           </p>
           <h1>{discoveryMessages[language].week}</h1>
           <SaveStatus language={language} />
@@ -247,7 +249,9 @@ function Calendar({ language }: { language: Language }) {
                 }}
               >
                 {plan.semesters.map((semester) => (
-                  <option key={semester}>{semester}</option>
+                  <option key={semester} value={semester}>
+                    {semesterLabel(semester, language)}
+                  </option>
                 ))}
               </select>
             </label>
@@ -490,7 +494,7 @@ function Calendar({ language }: { language: Language }) {
         </section>
         <section className="print-only">
           <h2>
-            {t.agenda} · {term}
+            {t.agenda} · {semesterLabel(term, language)}
           </h2>
           {all.map((event) => (
             <EventCard key={event.id} event={event} language={language} />

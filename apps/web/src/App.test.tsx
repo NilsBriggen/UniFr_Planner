@@ -94,6 +94,7 @@ describe("application shell", () => {
     expect(
       await screen.findByRole("heading", { level: 1, name: title }),
     ).toBeVisible();
+    expect(document.title).toBe(`${title} · UniFr Planner`);
   });
 
   it("changes between semester agenda and day view", async () => {

@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import type { Language } from "../i18n";
 import type { CalendarResult } from "../planner/calendar";
-import { lessonGroups, type Assessment } from "./engine";
+import { lessonGroups } from "./presentation";
+import type { Assessment } from "./engine";
 import { discoveryMessages } from "./messages";
 import { recommendationMessages } from "./recommendation-messages";
 

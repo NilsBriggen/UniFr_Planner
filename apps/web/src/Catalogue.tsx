@@ -1,3 +1,4 @@
+import { semesterLabel } from "./planner/SemesterField";
 import { useEffect, useRef, useState } from "react";
 import {
   Link,
@@ -32,7 +33,7 @@ import {
 } from "./planner/domain";
 import { catchupMessages } from "./planner/catchup-messages";
 import { useDiscovery, useDiscoveryIndex } from "./discovery/useDiscovery";
-import { filterDiscovery, offeringKey } from "./discovery/engine";
+import { filterDiscovery, offeringKey } from "./discovery/presentation";
 import { discoveryMessages } from "./discovery/messages";
 import { OfferingAdvice } from "./discovery/LessonPreview";
 import SemesterSummary from "./discovery/SemesterSummary";
@@ -142,7 +143,13 @@ function Provenance({
       {warning && (
         <details className="source-details">
           <summary>{t.sourceDetails}</summary>
-          <p>{status.development_fixture ? t.fixtureBody : t.rejectedBody}</p>
+          <p>
+            {status.development_fixture
+              ? t.fixtureBody
+              : status.latest_sync_outcome?.startsWith("rejected")
+                ? t.rejectedBody
+                : t.staleBody}
+          </p>
           <a className="text-link" href={source}>
             {t.catalogueSource} ↗
           </a>
@@ -480,6 +487,27 @@ function Search({
           total: filtered.length,
         }
       : serverPage;
+  const hasPage = !!page;
+  useEffect(() => {
+    if (loading || findingMatches || !hasPage) return;
+    const key = `unifr.catalogueScroll:${query}`;
+    let value: string | null;
+    try {
+      value = sessionStorage.getItem(key);
+    } catch {
+      return;
+    }
+    if (value === null || !Number.isFinite(Number(value))) return;
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo(0, Math.max(0, Number(value)));
+      try {
+        sessionStorage.removeItem(key);
+      } catch {
+        /* Optional presentation state. */
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [loading, findingMatches, hasPage, query]);
   const updateChoice = (key: string, value: string) => {
     const next = new URLSearchParams(query);
     next.set(key, value);
@@ -563,7 +591,9 @@ function Search({
                 onChange={(e) => updateChoice("term", e.target.value)}
               >
                 {plan.semesters.map((value) => (
-                  <option key={value}>{value}</option>
+                  <option key={value} value={value}>
+                    {semesterLabel(value, language)}
+                  </option>
                 ))}
               </select>
             </label>
@@ -859,7 +889,16 @@ function Search({
                     <h2>
                       <Link
                         to={`/catalogue/${encodeURIComponent(course.code)}?${query}`}
-                        state={{ catalogueScrollY: window.scrollY }}
+                        onClick={() => {
+                          try {
+                            sessionStorage.setItem(
+                              `unifr.catalogueScroll:${query}`,
+                              String(window.scrollY),
+                            );
+                          } catch {
+                            /* Browsing works without storage. */
+                          }
+                        }}
                       >
                         {localizedTitle(course, language)}{" "}
                         <span className="course-code">{course.code}</span>
@@ -953,7 +992,6 @@ function Search({
 export default function Catalogue({ language }: { language: Language }) {
   const { course_code } = useParams();
   const [query, setQuery] = useSearchParams();
-  const location = useLocation();
   const queryString = query.toString();
   const { plan, ready } = usePlans();
   useEffect(() => {
@@ -980,13 +1018,6 @@ export default function Catalogue({ language }: { language: Language }) {
   const [state, setState] = useState<LoadState>({ loading: true });
   const heading = useRef<HTMLHeadingElement>(null);
   const t: CatalogueMessages = catalogueMessages[language];
-  useEffect(() => {
-    if (course_code) return;
-    const scrollY = (location.state as { catalogueScrollY?: number } | null)
-      ?.catalogueScrollY;
-    if (typeof scrollY === "number")
-      requestAnimationFrame(() => scrollTo(0, scrollY));
-  }, [course_code, location.state]);
   useEffect(() => {
     const controller = new AbortController();
     let active = true;

@@ -1,3 +1,4 @@
+import { semesterLabel } from "./SemesterField";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import type { CatalogueStatus, Offering } from "../api/client";
@@ -103,11 +104,13 @@ function AddToSemester({
       {(!existing || canSchedule) && !editing && (
         <Button
           className="primary"
-          aria-label={t.addToSemester}
-          disabled={busy || !semester}
+          aria-label={semester ? t.addToSemester : t.add}
+          disabled={busy}
           onClick={add}
         >
-          {t.addToSemester} · {semester}
+          {semester
+            ? `${t.addToSemester} · ${semesterLabel(semester, language)}`
+            : t.add}
         </Button>
       )}
       {(!existing || canSchedule) && (
@@ -125,17 +128,21 @@ function AddToSemester({
               onChange={(event) => setSemester(event.target.value)}
             >
               {plan.semesters.map((term) => (
-                <option key={term}>{term}</option>
+                <option key={term} value={term}>
+                  {semesterLabel(term, language)}
+                </option>
               ))}
               <option value="">{t.unscheduled}</option>
             </select>
           </label>
           <Button
-            aria-label={t.addToSemester}
-            disabled={busy || !semester}
+            aria-label={semester ? t.addToSemester : t.add}
+            disabled={busy}
             onClick={add}
           >
-            {t.addToSemester} · {semester}
+            {semester
+              ? `${t.addToSemester} · ${semesterLabel(semester, language)}`
+              : t.add}
           </Button>
         </details>
       )}
@@ -163,8 +170,11 @@ function AddToSemester({
       {existing && !canSchedule ? (
         <div className="course-planner-result">
           <p role="status">
-            {t.saved} · {existing.semester ?? t.unscheduled} ·{" "}
-            {existing.ects ?? "?"} ECTS
+            {t.saved} ·{" "}
+            {existing.semester
+              ? semesterLabel(existing.semester, language)
+              : t.unscheduled}{" "}
+            · {existing.ects ?? "?"} ECTS
           </p>
           <Link
             className="text-link"

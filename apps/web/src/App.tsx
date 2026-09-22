@@ -12,6 +12,7 @@ import { Button, StatusNotice } from "./components";
 import { messages, type Language, type Messages } from "./i18n";
 import { experienceMessages } from "./experience-messages";
 import RouteBoundary from "./RouteBoundary";
+import PlanConflictNotice from "./planner/PlanConflictNotice";
 const Catalogue = lazy(() => import("./Catalogue"));
 import { PlanProvider, usePlans } from "./planner/context";
 const CompletedCourses = lazy(() => import("./planner/CompletedCourses"));
@@ -20,7 +21,7 @@ const PlanBoard = lazy(() =>
   import("./planner/Planner").then((module) => ({ default: module.PlanBoard })),
 );
 const Setup = lazy(() =>
-  import("./planner/Planner").then((module) => ({ default: module.Setup })),
+  import("./planner/Setup").then((module) => ({ default: module.Setup })),
 );
 const Requirements = lazy(() => import("./requirements/Requirements"));
 const Suggestions = lazy(() => import("./suggestions/Suggestions"));
@@ -160,6 +161,13 @@ function Semester({ t }: { t: Messages }) {
     </section>
   );
 }
+function PageTitle({ language }: { language: Language }) {
+  const location = useLocation();
+  useEffect(() => {
+    document.title = `${document.querySelector("h1")?.textContent ?? "UniFr"} · UniFr Planner`;
+  }, [language, location.pathname]);
+  return null;
+}
 function AppShell() {
   const plans = usePlans();
   const [language, setLanguage] = useState<Language>(() => {
@@ -190,9 +198,7 @@ function AppShell() {
       /* Still works when browser storage is unavailable. */
     }
   }, [language]);
-  useEffect(() => {
-    document.title = `${document.querySelector("h1")?.textContent ?? "UniFr"} · UniFr Planner`;
-  }, [language, location.pathname]);
+
   useEffect(() => {
     const element = navigationRef.current;
     if (!element || typeof ResizeObserver === "undefined") return;
@@ -289,6 +295,12 @@ function AppShell() {
                   ? "active"
                   : undefined
               }
+              aria-current={
+                key === "plan" &&
+                ["/requirements", "/setup"].includes(location.pathname)
+                  ? "page"
+                  : undefined
+              }
               key={key}
               to={
                 key === "semester"
@@ -324,6 +336,7 @@ function AppShell() {
         </nav>
         <div className="canvas">
           <main id="main" tabIndex={-1}>
+            <PlanConflictNotice language={language} />
             {!location.pathname.startsWith("/shared/") && (
               <SourceChanges language={language} />
             )}
@@ -414,6 +427,7 @@ function AppShell() {
                     }
                   />
                 </Routes>
+                <PageTitle language={language} />
               </Suspense>
             </RouteBoundary>
           </main>
