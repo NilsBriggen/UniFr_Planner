@@ -206,7 +206,17 @@ for (const language of ["de", "fr", "en"] as const) {
     const allocation = page.getByLabel(`${t.semester} · DEMO-001`, {
       exact: true,
     });
-    // Direct add assigns the planning semester immediately.
+    // Direct add assigns the planning semester immediately; opening the moved
+    // course keeps keyboard rescheduling covered through the collapsed board.
+    await allocation.selectOption("");
+    await expect(page.locator(".save-status")).toHaveText(t.saved);
+    const unscheduled = page.locator("details.semester-column", {
+      has: page.getByRole("heading", { name: t.unscheduled, exact: true }),
+    });
+    await unscheduled.locator("summary").click();
+    await allocation.focus();
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("Enter");
     await expect(allocation).toHaveValue("AS-2026");
     const pin = page.getByRole("button", {
       name: `${t.pin} · DEMO-001`,
