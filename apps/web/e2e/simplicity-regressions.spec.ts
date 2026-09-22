@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import { experienceMessages } from "../src/experience-messages";
 import { messages } from "../src/i18n";
 import { plannerMessages } from "../src/planner/messages";
@@ -104,3 +105,22 @@ test("course query and settled scroll position survive a detail round trip", asy
     .poll(() => page.evaluate(() => window.scrollY))
     .toBeGreaterThanOrEqual(savedScroll - 2);
 });
+
+for (const language of ["de", "fr", "en"] as const) {
+  test(`weekly timetable has a complete heading hierarchy in ${language}`, async ({
+    page,
+  }) => {
+    await page.clock.setFixedTime(new Date("2026-09-22T12:00:00Z"));
+    await page.addInitScript(
+      (lang) => localStorage.setItem("unifr.language", lang),
+      language,
+    );
+    await importStudyPlan(page, configuredStudyPlan(), language);
+    await page.goto("/semester/AS-2026");
+    await expect(page.locator(".timetable-grid")).toBeVisible();
+    expect(
+      (await new AxeBuilder({ page }).withRules(["heading-order"]).analyze())
+        .violations,
+    ).toEqual([]);
+  });
+}

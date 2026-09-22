@@ -66,7 +66,7 @@ export default function WeekTimetable({
             {zone.split("/")[1]}
           </div>
           {week.days.map((day) => (
-            <h3 className="timetable-day-heading" key={`heading-${day.date}`}>
+            <h2 className="timetable-day-heading" key={`heading-${day.date}`}>
               <span className="calendar-weekday">
                 {format(`${day.date}T12:00:00Z`, { weekday: "long" })}
               </span>
@@ -76,7 +76,7 @@ export default function WeekTimetable({
                   month: "short",
                 })}
               </time>
-            </h3>
+            </h2>
           ))}
           <div className="timetable-hours" aria-hidden="true">
             {hours.map((hour) => (
