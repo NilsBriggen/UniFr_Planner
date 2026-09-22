@@ -25,6 +25,32 @@ async function setup() {
   );
 }
 
+it("moves from studies to review without a separate preview action", async () => {
+  await setup();
+  expect(screen.getByLabelText("Search programmes")).toBeVisible();
+  fireEvent.change(screen.getByLabelText("Search programmes"), {
+    target: { value: "Law" },
+  });
+  fireEvent.change(screen.getByLabelText("Main programme"), {
+    target: { value: "bachelor-ius-law" },
+  });
+
+  expect(screen.queryByLabelText("Variant / track")).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Degree structure"), {
+    target: { value: "ba-180" },
+  });
+  expect(
+    screen.queryByRole("button", { name: "Preview degree" }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Review and start" }));
+
+  expect(await screen.findByText("2. Review and start")).toBeVisible();
+  expect(screen.getByRole("heading", { name: "Law", level: 3 })).toBeVisible();
+  expect(screen.getByLabelText("Planning semester · Season")).toBeVisible();
+  expect(screen.getByLabelText("Planning semester · Year")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Start planning" })).toBeVisible();
+});
+
 it("keeps the structured study draft when switching to the manual fallback and back", async () => {
   await setup();
   fireEvent.change(screen.getByLabelText("Main programme"), {
@@ -64,11 +90,11 @@ it("keeps setup usable while invalid values are being typed", async () => {
     expect(screen.getByLabelText(label)).toHaveValue(" ");
   }
   for (const year of ["9999", "2099", "2088", "0000", ""]) {
-    fireEvent.change(screen.getByLabelText("Entry year"), {
+    fireEvent.change(screen.getByLabelText("Study start · Year"), {
       target: { value: year },
     });
     expect(
-      screen.getByRole("button", { name: "Create local plan" }),
+      screen.getByRole("button", { name: "Start planning" }),
     ).toBeVisible();
   }
   fireEvent.change(screen.getByLabelText("Degree target (ECTS)"), {
@@ -137,27 +163,24 @@ it.each([
     fireEvent.change(screen.getByLabelText("Main programme"), {
       target: { value: programme },
     });
-    fireEvent.change(screen.getByLabelText("Variant / track"), {
-      target: { value: variant },
-    });
-    fireEvent.change(screen.getByLabelText("Degree structure"), {
-      target: { value: structure },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Preview degree" }));
-    fireEvent.click(
-      screen.getByRole("button", { name: "Continue to planning" }),
-    );
+    const variantField = screen.queryByLabelText("Variant / track");
+    if (variantField)
+      fireEvent.change(variantField, { target: { value: variant } });
+    const structureField = screen.queryByLabelText("Degree structure");
+    if (structureField)
+      fireEvent.change(structureField, { target: { value: structure } });
+    fireEvent.click(screen.getByRole("button", { name: "Review and start" }));
     fireEvent.change(screen.getByLabelText("Plan name"), {
       target: { value: "My configured studies" },
     });
     const save = vi
       .spyOn(PlanStore.prototype, "save")
       .mockRejectedValueOnce(new Error("Disk full"));
-    fireEvent.click(screen.getByRole("button", { name: "Create local plan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
     await waitFor(() => expect(save).toHaveBeenCalledOnce());
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: "Create local plan" }),
+        screen.getByRole("button", { name: "Start planning" }),
       ).toBeEnabled(),
     );
     expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(0);
@@ -165,7 +188,7 @@ it.each([
       "My configured studies",
     );
     expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: "Create local plan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
     await waitFor(async () =>
       expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(1),
     );

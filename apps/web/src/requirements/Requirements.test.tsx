@@ -206,16 +206,22 @@ it("offers seven faculty groups, major-only recipes, and saves a preview with in
     screen.getByRole("combobox", { name: "Minor · 60 ECTS" }),
     "bachelor-digitinf-businessinformatics/minor-60",
   );
+  await userEvent.selectOptions(
+    screen.getByRole("combobox", {
+      name: "Minor · 60 ECTS · Starting semester · Season",
+    }),
+    "SS",
+  );
   await userEvent.clear(
-    screen.getByRole("textbox", {
-      name: "Minor · 60 ECTS · Starting semester",
+    screen.getByRole("spinbutton", {
+      name: "Minor · 60 ECTS · Starting semester · Year",
     }),
   );
   await userEvent.type(
-    screen.getByRole("textbox", {
-      name: "Minor · 60 ECTS · Starting semester",
+    screen.getByRole("spinbutton", {
+      name: "Minor · 60 ECTS · Starting semester · Year",
     }),
-    "SS-2027",
+    "2027",
   );
   await userEvent.click(screen.getByRole("button", { name: "Preview degree" }));
   expect(await screen.findByText("Applied exceptions")).toBeVisible();

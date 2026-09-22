@@ -25,6 +25,39 @@
   justify-self: start;
   margin-top: 8px;
 }
+.setup-review {
+  margin-block: 20px;
+  padding: 20px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: white;
+}
+.setup-options {
+  grid-column: 1 / -1;
+}
+.setup-options > summary {
+  cursor: pointer;
+  padding-block: 10px;
+}
+.semester-field {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.semester-field legend {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+.checkbox-label input[type="checkbox"] {
+  width: 20px !important;
+  min-height: 20px !important;
+}
 .planner-page label,
 .import-plan label {
   display: grid;

@@ -17,6 +17,7 @@ import type { Plan } from "../planner/domain";
 import { usePlans } from "../planner/context";
 import { bindDegreeSelection } from "./adapter";
 import { recipeMessages } from "./recipeMessages";
+import { SemesterField } from "../planner/SemesterField";
 
 export function DegreeSelectionForm({
   plan,
@@ -26,6 +27,7 @@ export function DegreeSelectionForm({
   onClearEvidence,
   commitLabel,
   compactPreview = false,
+  setupMode = false,
 }: {
   plan: Plan;
   language: Language;
@@ -34,6 +36,7 @@ export function DegreeSelectionForm({
   onClearEvidence?: () => Promise<boolean>;
   commitLabel?: string;
   compactPreview?: boolean;
+  setupMode?: boolean;
 }) {
   const t = recipeMessages[language];
   const original = plan.degreeSelection?.components.find(
@@ -44,6 +47,7 @@ export function DegreeSelectionForm({
   );
   const [degree, setDegree] = useState(originalProgramme?.degree ?? "bachelor");
   const [faculty, setFaculty] = useState(originalProgramme?.faculty ?? "");
+  const [search, setSearch] = useState("");
   const [main, setMain] = useState(original?.programmeId ?? "");
   const [variant, setVariant] = useState(original?.variantId ?? "");
   const [structure, setStructure] = useState(
@@ -72,6 +76,9 @@ export function DegreeSelectionForm({
       (component) => component.recipeVersion !== recipeRegistry.edition,
     ) ?? false;
   const [useCurrentEdition, setUseCurrentEdition] = useState(false);
+  const [differentStarts, setDifferentStarts] = useState<
+    Record<string, boolean>
+  >({});
 
   const major = recipeRegistry.programmes.find((p) => p.id === main);
   const track = major?.variants.find((v) => v.id === variant);
@@ -80,6 +87,13 @@ export function DegreeSelectionForm({
     [major, track],
   );
   const layout = recipeRegistry.structures.find((s) => s.id === structure);
+  const programmes = majorProgrammes(degree, faculty).filter((programme) =>
+    (programme.titles?.[language] ?? programme.title)
+      .toLocaleLowerCase(language)
+      .includes(search.trim().toLocaleLowerCase(language)),
+  );
+  const majorVariants =
+    major?.variants.filter((candidate) => candidate.role === "major") ?? [];
   const hasEvidence = plan.scenarios.some(
     (s) =>
       s.requirementEvidence &&
@@ -161,7 +175,7 @@ export function DegreeSelectionForm({
       )}
       <form
         className="planner-form"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           try {
             if (unavailableEdition && !useCurrentEdition)
@@ -189,8 +203,12 @@ export function DegreeSelectionForm({
                   ),
               ],
             };
-            setPreview(composeDegree(recipeRegistry, selection));
+            const resolved = composeDegree(recipeRegistry, selection);
+            setPreview(resolved);
             setError("");
+            if (setupMode && resolved.status !== "prohibited") {
+              if (!(await onCommit(resolved))) setError(t.failed);
+            }
           } catch (e) {
             setPreview(null);
             setError(`${t.error} ${e instanceof Error ? e.message : ""}`);
@@ -213,6 +231,16 @@ export function DegreeSelectionForm({
             <option value="bachelor">Bachelor</option>
             <option value="master">Master</option>
           </select>
+        </label>
+        <label>
+          {t.search}
+          <input
+            aria-label={t.search}
+            type="search"
+            value={search}
+            disabled={busy}
+            onChange={(event) => setSearch(event.target.value)}
+          />
         </label>
         <label>
           {t.faculty}
@@ -249,14 +277,14 @@ export function DegreeSelectionForm({
             }}
           >
             <option value="">{t.choose}</option>
-            {majorProgrammes(degree, faculty).map((p) => (
+            {programmes.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.titles?.[language] ?? p.title}
               </option>
             ))}
           </select>
         </label>
-        {major && (
+        {major && (!setupMode || majorVariants.length > 1) && (
           <label>
             {t.variant}
             <select
@@ -270,18 +298,21 @@ export function DegreeSelectionForm({
               }}
             >
               <option value="">{t.choose}</option>
-              {major.variants
-                .filter((v) => v.role === "major")
-                .map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.ects} ECTS
-                    {v.id.endsWith("-teaching") ? ` · ${t.teachingTrack}` : ""}
-                  </option>
-                ))}
+              {majorVariants.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.ects} ECTS
+                  {v.id.endsWith("-teaching") ? ` · ${t.teachingTrack}` : ""}
+                </option>
+              ))}
             </select>
           </label>
         )}
-        {track && (
+        {setupMode && track && majorVariants.length === 1 && (
+          <p className="recipe-choice-summary">
+            {t.variant}: {track.ects} ECTS
+          </p>
+        )}
+        {track && (!setupMode || structures.length > 1) && (
           <label>
             {t.structure}
             <select
@@ -312,22 +343,34 @@ export function DegreeSelectionForm({
             </select>
           </label>
         )}
-        <label>
-          {t.major} · {t.semester}
-          <input
-            aria-label={`${t.major} · ${t.semester}`}
-            value={semester}
-            pattern="(AS|SS)-20[0-9]{2}"
-            maxLength={7}
-            required
-            disabled={busy}
-            onChange={(e) => {
-              setSemester(e.target.value);
-              invalidate();
-            }}
-            placeholder="AS-2026"
-          />
-        </label>
+        {setupMode && track && structures.length === 1 && layout && (
+          <p className="recipe-choice-summary">
+            {t.structure}:{" "}
+            {layout.slots
+              .map((slot) => `${t[slot.role]} ${slot.ects} ECTS`)
+              .join(" + ")}
+          </p>
+        )}
+        <SemesterField
+          label={`${t.major} · ${t.semester}`}
+          value={semester}
+          language={language}
+          disabled={busy}
+          onChange={(value) => {
+            setSemester(value);
+            setChoices((current) =>
+              Object.fromEntries(
+                Object.entries(current).map(([id, component]) => [
+                  id,
+                  differentStarts[id]
+                    ? component
+                    : { ...component, startSemester: value },
+                ]),
+              ),
+            );
+            invalidate();
+          }}
+        />
         {major &&
           layout?.slots
             .filter((s) => s.role !== "major")
@@ -392,28 +435,44 @@ export function DegreeSelectionForm({
                       )}
                     </select>
                   </label>
-                  {selected && (
-                    <label>
-                      {label} · {t.semester}
+                  {selected && setupMode && (
+                    <label className="checkbox-label">
                       <input
-                        aria-label={`${label} · ${t.semester}`}
-                        value={selected.startSemester}
-                        required
-                        pattern="(AS|SS)-20[0-9]{2}"
-                        maxLength={7}
+                        type="checkbox"
+                        checked={!!differentStarts[slot.id]}
                         disabled={busy}
-                        onChange={(e) => {
-                          setChoices({
-                            ...choices,
-                            [slot.id]: {
-                              ...selected,
-                              startSemester: e.target.value,
-                            },
+                        onChange={(event) => {
+                          setDifferentStarts({
+                            ...differentStarts,
+                            [slot.id]: event.target.checked,
                           });
-                          invalidate();
+                          if (!event.target.checked)
+                            setChoices({
+                              ...choices,
+                              [slot.id]: {
+                                ...selected,
+                                startSemester: semester,
+                              },
+                            });
                         }}
                       />
+                      {t.differentStart}
                     </label>
+                  )}
+                  {selected && (!setupMode || differentStarts[slot.id]) && (
+                    <SemesterField
+                      label={`${label} · ${t.semester}`}
+                      value={selected.startSemester}
+                      language={language}
+                      disabled={busy}
+                      onChange={(value) => {
+                        setChoices({
+                          ...choices,
+                          [slot.id]: { ...selected, startSemester: value },
+                        });
+                        invalidate();
+                      }}
+                    />
                   )}
                 </fieldset>
               );
@@ -424,11 +483,11 @@ export function DegreeSelectionForm({
             busy || !layout || (unavailableEdition && !useCurrentEdition)
           }
         >
-          {t.preview}
+          {setupMode ? (commitLabel ?? t.save) : t.preview}
         </Button>
       </form>
       {error && <p role="alert">{error}</p>}
-      {preview && (
+      {preview && !setupMode && (
         <section aria-label={t.preview}>
           <h3>{t.preview}</h3>
           <p>

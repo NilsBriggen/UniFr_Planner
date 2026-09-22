@@ -111,9 +111,11 @@ it("creates a guest degree, records completion, duplicates independently and res
     }),
   );
   await waitFor(() => expect(screen.getByLabelText("Plan name")).toBeEnabled());
-  await user.type(await screen.findByLabelText("Plan name"), "CS degree");
+  await user.clear(await screen.findByLabelText("Plan name"));
+  await user.type(screen.getByLabelText("Plan name"), "CS degree");
+  await user.clear(screen.getByLabelText("Programme"));
   await user.type(screen.getByLabelText("Programme"), "Informatics");
-  await user.click(screen.getByRole("button", { name: "Create local plan" }));
+  await user.click(screen.getByRole("button", { name: "Start planning" }));
   await waitFor(async () =>
     expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(1),
   );
@@ -162,9 +164,8 @@ it("creates a configured degree atomically with its derived credits and componen
     screen.getByLabelText("Main programme"),
     "bachelor-digitinf-informatics",
   );
-  await user.selectOptions(
-    screen.getByLabelText("Variant / track"),
-    "major-120",
+  await waitFor(() =>
+    expect(screen.getByText("Variant / track: 120 ECTS")).toBeVisible(),
   );
   await user.selectOptions(
     screen.getByLabelText("Degree structure"),
@@ -174,19 +175,24 @@ it("creates a configured degree atomically with its derived credits and componen
     screen.getByLabelText("Minor · 60 ECTS"),
     "bachelor-digitinf-businessinformatics/minor-60",
   );
+  await user.click(
+    screen.getByLabelText("This component started in a different semester"),
+  );
+  await user.selectOptions(
+    screen.getByLabelText("Minor · 60 ECTS · Starting semester · Season"),
+    "SS",
+  );
   await user.clear(
-    screen.getByLabelText("Minor · 60 ECTS · Starting semester"),
+    screen.getByLabelText("Minor · 60 ECTS · Starting semester · Year"),
   );
   await user.type(
-    screen.getByLabelText("Minor · 60 ECTS · Starting semester"),
-    "SS-2027",
+    screen.getByLabelText("Minor · 60 ECTS · Starting semester · Year"),
+    "2027",
   );
-  await user.click(screen.getByRole("button", { name: "Preview degree" }));
-  await user.click(
-    screen.getByRole("button", { name: "Continue to planning" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Review and start" }));
+  await user.clear(screen.getByLabelText("Plan name"));
   await user.type(screen.getByLabelText("Plan name"), "My informatics degree");
-  await user.click(screen.getByRole("button", { name: "Create local plan" }));
+  await user.click(screen.getByRole("button", { name: "Start planning" }));
   const stored = (await new PlanStore(indexedDB).load()).plans;
   expect(stored).toHaveLength(1);
   expect(stored[0].targetEcts).toBe(180);

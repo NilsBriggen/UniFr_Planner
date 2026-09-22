@@ -88,17 +88,22 @@ it("sets start and planning separately, extends semester range and offers skippa
     }),
   );
   await waitFor(() => expect(screen.getByLabelText("Plan name")).toBeEnabled());
+  await user.clear(screen.getByLabelText("Plan name"));
   await user.type(screen.getByLabelText("Plan name"), "My degree");
+  await user.clear(screen.getByLabelText("Programme"));
   await user.type(screen.getByLabelText("Programme"), "CS");
-  await user.clear(screen.getByLabelText("Entry year"));
-  await user.type(screen.getByLabelText("Entry year"), "2024");
-  await user.selectOptions(screen.getByLabelText("Study start"), "AS");
-  await user.selectOptions(screen.getByLabelText("Planning semester"), "AS");
-  await user.clear(screen.getByLabelText("Planning year"));
-  await user.type(screen.getByLabelText("Planning year"), "2026");
+  await user.clear(screen.getByLabelText("Study start · Year"));
+  await user.type(screen.getByLabelText("Study start · Year"), "2024");
+  await user.selectOptions(screen.getByLabelText("Study start · Season"), "AS");
+  await user.selectOptions(
+    screen.getByLabelText("Planning semester · Season"),
+    "AS",
+  );
+  await user.clear(screen.getByLabelText("Planning semester · Year"));
+  await user.type(screen.getByLabelText("Planning semester · Year"), "2026");
   await user.clear(screen.getByLabelText("Number of semesters"));
   await user.type(screen.getByLabelText("Number of semesters"), "2");
-  await user.click(screen.getByRole("button", { name: "Create local plan" }));
+  await user.click(screen.getByRole("button", { name: "Start planning" }));
   await screen.findByRole("heading", { name: "Record completed courses" });
   expect(screen.getByRole("link", { name: "Resume later" })).toHaveAttribute(
     "href",
