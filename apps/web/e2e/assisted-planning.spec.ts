@@ -20,14 +20,24 @@ test("semester discovery explains lesson times and updates its overview as cours
     .click();
   const overview = page.getByRole("complementary", { name: "Your semester" });
   await expect(overview).toBeVisible();
+  const openOverview = async () => {
+    const disclosure = overview.locator("details");
+    if ((await disclosure.getAttribute("open")) === null)
+      await disclosure.locator("summary").click();
+  };
   await expect(page).toHaveURL(/term=AS-2026/);
   const algebra = page
     .locator(".course-results > li")
     .filter({ has: page.getByRole("heading", { name: /Algebra/ }) });
+  if (info.project.name === "phone") {
+    const firstResult = await algebra.boundingBox();
+    expect(firstResult!.y).toBeLessThan(844 - 64);
+  }
+  await openOverview();
   await expect(algebra.locator(".lesson-preview")).toContainText("12:00");
   await expect(algebra.locator(".lesson-preview")).toContainText("PER 21");
   await algebra
-    .getByRole("button", { name: "Add to plan", exact: true })
+    .getByRole("button", { name: "Add to semester", exact: true })
     .click();
   await expect(overview).toContainText("6 ECTS");
   await expect(overview).toContainText("Algebra");
@@ -55,7 +65,7 @@ test("semester discovery explains lesson times and updates its overview as cours
     page.getByLabel("Only courses that fit", { exact: true }),
   ).not.toBeChecked();
   await ecology
-    .getByRole("button", { name: "Add to plan", exact: true })
+    .getByRole("button", { name: "Add to semester", exact: true })
     .click();
   await expect(overview).toContainText("15 ECTS");
   await expect(overview).toContainText("Time conflict");
@@ -130,6 +140,7 @@ test("semester discovery explains lesson times and updates its overview as cours
   await page.reload();
   await expect(page.locator(".timetable-grid .calendar-event")).toHaveCount(2);
   await page.getByRole("link", { name: "Add courses", exact: true }).click();
+  await openOverview();
   await overview
     .getByRole("button", {
       name: "Remove from semester · DEMO-002",

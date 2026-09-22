@@ -51,6 +51,8 @@ export const catalogueMessages = {
     fixture: "Entwicklungsbeispiele · kein aktueller UniFr-Katalog",
     fixtureBody:
       "Diese Beispieldaten dienen nur zur Erprobung. Kurse und Quellverweise sind keine aktuellen Studienangebote.",
+    sourceState: "Aktueller veröffentlichter UniFr-Katalog",
+    sourceDetails: "Quelldetails",
     unresolved: "Termine ungeklärt",
     unresolvedBody:
       "Termine sind unvollständig oder noch nicht veröffentlicht. Dieser Kurs gilt nicht als zeitlich frei.",
@@ -134,6 +136,8 @@ export const catalogueMessages = {
     fixture: "Exemples de développement · pas de catalogue UniFr actuel",
     fixtureBody:
       "Ces données servent uniquement aux essais. Les cours et références ne sont pas des offres d’études actuelles.",
+    sourceState: "Catalogue UniFr publié actuel",
+    sourceDetails: "Détails de la source",
     unresolved: "Horaires non résolus",
     unresolvedBody:
       "Les horaires sont incomplets ou pas encore publiés. Ce cours n’est pas considéré comme libre de conflit horaire.",
@@ -217,6 +221,8 @@ export const catalogueMessages = {
     fixture: "Development examples · not a current UniFr catalogue",
     fixtureBody:
       "These examples are for testing only. Courses and source references are not current study offerings.",
+    sourceState: "Current published UniFr catalogue",
+    sourceDetails: "Source details",
     unresolved: "Meeting times unresolved",
     unresolvedBody:
       "Meeting times are incomplete or unpublished. This course is not considered free of timetable conflicts.",

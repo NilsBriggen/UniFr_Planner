@@ -19,6 +19,11 @@ export default function SemesterSummary({
   const t = discoveryMessages[language],
     p = plannerMessages[language];
   const [error, setError] = useState(false);
+  const [open, setOpen] = useState(
+    () =>
+      typeof matchMedia === "undefined" ||
+      !matchMedia("(max-width: 820px)").matches,
+  );
   const scenario = plan && activeScenario(plan);
   const calendar = useMemo(
     () => (scenario ? calendarFor(scenario.courses, term, language) : null),
@@ -42,72 +47,69 @@ export default function SemesterSummary({
     .size;
   return (
     <aside className="semester-summary" aria-label={t.overview}>
-      <div className="semester-summary-heading">
-        <span className="eyebrow">{term}</span>
-        <h2>{t.overview}</h2>
-      </div>
-      <p className="semester-credit-total" aria-live="polite">
-        {credits} ECTS
-        {unknownCredits > 0 && (
-          <small>
-            {" "}
-            + {unknownCredits} {p.unknown}
-          </small>
+      <details
+        className="semester-summary-disclosure"
+        open={open}
+        onToggle={(event) => setOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <span>
+            <strong>{term}</strong> · {credits} ECTS
+          </span>
+          <span>
+            {unknownCredits > 0 && `${unknownCredits} ${p.unknown} · `}
+            {pairs.size} {t.conflictCount}
+          </span>
+        </summary>
+        <p>
+          {courses.length} {t.selected}
+        </p>
+        <p className="planner-help">
+          {Math.round(plan.targetEcts / plan.semesters.length)} {t.reference}
+        </p>
+        {unresolved > 0 && (
+          <p className="fit-note unknown">
+            {t.unknownCount} · {unresolved}
+          </p>
         )}
-      </p>
-      <p>
-        {courses.length} {t.selected}
-      </p>
-      <p className="planner-help">
-        {Math.round(plan.targetEcts / plan.semesters.length)} {t.reference}
-      </p>
-      {pairs.size > 0 && (
-        <p className="fit-note conflict">
-          {t.conflictCount} · {pairs.size}
-        </p>
-      )}
-      {unresolved > 0 && (
-        <p className="fit-note unknown">
-          {t.unknownCount} · {unresolved}
-        </p>
-      )}
-      {!courses.length && <p className="semester-empty">{t.noCourses}</p>}
-      <ul className="selected-courses">
-        {courses.map((course) => (
-          <li key={course.id}>
-            <Link
-              to={`/catalogue/${encodeURIComponent(course.code)}?term=${term}`}
-            >
-              {course.titles[language] ?? course.titles.en ?? course.code}
-            </Link>
-            <span>{course.ects ?? "?"} ECTS</span>
-            <Button
-              disabled={busy || course.pinned}
-              aria-label={`${t.remove} · ${course.code}`}
-              title={course.pinned ? t.pinned : t.remove}
-              onClick={async () => {
-                const ok = await save(
-                  allocateCourse(plan, course.id, null, "unscheduled"),
-                );
-                setError(!ok);
-              }}
-            >
-              ×
-            </Button>
-            {course.pinned && <small>{t.pinned}</small>}
-          </li>
-        ))}
-      </ul>
-      <div className="semester-summary-links">
-        <Link className="button primary" to={`/semester/${term}`}>
-          {p.openCalendar}
-        </Link>
-        <Link className="text-link" to="/suggestions">
-          {t.improve}
-        </Link>
-      </div>
-      {courses.length > 0 && <p className="planner-help">{t.overviewHelp}</p>}
-      {error && <p role="alert">{p.actionError}</p>}
+        {!courses.length && <p className="semester-empty">{t.noCourses}</p>}
+        <ul className="selected-courses">
+          {courses.map((course) => (
+            <li key={course.id}>
+              <Link
+                to={`/catalogue/${encodeURIComponent(course.code)}?term=${term}`}
+              >
+                {course.titles[language] ?? course.titles.en ?? course.code}
+              </Link>
+              <span>{course.ects ?? "?"} ECTS</span>
+              <Button
+                disabled={busy || course.pinned}
+                aria-label={`${t.remove} · ${course.code}`}
+                title={course.pinned ? t.pinned : t.remove}
+                onClick={async () => {
+                  const ok = await save(
+                    allocateCourse(plan, course.id, null, "unscheduled"),
+                  );
+                  setError(!ok);
+                }}
+              >
+                ×
+              </Button>
+              {course.pinned && <small>{t.pinned}</small>}
+            </li>
+          ))}
+        </ul>
+        <div className="semester-summary-links">
+          <Link className="button primary" to={`/semester/${term}`}>
+            {p.openCalendar}
+          </Link>
+          <Link className="text-link" to="/suggestions">
+            {t.improve}
+          </Link>
+        </div>
+        {courses.length > 0 && <p className="planner-help">{t.overviewHelp}</p>}
+        {error && <p role="alert">{p.actionError}</p>}
+      </details>
     </aside>
   );
 }

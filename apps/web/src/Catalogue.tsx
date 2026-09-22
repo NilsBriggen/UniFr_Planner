@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import {
   api,
   type CatalogueStatus,
@@ -14,7 +19,6 @@ import { Button, StatusNotice } from "./components";
 import { catalogueMessages, type CatalogueMessages } from "./catalogue-i18n";
 import { messages, type Language } from "./i18n";
 import "./catalogue.css";
-import StudySummary from "./requirements/StudySummary";
 import {
   hasStudyConfiguration,
   studyLabel,
@@ -112,29 +116,37 @@ function Provenance({
   language: Language;
 }) {
   const t = catalogueMessages[language];
+  const warning = status.development_fixture
+    ? t.fixture
+    : status.latest_sync_outcome?.startsWith("rejected")
+      ? t.rejected
+      : status.stale
+        ? t.stale
+        : null;
   return (
     <div className="catalogue-provenance">
-      {status.development_fixture && (
-        <StatusNotice>
-          <h2>{t.fixture}</h2>
-          <p>{t.fixtureBody}</p>
-        </StatusNotice>
-      )}
-      {status.latest_sync_outcome?.startsWith("rejected") && (
-        <StatusNotice>
-          <h2>{t.rejected}</h2>
-          <p>{t.rejectedBody}</p>
-        </StatusNotice>
-      )}
-      {status.published_at && (
-        <p className={status.stale ? "snapshot-age stale" : "snapshot-age"}>
-          {status.stale && <strong>{t.stale} · </strong>}
-          {t.updated}:{" "}
-          {new Date(status.published_at).toLocaleString(language, {
-            timeZone: "Europe/Zurich",
-          })}{" "}
-          · {t.age}: {Math.floor((status.age_seconds ?? 0) / 86400)} {t.days}
-        </p>
+      <p className={warning ? "snapshot-age stale" : "snapshot-age"}>
+        {warning && <strong>{warning} · </strong>}
+        {status.published_at ? (
+          <>
+            {t.updated}:{" "}
+            {new Date(status.published_at).toLocaleString(language, {
+              timeZone: "Europe/Zurich",
+            })}{" "}
+            · {t.age}: {Math.floor((status.age_seconds ?? 0) / 86400)} {t.days}
+          </>
+        ) : (
+          t.sourceState
+        )}
+      </p>
+      {warning && (
+        <details className="source-details">
+          <summary>{t.sourceDetails}</summary>
+          <p>{status.development_fixture ? t.fixtureBody : t.rejectedBody}</p>
+          <a className="text-link" href={source}>
+            {t.catalogueSource} ↗
+          </a>
+        </details>
       )}
     </div>
   );
@@ -311,10 +323,15 @@ function Detail({
   status: CatalogueStatus;
 }) {
   const t = catalogueMessages[language];
+  const location = useLocation();
   const title = localizedTitle(course, language);
   return (
     <>
-      <Link className="text-link" to={`/catalogue${query ? `?${query}` : ""}`}>
+      <Link
+        className="text-link"
+        to={`/catalogue${query ? `?${query}` : ""}`}
+        state={location.state}
+      >
         {t.back}
       </Link>
       {course.offerings.map((offering) => (
@@ -472,11 +489,7 @@ function Search({
   const [clientIssue, setClientIssue] = useState<FilterIssue>();
   const formRef = useRef<HTMLFormElement>(null);
   const pendingFocus = useRef<FilterField | undefined>(undefined);
-  const [expanded, setExpanded] = useState(
-    filterKeys.some(
-      (key) => key !== "q" && (!plan || key !== "term") && query.has(key),
-    ),
-  );
+  const [expanded, setExpanded] = useState(invalid);
   const issue =
     clientIssue ??
     (invalid
@@ -576,7 +589,14 @@ function Search({
             </p>
           </div>
         )}
-        {plan && <StudySummary plan={plan} language={language} />}
+        {plan && (
+          <p className="catalogue-degree">
+            {studyLabel(plan, language)} ·{" "}
+            <Link className="text-link" to="/requirements">
+              {d.viewRequirements}
+            </Link>
+          </p>
+        )}
         <form
           ref={formRef}
           key={query.toString()}
@@ -839,6 +859,7 @@ function Search({
                     <h2>
                       <Link
                         to={`/catalogue/${encodeURIComponent(course.code)}?${query}`}
+                        state={{ catalogueScrollY: window.scrollY }}
                       >
                         {localizedTitle(course, language)}{" "}
                         <span className="course-code">{course.code}</span>
@@ -932,6 +953,7 @@ function Search({
 export default function Catalogue({ language }: { language: Language }) {
   const { course_code } = useParams();
   const [query, setQuery] = useSearchParams();
+  const location = useLocation();
   const queryString = query.toString();
   const { plan, ready } = usePlans();
   useEffect(() => {
@@ -958,6 +980,13 @@ export default function Catalogue({ language }: { language: Language }) {
   const [state, setState] = useState<LoadState>({ loading: true });
   const heading = useRef<HTMLHeadingElement>(null);
   const t: CatalogueMessages = catalogueMessages[language];
+  useEffect(() => {
+    if (course_code) return;
+    const scrollY = (location.state as { catalogueScrollY?: number } | null)
+      ?.catalogueScrollY;
+    if (typeof scrollY === "number")
+      requestAnimationFrame(() => scrollTo(0, scrollY));
+  }, [course_code, location.state]);
   useEffect(() => {
     const controller = new AbortController();
     let active = true;

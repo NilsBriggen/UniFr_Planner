@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { IDBFactory } from "fake-indexeddb";
 import { MemoryRouter } from "react-router-dom";
 import App from "./App";
@@ -67,10 +68,47 @@ it("shows an imported UE code as already added when the plan has its curriculum 
       <App />
     </MemoryRouter>,
   );
-  for (const button of await screen.findAllByRole("button", {
-    name: "In this scenario",
-  })) {
-    expect(button).toBeDisabled();
-  }
+  expect(
+    await screen.findAllByRole("button", { name: "Remove from semester" }),
+  ).not.toHaveLength(0);
+  expect(screen.queryByLabelText("Semester")).not.toBeInTheDocument();
   expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("keeps advanced filters closed while retaining URL filter chips", async () => {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "en");
+  const page = {
+    status: publishedStatus,
+    items: publishedCourses(),
+    offset: 0,
+    limit: 20,
+    total: 2,
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) => {
+      if (request.url.includes("/terms"))
+        return Response.json({
+          ...page,
+          terms: ["AS-2026"],
+          faculties: ["Science"],
+          languages: ["en"],
+          levels: ["Bachelor"],
+        });
+      return Response.json(page);
+    }),
+  );
+  render(
+    <MemoryRouter initialEntries={["/catalogue?faculty=Science"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const toggle = await screen.findByRole("button", { name: "Filters" });
+  expect(toggle).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.getByRole("button", { name: "Remove: Faculty / domain · Science" }),
+  ).toBeVisible();
+  await userEvent.click(toggle);
+  expect(screen.getByLabelText("Faculty / domain")).toBeVisible();
 });

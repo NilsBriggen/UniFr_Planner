@@ -193,6 +193,17 @@
 .semester-summary p {
   margin: 8px 0;
 }
+.semester-summary-disclosure > summary {
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  list-style-position: outside;
+  font-size: 0.875rem;
+}
+.semester-summary-disclosure > summary span:first-child {
+  color: var(--color-blue);
+  font-size: 1rem;
+}
 .semester-credit-total {
   color: var(--color-blue);
   font-size: 2rem;
@@ -273,9 +284,25 @@
   .semester-summary {
     width: 100%;
   }
+  .discovery-semester {
+    margin-bottom: 4px;
+  }
+  .discovery-semester .discovery-help {
+    display: none;
+  }
+  .discovery-semester label {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+  }
+  .discovery-semester select {
+    height: 40px;
+    padding-block: 7px;
+  }
   .semester-summary {
     position: static;
     order: -1;
+    padding: 12px 16px;
   }
   .semester-summary-heading {
     display: flex;

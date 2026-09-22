@@ -62,6 +62,7 @@ function AddToSemester({
       ? preferredTerm
       : planningSemester(plan),
   );
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState(false);
   const existing = activeScenario(plan).courses.find(
     (course) =>
@@ -69,61 +70,96 @@ function AddToSemester({
       canonicalCourseCode(offering.course.code),
   );
   const canSchedule = existing?.status === "unscheduled" && !existing.pinned;
+  const canRemove =
+    !!existing?.semester && existing.status !== "completed" && !existing.pinned;
+  const add = async () => {
+    setError(false);
+    try {
+      const course = fromOffering(
+        offering,
+        existing?.id ?? crypto.randomUUID(),
+        (offering as Offering & { snapshot_id?: string }).snapshot_id ??
+          status.snapshot_id ??
+          "unknown",
+        status.development_fixture,
+      );
+      const next = existing
+        ? updateScenario(plan, (s) => ({
+            ...s,
+            courses: s.courses.map((c) => (c.id === existing.id ? course : c)),
+          }))
+        : addCourse(plan, course);
+      const saved = await save(
+        semester ? allocateCourse(next, course.id, semester, "planned") : next,
+      );
+      setError(!saved);
+      if (saved) setEditing(false);
+    } catch {
+      setError(true);
+    }
+  };
   return (
     <div className="course-planner">
-      {(!existing || canSchedule) && (
-        <label>
-          {t.semester}
-          <select
-            aria-label={t.semester}
-            value={semester}
-            disabled={busy}
-            onChange={(event) => setSemester(event.target.value)}
-          >
-            {plan.semesters.map((term) => (
-              <option key={term}>{term}</option>
-            ))}
-            <option value="">{t.unscheduled}</option>
-          </select>
-        </label>
+      {(!existing || canSchedule) && !editing && (
+        <Button
+          className="primary"
+          aria-label={t.addToSemester}
+          disabled={busy || !semester}
+          onClick={add}
+        >
+          {t.addToSemester} · {semester}
+        </Button>
       )}
-      <Button
-        className={existing && !canSchedule ? "" : "primary"}
-        disabled={busy || (!!existing && (!canSchedule || !semester))}
-        onClick={async () => {
-          setError(false);
-          try {
-            const course = fromOffering(
-              offering,
-              existing?.id ?? crypto.randomUUID(),
-              (offering as Offering & { snapshot_id?: string }).snapshot_id ??
-                status.snapshot_id ??
-                "unknown",
-              status.development_fixture,
-            );
-            // A deliberate new selection can put an unscheduled course back,
-            // using the offering currently shown and retaining its stable ID.
-            const next = existing
-              ? updateScenario(plan, (s) => ({
-                  ...s,
-                  courses: s.courses.map((c) =>
-                    c.id === existing.id ? course : c,
-                  ),
-                }))
-              : addCourse(plan, course);
-            const saved = await save(
-              semester
-                ? allocateCourse(next, course.id, semester, "planned")
-                : next,
-            );
-            setError(!saved);
-          } catch {
-            setError(true);
-          }
-        }}
-      >
-        {canSchedule ? t.addToSemester : existing ? t.added : t.add}
-      </Button>
+      {(!existing || canSchedule) && (
+        <details
+          open={editing}
+          onToggle={(e) => setEditing(e.currentTarget.open)}
+        >
+          <summary>{t.changeSemester}</summary>
+          <label>
+            {t.semester}
+            <select
+              aria-label={t.semester}
+              value={semester}
+              disabled={busy}
+              onChange={(event) => setSemester(event.target.value)}
+            >
+              {plan.semesters.map((term) => (
+                <option key={term}>{term}</option>
+              ))}
+              <option value="">{t.unscheduled}</option>
+            </select>
+          </label>
+          <Button
+            aria-label={t.addToSemester}
+            disabled={busy || !semester}
+            onClick={add}
+          >
+            {t.addToSemester} · {semester}
+          </Button>
+        </details>
+      )}
+      {existing && !canSchedule && (
+        <Button
+          disabled={busy || !canRemove}
+          title={existing.pinned ? t.pinHelp : undefined}
+          onClick={async () => {
+            if (!canRemove) return;
+            setError(false);
+            try {
+              setError(
+                !(await save(
+                  allocateCourse(plan, existing.id, null, "unscheduled"),
+                )),
+              );
+            } catch {
+              setError(true);
+            }
+          }}
+        >
+          {canRemove ? t.removeFromSemester : t.added}
+        </Button>
+      )}
       {existing && !canSchedule ? (
         <div className="course-planner-result">
           <p role="status">

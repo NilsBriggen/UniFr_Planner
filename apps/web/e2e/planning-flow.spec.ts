@@ -23,11 +23,8 @@ test("a student adds courses from a semester and opens the saved weekly timetabl
   const algebra = page
     .locator(".course-results > li")
     .filter({ has: page.getByRole("heading", { name: /Algebra/ }) });
-  await expect(algebra.getByLabel("Semester", { exact: true })).toHaveValue(
-    "AS-2026",
-  );
   await algebra
-    .getByRole("button", { name: "Add to plan", exact: true })
+    .getByRole("button", { name: "Add to semester", exact: true })
     .click();
   await expect(algebra.getByRole("status")).toContainText("AS-2026");
   await algebra
@@ -98,7 +95,10 @@ test("starting from a course returns to that course after creating a plan", asyn
   await page.getByLabel("Entry year", { exact: true }).fill("2026");
   await page.getByRole("button", { name: "Create local plan" }).click();
   await expect(page).toHaveURL(/catalogue\/DEMO-001\?term=AS-2026$/);
-  await page.getByRole("button", { name: "Add to plan", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Add to semester", exact: true })
+    .first()
+    .click();
   await page
     .getByRole("link", { name: "View weekly timetable", exact: true })
     .click();
