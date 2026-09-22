@@ -30,9 +30,13 @@ def main() -> None:
     parser.add_argument("--sample", type=Path, help="Optional captured public discovery JSON")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    payload = args.sample.read_bytes() if args.sample else json.dumps(
-        {"courses": [{"title": "Programming", "dates": ["2026-09-22"] * 20}] * 1000}
-    ).encode()
+    payload = (
+        args.sample.read_bytes()
+        if args.sample
+        else json.dumps(
+            {"courses": [{"title": "Programming", "dates": ["2026-09-22"] * 20}] * 1000}
+        ).encode()
+    )
 
     class Backend(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
@@ -62,13 +66,32 @@ def main() -> None:
                 config_path.write_text(config)
                 name = "unifr-compression-" + uuid.uuid4().hex[:10]
                 process = subprocess.Popen(
-                    ["docker", "run", "--rm", "--name", name, "--network", "host",
-                     "-e", f"SITE_ADDRESS=http://127.0.0.1:{port}",
-                     "-e", "TRAEFIK_IP=127.0.0.1", "-e", "TLS_EMAIL=audit@example.invalid",
-                     "-v", f"{config_path}:/etc/caddy/Caddyfile:ro",
-                     "-v", f"{temporary}:/srv:ro", args.image,
-                     "caddy", "run", "--config", "/etc/caddy/Caddyfile"],
-                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                    [
+                        "docker",
+                        "run",
+                        "--rm",
+                        "--name",
+                        name,
+                        "--network",
+                        "host",
+                        "-e",
+                        f"SITE_ADDRESS=http://127.0.0.1:{port}",
+                        "-e",
+                        "TRAEFIK_IP=127.0.0.1",
+                        "-e",
+                        "TLS_EMAIL=audit@example.invalid",
+                        "-v",
+                        f"{config_path}:/etc/caddy/Caddyfile:ro",
+                        "-v",
+                        f"{temporary}:/srv:ro",
+                        args.image,
+                        "caddy",
+                        "run",
+                        "--config",
+                        "/etc/caddy/Caddyfile",
+                    ],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE,
                 )
                 try:
                     url = f"http://127.0.0.1:{port}" + (
@@ -102,7 +125,9 @@ def main() -> None:
                         with urllib.request.urlopen(request, timeout=5) as response:
                             assert response.headers.get("Content-Encoding") is None
                             assert response.read() == payload
-                    print(f"PASS {variant}: {len(payload)} -> {len(encoded)} bytes; identical decoded content")
+                    print(
+                        f"PASS {variant}: {len(payload)} -> {len(encoded)} bytes; identical decoded content"
+                    )
                 finally:
                     subprocess.run(["docker", "rm", "-f", name], capture_output=True, check=False)
                     process.wait(timeout=10)
