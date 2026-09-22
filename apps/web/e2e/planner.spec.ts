@@ -201,9 +201,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await page
       .getByRole("button", { name: t.addToSemester, exact: true })
       .click();
-    await expect(
-      page.getByRole("button", { name: t.added, exact: true }),
-    ).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText("6 ECTS");
     await page.goto("/plan");
     const allocation = page.getByLabel(`${t.semester} · DEMO-001`, {
       exact: true,
@@ -343,9 +341,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await page
       .getByRole("button", { name: t.addToSemester, exact: true })
       .click();
-    await expect(
-      page.getByRole("button", { name: t.added, exact: true }),
-    ).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText("6 ECTS");
     await page.goto("/plan");
     await page
       .getByLabel(`${t.semester} · DEMO-003`, { exact: true })
@@ -367,9 +363,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await page
       .getByRole("button", { name: t.addToSemester, exact: true })
       .click();
-    await expect(
-      page.getByRole("button", { name: t.added, exact: true }),
-    ).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText("6 ECTS");
     await page.goto("/plan");
     await page
       .getByLabel(`${t.semester} · DEMO-004`, { exact: true })
