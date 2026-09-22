@@ -239,7 +239,13 @@ for (const language of ["de", "fr", "en"] as const) {
     await page
       .getByLabel(`${t.semester} · DEMO-001`, { exact: true })
       .selectOption("SS-2027");
-    await expect(page.getByText(t.future, { exact: true })).toBeVisible();
+    const futureSemester = page.locator("details.semester-column", {
+      has: page.getByLabel(`${t.semester} · DEMO-001`, { exact: true }),
+    });
+    await futureSemester.locator("summary").click();
+    await expect(
+      futureSemester.getByText(t.future, { exact: true }),
+    ).toBeVisible();
     await page
       .getByLabel(t.scenario, { exact: true })
       .selectOption({ label: "My degree" });
