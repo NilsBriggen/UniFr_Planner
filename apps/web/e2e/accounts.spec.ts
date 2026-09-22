@@ -32,7 +32,11 @@ test("same-browser account switch revalidates the stale tab on its next account 
     semesterCount: 6,
     targetEcts: 180,
   });
-  await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(guest));
+  await page.getByLabel(p.file, { exact: true }).setInputFiles({
+    name: "guest-plan.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(guest)),
+  });
   await page.getByRole("button", { name: p.preview, exact: true }).click();
   await page
     .getByRole("button", { name: p.confirmImport, exact: true })
@@ -107,7 +111,11 @@ for (const language of ["de", "fr", "en"] as const) {
       semesterCount: 6,
       targetEcts: 180,
     });
-    await page.getByLabel(p.json, { exact: true }).fill(JSON.stringify(guest));
+    await page.getByLabel(p.file, { exact: true }).setInputFiles({
+      name: "guest-plan.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(guest)),
+    });
     await page.getByRole("button", { name: p.preview, exact: true }).click();
     await page
       .getByRole("button", { name: p.confirmImport, exact: true })

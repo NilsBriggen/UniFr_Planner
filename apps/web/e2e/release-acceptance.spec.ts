@@ -1,7 +1,8 @@
-import { chooseManualSetup } from "./studies-helpers";
+import { chooseManualSetup, openPlanTools } from "./studies-helpers";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
 import { accountMessages } from "../src/accounts/messages";
+import { semesterLabel } from "../src/planner/SemesterField";
 import { plannerMessages } from "../src/planner/messages";
 import { recipeMessages } from "../src/requirements/recipeMessages";
 import { requirementMessages } from "../src/requirements/messages";
@@ -25,6 +26,7 @@ async function exportPlan(page: Page): Promise<Plan> {
     await expect(page.locator(".save-status")).toHaveText(p.saved);
   await page.goto("/plan");
   await expect(page.locator(".save-status")).toHaveText(p.saved);
+  await openPlanTools(page);
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: p.exportJson, exact: true }).click();
   return JSON.parse(await readFile((await (await download).path())!, "utf8"));
@@ -40,8 +42,10 @@ async function createStudentPlan(page: Page) {
   await page
     .getByLabel(p.programme, { exact: true })
     .fill("CS + Business Informatics");
-  await page.getByLabel(p.startYear, { exact: true }).fill("2026");
-  await page.getByRole("button", { name: p.create, exact: true }).click();
+  await page.getByLabel("Study start · Year", { exact: true }).fill("2026");
+  await page
+    .getByRole("button", { name: "Start planning", exact: true })
+    .click();
   await expect(page).toHaveURL(/catalogue/);
   await page.goto("/plan");
   await expect(
@@ -61,6 +65,10 @@ async function createStudentPlan(page: Page) {
     await expect(page.locator(".save-status")).toHaveText(p.saved);
   }
   await page.goto("/plan");
+  await page
+    .getByRole("group", { name: p.completed, exact: true })
+    .locator(":scope > summary")
+    .click();
   for (const [code, title, credits] of [
     ["SIN.01023", "Introduction to programming", "6"],
     ["SIN.01021", "Networks", "5"],
@@ -77,10 +85,15 @@ async function createStudentPlan(page: Page) {
   }
   for (const code of ["DEMO-001", "DEMO-005"]) {
     await page.goto(`/catalogue/${code}`);
-    await page.getByRole("button", { name: p.add, exact: true }).click();
+    await page
+      .getByRole("button", { name: p.addToSemester, exact: true })
+      .click();
     await expect(
-      page.getByRole("button", { name: p.added, exact: true }),
-    ).toBeDisabled();
+      page.getByRole("button", { name: p.removeFromSemester, exact: true }),
+    ).toBeEnabled();
+    await expect(
+      page.locator(".course-planner-result [role=status]"),
+    ).toContainText(semesterLabel(term, "en"));
     await page.goto("/plan");
     await page
       .getByLabel(`${p.semester} · ${code}`, { exact: true })
@@ -145,6 +158,7 @@ async function assertWeek(page: Page, starts: string[], conflicts: number) {
     await expect(page.locator(".calendar-check li")).toContainText(p.hard);
   else await expect(page.getByText(p.clear, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: p.week, exact: true }).click();
+  await page.getByLabel(p.date, { exact: true }).fill("2026-09-21");
   await expect(page.locator(".calendar-week .calendar-event")).toHaveCount(
     starts.length,
   );

@@ -1,4 +1,8 @@
-import { chooseManualSetup, configuredStudyPlan } from "./studies-helpers";
+import {
+  chooseManualSetup,
+  configuredStudyPlan,
+  openPlanTools,
+} from "./studies-helpers";
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFile } from "node:fs/promises";
@@ -293,6 +297,10 @@ test("the selected week downloads as an editable workbook and a complete landsca
   await page
     .getByRole("link", { name: "View weekly timetable", exact: true })
     .click();
+  await page
+    .getByLabel(plannerMessages.en.date, { exact: true })
+    .fill("2026-09-21");
+  await page.locator(".calendar-exports > summary").click();
   const downloadEvent = page.waitForEvent("download");
   await page
     .getByRole("button", { name: "Download Excel", exact: true })
@@ -382,9 +390,13 @@ test("a continuing student's shared plan opens and imports the planning semester
       .click();
     await expect(page).toHaveURL(/\/semester\/AS-2026$/);
     await page.goto("/plan");
-    await expect(
-      page.getByRole("region", { name: "Completed", exact: true }),
-    ).toContainText("Earlier completed course");
+    const completed = page.getByRole("group", {
+      name: "Completed",
+      exact: true,
+    });
+    await completed.locator(":scope > summary").click();
+    await expect(completed).toContainText("Earlier completed course");
+    await openPlanTools(page);
     const download = page.waitForEvent("download");
     await page
       .getByRole("button", { name: plannerMessages.en.exportJson, exact: true })
