@@ -121,16 +121,15 @@ it("opens the current week and can return to it after browsing another day", asy
     await mountCalendar("en", "2027-03-01");
     const user = userEvent.setup();
     expect(screen.getByLabelText("Date")).toHaveValue("2027-03-17");
-    await user.click(screen.getByRole("button", { name: "Day", exact: true }));
+    await user.click(screen.getByRole("button", { name: "Day" }));
     await user.clear(screen.getByLabelText("Date"));
     await user.type(screen.getByLabelText("Date"), "2027-03-10");
-    await user.click(
-      screen.getByRole("button", { name: "This week", exact: true }),
-    );
+    await user.click(screen.getByRole("button", { name: "This week" }));
     expect(screen.getByLabelText("Date")).toHaveValue("2027-03-17");
-    expect(
-      screen.getByRole("button", { name: "Week", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Week" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   } finally {
     vi.useRealTimers();
   }
