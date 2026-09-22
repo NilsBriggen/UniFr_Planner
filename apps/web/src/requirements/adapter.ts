@@ -13,6 +13,7 @@ import {
   evaluateRequirements,
   flattenRequirements,
   resolveTemplate,
+  type EvaluationOptions,
   type RequirementNode,
   type RequirementResult,
 } from "../../../../packages/domain/src/requirements";
@@ -119,9 +120,19 @@ function recipeEvidence(
   plan: Plan,
   degree: ResolvedDegree,
   root: RequirementNode,
+  choices?: EvaluationOptions["choices"],
 ) {
   const evidence = activeScenario(plan).requirementEvidence;
-  if (!evidence) return undefined;
+  if (!evidence) {
+    const ids = new Set(flattenRequirements(root).map((n) => n.id));
+    return {
+      choices:
+        choices &&
+        Object.fromEntries(
+          Object.entries(choices).filter(([id]) => ids.has(id)),
+        ),
+    };
+  }
   const all = new Set(
     [
       ...flattenRequirements(degree.root),
@@ -141,6 +152,9 @@ function recipeEvidence(
     );
   const ids = new Set(flattenRequirements(root).map((n) => n.id));
   return {
+    choices:
+      choices &&
+      Object.fromEntries(Object.entries(choices).filter(([id]) => ids.has(id))),
     overrides: evidence.overrides.filter((o) => ids.has(o.nodeId)),
     completedChecklist: evidence.completedChecklist.filter((id) => ids.has(id)),
   };
@@ -158,10 +172,13 @@ function degreeCourses(plan: Plan, degree: ResolvedDegree) {
   );
   return activeScenario(plan).courses.filter((c) => !reserved.has(c.id));
 }
-export function evaluateAdditionalRequirements(plan: Plan) {
+export function evaluateAdditionalRequirements(
+  plan: Plan,
+  choices?: EvaluationOptions["choices"],
+) {
   const degree = resolvedPlanDegree(plan);
   if (!degree?.additionalRoot) return null;
-  const counted = evaluatePlanRequirements(plan)!;
+  const counted = evaluatePlanRequirements(plan, choices)!;
   const used = new Set<string>();
   const visit = (result: RequirementResult) => {
     result.allocations.forEach((a) => used.add(a.courseId));
@@ -175,26 +192,28 @@ export function evaluateAdditionalRequirements(plan: Plan) {
   return evaluateRecipeRequirements(
     degree,
     activeScenario(plan).courses.filter((c) => !used.has(c.id)),
-    recipeEvidence(plan, degree, degree.additionalRoot),
+    recipeEvidence(plan, degree, degree.additionalRoot, choices),
     degree.additionalRoot,
   );
 }
-export function evaluatePlanRequirements(plan: Plan) {
+export function evaluatePlanRequirements(
+  plan: Plan,
+  choices?: EvaluationOptions["choices"],
+) {
   const degree = resolvedPlanDegree(plan);
   if (degree)
     return evaluateRecipeRequirements(
       degree,
       degreeCourses(plan, degree),
-      recipeEvidence(plan, degree, degree.root),
+      recipeEvidence(plan, degree, degree.root, choices),
     );
   const root = requirementTree(plan);
   if (!root) return null;
   const scenario = activeScenario(plan);
-  return evaluateRequirements(
-    root,
-    scenario.courses,
-    scenario.requirementEvidence,
-  );
+  return evaluateRequirements(root, scenario.courses, {
+    ...scenario.requirementEvidence,
+    choices,
+  });
 }
 export function setRequirementEvidence(
   plan: Plan,

@@ -55,22 +55,33 @@ function course(
     offerings: [publicOffering(selection)],
   };
 }
-it("uses the complete result set for programme discovery before pagination", () => {
+it("requires configuration and never guesses recommendations from programme text", () => {
+  const result = discoverCourses(
+    plan(),
+    [course("SIN.10000", "Algorithms")],
+    "AS-2026",
+    "en",
+  );
+  expect(result.hasProgramme).toBe(false);
+  expect(
+    filterDiscovery(result, { programme: true, fits: false, hideAdded: false }),
+  ).toEqual([]);
+});
+it("uses the complete result set before pagination", () => {
+  const configured = publishedPlan();
+  configured.scenarios[0].courses = [];
   const all = Array.from({ length: 25 }, (_, n) =>
     course(`X-${n}`, `Unrelated ${n}`),
   );
-  all.push(course("SIN.10000", "Algorithms"));
-  const result = discoverCourses(plan(), all, "AS-2026", "en");
+  all.push(course("SIN.01023", "Programming"));
+  const result = discoverCourses(configured, all, "AS-2026", "en");
   expect(
     filterDiscovery(result, {
       programme: true,
       fits: false,
       hideAdded: false,
     }).map((c) => c.code),
-  ).toEqual(["SIN.10000"]);
-  expect(result.assessments.get(offeringKey(all[25].offerings[0]))?.match).toBe(
-    "subject",
-  );
+  ).toEqual(["SIN.01023"]);
 });
 it("uses pinned curriculum codes rather than a free-text guess when requirements are configured", () => {
   const configured = publishedPlan();
@@ -214,4 +225,90 @@ it("shows overnight dates honestly and groups only matching weekday/time/room", 
   expect(groups).toHaveLength(1);
   expect(groups[0].time).toContain("Tue");
   expect(groups[0].dates).toHaveLength(2);
+});
+
+it("keeps completed canonical aliases visible as matches but never recommends them", () => {
+  const p = publishedPlan();
+  p.scenarios[0].courses = [p.scenarios[0].courses[0]];
+  p.scenarios[0].courses[0].status = "completed";
+  const c = course("UE-SIN.01023", "Programming");
+  const a = discoverCourses(p, [c], "AS-2026", "en").assessments.get(
+    offeringKey(c.offerings[0]),
+  )!;
+  expect(a.match).toBe("requirements");
+  expect(a.recommended).toBe(false);
+  expect(a.selectedStatus).toBe("completed");
+  expect(a.contributionEcts).toBe(0);
+});
+it("retains an unscheduled record identity and its substitution evidence", () => {
+  const p = publishedPlan();
+  const saved = p.scenarios[0].courses[0];
+  p.scenarios[0].courses = [
+    { ...saved, status: "unscheduled", semester: null },
+  ];
+  const c = course("UE-SIN.01023", "Programming");
+  const a = discoverCourses(p, [c], "AS-2026", "en").assessments.get(
+    offeringKey(c.offerings[0]),
+  )!;
+  expect(a.recommended).toBe(true);
+  expect(a.selected).toBe(false);
+  expect(a.contributionEcts).toBeGreaterThan(0);
+});
+it("does not recommend a requirement already satisfied by a personal substitution", () => {
+  const p = publishedPlan();
+  const saved = p.scenarios[0].courses[0];
+  p.scenarios[0].courses = [
+    { ...saved, code: "TRANSFER", status: "completed" },
+  ];
+  p.scenarios[0].requirementEvidence = {
+    completedChecklist: [],
+    overrides: [
+      {
+        kind: "substitution",
+        courseId: saved.id,
+        nodeId: "CS-120@2024.1/SIN.01023",
+        reason: "Recognised transfer",
+      },
+    ],
+  };
+  const c = course("SIN.01023", "Programming");
+  const result = discoverCourses(p, [c], "AS-2026", "en");
+  expect(result.requirementError).toBe(false);
+  expect(result.assessments.get(offeringKey(c.offerings[0]))?.recommended).toBe(
+    false,
+  );
+});
+
+it("uses the composed CS plus BI exception rather than the standalone BI table", async () => {
+  const { bindDegreeSelection } = await import("../requirements/adapter");
+  const p = bindDegreeSelection(plan(), {
+    structureId: "ba-120-60",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-digitinf-informatics",
+        variantId: "major-120",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+      {
+        slotId: "minor",
+        programmeId: "bachelor-digitinf-businessinformatics",
+        variantId: "minor-60",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  });
+  const cs = course("SIN.01023", "Programming");
+  const bi = course("EIG.00038", "Business Informatics II");
+  const result = discoverCourses(p, [cs, bi], "AS-2026", "en");
+  expect(result.requirementError).toBe(false);
+  expect(
+    result.assessments.get(offeringKey(cs.offerings[0]))?.recommended,
+  ).toBe(true);
+  // The CS-specific BI curriculum replaces Business Informatics II with other requirements.
+  expect(
+    result.assessments.get(offeringKey(bi.offerings[0]))?.match,
+  ).toBeNull();
 });

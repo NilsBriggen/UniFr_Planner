@@ -1,6 +1,12 @@
+import {
+  evaluatePlanningRequirements,
+  selectedChoices,
+} from "../requirements/planning";
+import { resolvedPlanDegree } from "../requirements/adapter";
+import { resolveRecipeEligibility } from "../../../../packages/domain/src/eligibility";
+import { flattenRequirements } from "../../../../packages/domain/src/requirements";
 import { Temporal } from "@js-temporal/polyfill";
 import {
-  evaluateRequirements,
   canonicalCourseCode,
   courseCodeIn,
   type RequirementResult,
@@ -181,20 +187,25 @@ export function generateSuggestions(input: {
   };
   // The supplied evaluation carries its selected alternatives. Recomputing
   // allocations must not silently substitute an automatically preferred branch.
-  const choices = Object.fromEntries(
-    (input.requirements ? flatten(input.requirements) : [])
-      .filter((r) => r.node.kind === "one_of" && r.selectedChildId)
-      .map((r) => [r.node.id, r.selectedChildId!]),
+  const initial = evaluatePlanningRequirements(
+    plan,
+    undefined,
+    input.requirements,
   );
-  const requirementOptions = { ...scenario.requirementEvidence, choices };
-  const baseline = input.requirements
-    ? evaluateRequirements(
-        input.requirements.node,
-        scenario.courses,
-        requirementOptions,
-      )
-    : null;
-  const beforeRules = baseline ? flatten(baseline) : [];
+  const choices = selectedChoices(
+    input.requirements ?? initial.degree,
+    initial.additional,
+  );
+  const baseline = evaluatePlanningRequirements(
+    plan,
+    choices,
+    input.requirements,
+  ).degree;
+  const beforeRules = [
+    ...(baseline ? flatten(baseline) : []),
+    ...(initial.additional ? flatten(initial.additional) : []),
+  ];
+  const degree = resolvedPlanDegree(plan);
   const beforeCalendar = calendarState(plan, preferences);
   const beforeHard = new Set(
     beforeCalendar.conflicts.filter((c) => c.kind === "hard").map(key),
@@ -228,11 +239,27 @@ export function generateSuggestions(input: {
       const same =
         canonicalCourseCode(before.code) === canonicalCourseCode(source.code);
       const equivalent = courseCodeIn(item.equivalentTo, before.code);
-      const elective = beforeRules.some(
+      const eligibleNodes = degree
+        ? [
+            ...flattenRequirements(
+              resolveRecipeEligibility(degree, [...scenario.courses, source]),
+            ),
+            ...(degree.additionalRoot
+              ? flattenRequirements(
+                  resolveRecipeEligibility(
+                    degree,
+                    [...scenario.courses, source],
+                    degree.additionalRoot,
+                  ),
+                )
+              : []),
+          ]
+        : beforeRules.map((r) => r.node);
+      const elective = eligibleNodes.some(
         (r) =>
-          (r.node.kind === "credit_pool" || r.node.kind === "course_count") &&
-          courseCodeIn(r.node.codes, before.code) &&
-          courseCodeIn(r.node.codes, source.code),
+          (r.kind === "credit_pool" || r.kind === "course_count") &&
+          courseCodeIn(r.codes, before.code) &&
+          courseCodeIn(r.codes, source.code),
       );
       if (!same && !equivalent && !elective) continue;
       for (const term of [
@@ -328,19 +355,23 @@ export function generateSuggestions(input: {
           continue;
         }
         let requirementsAfter: RequirementResult | null;
+        let additionalAfter: RequirementResult | null;
         try {
-          requirementsAfter = baseline
-            ? evaluateRequirements(
-                baseline.node,
-                activeScenario(next).courses,
-                requirementOptions,
-              )
-            : null;
+          const evaluated = evaluatePlanningRequirements(
+            next,
+            choices,
+            input.requirements,
+          );
+          requirementsAfter = evaluated.degree;
+          additionalAfter = evaluated.additional;
         } catch {
           reject("requirementError", after.code);
           continue;
         }
-        const afterRules = requirementsAfter ? flatten(requirementsAfter) : [];
+        const afterRules = [
+          ...(requirementsAfter ? flatten(requirementsAfter) : []),
+          ...(additionalAfter ? flatten(additionalAfter) : []),
+        ];
         const advanced = afterRules.filter((r) => {
           const old = beforeRules.find((b) => b.node.id === r.node.id);
           return (
