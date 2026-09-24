@@ -258,6 +258,231 @@
           ]
         }
       }
+    },
+    {
+      "name": "provisional attendance and pending prior study survive account storage",
+      "valid": true,
+      "patch": {
+        "scenarios": [
+          {
+            "id": "s",
+            "name": "Main",
+            "courses": [
+              {
+                "id": "personal",
+                "code": "STAT.1",
+                "titles": {
+                  "en": "Statistics"
+                },
+                "ects": 6,
+                "status": "planned",
+                "semester": "AS-2026",
+                "pinned": false,
+                "offering": {
+                  "source_id": "stat",
+                  "terms": [
+                    "AS-2026"
+                  ],
+                  "assignments": [
+                    {
+                      "programme": "Programme",
+                      "version": "2026",
+                      "paths": [
+                        "Module"
+                      ]
+                    }
+                  ],
+                  "meetings": [
+                    {
+                      "starts_at": "2026-09-21T08:00:00Z",
+                      "ends_at": "2026-09-21T09:00:00Z",
+                      "note": "Cours",
+                      "location": "A",
+                      "unresolved": false,
+                      "cancelled": false,
+                      "excluded_dates": [],
+                      "additional_dates": []
+                    }
+                  ],
+                  "meeting_state": "resolved",
+                  "source_url": "https://www.unifr.ch",
+                  "snapshot_id": "saved",
+                  "development_fixture": false
+                },
+                "attendance": {
+                  "sourceFingerprint": "saved-fingerprint",
+                  "excludedMeetingKeys": [
+                    "0-saved-key"
+                  ],
+                  "provisional": true
+                }
+              }
+            ],
+            "unavailable": [],
+            "travelMinutes": 0,
+            "priorStudy": [
+              {
+                "id": "prior",
+                "institution": "Prior university",
+                "period": "2024\u20132025",
+                "approximateEcts": 60,
+                "status": "recognition_pending",
+                "notes": "Not yet recognized"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "attendance cannot claim official group permission",
+      "valid": false,
+      "patch": {
+        "scenarios": [
+          {
+            "id": "s",
+            "name": "Main",
+            "courses": [
+              {
+                "id": "personal",
+                "code": "STAT.1",
+                "titles": {
+                  "en": "Statistics"
+                },
+                "ects": 6,
+                "status": "planned",
+                "semester": "AS-2026",
+                "pinned": false,
+                "offering": {
+                  "source_id": "stat",
+                  "terms": [
+                    "AS-2026"
+                  ],
+                  "assignments": [
+                    {
+                      "programme": "Programme",
+                      "version": "2026",
+                      "paths": [
+                        "Module"
+                      ]
+                    }
+                  ],
+                  "meetings": [
+                    {
+                      "starts_at": "2026-09-21T08:00:00Z",
+                      "ends_at": "2026-09-21T09:00:00Z",
+                      "note": "Cours",
+                      "location": "A",
+                      "unresolved": false,
+                      "cancelled": false,
+                      "excluded_dates": [],
+                      "additional_dates": []
+                    }
+                  ],
+                  "meeting_state": "resolved",
+                  "source_url": "https://www.unifr.ch",
+                  "snapshot_id": "saved",
+                  "development_fixture": false
+                },
+                "attendance": {
+                  "sourceFingerprint": "saved-fingerprint",
+                  "excludedMeetingKeys": [
+                    "0-saved-key"
+                  ],
+                  "provisional": false
+                }
+              }
+            ],
+            "unavailable": [],
+            "travelMinutes": 0,
+            "priorStudy": [
+              {
+                "id": "prior",
+                "institution": "Prior university",
+                "period": "2024\u20132025",
+                "approximateEcts": 60,
+                "status": "recognition_pending",
+                "notes": "Not yet recognized"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "prior aggregate cannot become recognized course credit",
+      "valid": false,
+      "patch": {
+        "scenarios": [
+          {
+            "id": "s",
+            "name": "Main",
+            "courses": [
+              {
+                "id": "personal",
+                "code": "STAT.1",
+                "titles": {
+                  "en": "Statistics"
+                },
+                "ects": 6,
+                "status": "planned",
+                "semester": "AS-2026",
+                "pinned": false,
+                "offering": {
+                  "source_id": "stat",
+                  "terms": [
+                    "AS-2026"
+                  ],
+                  "assignments": [
+                    {
+                      "programme": "Programme",
+                      "version": "2026",
+                      "paths": [
+                        "Module"
+                      ]
+                    }
+                  ],
+                  "meetings": [
+                    {
+                      "starts_at": "2026-09-21T08:00:00Z",
+                      "ends_at": "2026-09-21T09:00:00Z",
+                      "note": "Cours",
+                      "location": "A",
+                      "unresolved": false,
+                      "cancelled": false,
+                      "excluded_dates": [],
+                      "additional_dates": []
+                    }
+                  ],
+                  "meeting_state": "resolved",
+                  "source_url": "https://www.unifr.ch",
+                  "snapshot_id": "saved",
+                  "development_fixture": false
+                },
+                "attendance": {
+                  "sourceFingerprint": "saved-fingerprint",
+                  "excludedMeetingKeys": [
+                    "0-saved-key"
+                  ],
+                  "provisional": true
+                }
+              }
+            ],
+            "unavailable": [],
+            "travelMinutes": 0,
+            "priorStudy": [
+              {
+                "id": "prior",
+                "institution": "Prior university",
+                "period": "2024\u20132025",
+                "approximateEcts": 60,
+                "status": "recognized",
+                "notes": "Not yet recognized"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

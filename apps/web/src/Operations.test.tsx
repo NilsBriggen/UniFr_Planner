@@ -6,6 +6,7 @@ import App from "./App";
 afterEach(() => vi.restoreAllMocks());
 
 test("operations is localized, requires an explicit token and never stores it", async () => {
+  localStorage.setItem("unifr.language", "de");
   const request = vi.fn().mockResolvedValue({
     ok: true,
     json: async () => ({

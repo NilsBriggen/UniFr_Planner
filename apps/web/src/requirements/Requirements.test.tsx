@@ -47,6 +47,45 @@ it("can clear stale checklist-only evidence and restore evaluation", async () =>
 
 beforeEach(() => vi.stubGlobal("indexedDB", new IDBFactory()));
 afterEach(() => vi.unstubAllGlobals());
+it("keeps an unavailable saved edition recoverable without silently changing it", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const plan = createPlan({
+    id: "unknown-edition",
+    scenarioId: "s",
+    name: "My saved degree",
+    programme: "Saved law programme",
+    startTerm: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  plan.degreeSelection = {
+    structureId: "ba-180",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-ius-law",
+        variantId: "major-180",
+        startSemester: "AS-2026",
+        recipeVersion: "2025-26.1",
+      },
+    ],
+  };
+  await new PlanStore(indexedDB).save(plan, null);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(await screen.findByText("Saved law programme")).toBeVisible();
+  await userEvent.click(screen.getByRole("button", { name: "Edit studies" }));
+  expect(
+    screen.getByRole("button", { name: "Review with current curriculum" }),
+  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "Preview degree" })).toBeDisabled();
+  expect(
+    (await new PlanStore(indexedDB).load()).plans[0].degreeSelection,
+  ).toEqual(plan.degreeSelection);
+});
 for (const [
   language,
   heading,

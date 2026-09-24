@@ -103,6 +103,11 @@ it("sets start and planning separately, extends semester range and offers skippa
   await user.type(screen.getByLabelText("Planning semester · Year"), "2026");
   await user.clear(screen.getByLabelText("Number of semesters"));
   await user.type(screen.getByLabelText("Number of semesters"), "2");
+  await user.click(
+    screen.getByRole("checkbox", {
+      name: "I have completed courses to record now",
+    }),
+  );
   await user.click(screen.getByRole("button", { name: "Start planning" }));
   await screen.findByRole("heading", { name: "Record completed courses" });
   expect(screen.getByRole("link", { name: "Resume later" })).toHaveAttribute(

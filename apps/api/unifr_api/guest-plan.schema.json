@@ -185,6 +185,35 @@
                 "pinned": {
                   "type": "boolean"
                 },
+                "attendance": {
+                  "type": "object",
+                  "properties": {
+                    "sourceFingerprint": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "excludedMeetingKeys": {
+                      "maxItems": 1000,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100
+                      }
+                    },
+                    "provisional": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "sourceFingerprint",
+                    "excludedMeetingKeys",
+                    "provisional"
+                  ],
+                  "additionalProperties": false
+                },
                 "offering": {
                   "anyOf": [
                     {
@@ -513,6 +542,61 @@
               "completedChecklist"
             ],
             "additionalProperties": false
+          },
+          "priorStudy": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[\\w-]{1,100}$"
+                },
+                "institution": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "period": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "approximateEcts": {
+                  "anyOf": [
+                    {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 600
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "self_reported",
+                    "recognition_pending"
+                  ]
+                },
+                "notes": {
+                  "type": "string",
+                  "maxLength": 2000
+                }
+              },
+              "required": [
+                "id",
+                "institution",
+                "period",
+                "approximateEcts",
+                "status",
+                "notes"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [

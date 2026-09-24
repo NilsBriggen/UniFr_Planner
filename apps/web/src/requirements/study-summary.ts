@@ -32,8 +32,15 @@ export function degreeProgrammeLabel(
 
 /** Display follows the saved academic selection; the free-text label is legacy metadata. */
 export function studyLabel(plan: Plan, language: Language): string {
-  if (plan.degreeSelection)
-    return selectionLabel(plan.degreeSelection, language);
+  if (plan.degreeSelection) {
+    try {
+      return selectionLabel(plan.degreeSelection, language);
+    } catch {
+      // Labels must remain readable so an unavailable edition can be recovered.
+      // Evaluation still rejects it until the student explicitly reviews an upgrade.
+      return plan.programme;
+    }
+  }
   if (plan.requirements) {
     return plan.requirements.templates
       .map((reference) => {

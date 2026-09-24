@@ -4,7 +4,20 @@ import type { RequirementNode } from "../../../../packages/domain/src/requiremen
 vi.mock("../../../../packages/domain/src/registry", async (original) => {
   const source =
     await original<typeof import("../../../../packages/domain/src/registry")>();
-  const recipeRegistry = structuredClone(source.recipeRegistry);
+  const recipeRegistry = structuredClone(
+    source.recipeRegistryForSelection({
+      structureId: "ba-180",
+      components: [
+        {
+          slotId: "major",
+          programmeId: "bachelor-ius-law",
+          variantId: "major-180",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+      ],
+    }),
+  );
   const leaf = (
     id: string,
     kind: "course" | "credit_pool" = "course",
@@ -54,7 +67,17 @@ vi.mock("../../../../packages/domain/src/registry", async (original) => {
     .find((p) => p.id === "bachelor-digitinf-businessinformatics")!
     .variants.find((v) => v.id === "minor-60")!;
   extra.requirements = group("extra", [leaf("FIRST"), leaf("EXTRA")]);
-  return { recipeRegistry };
+  return {
+    ...source,
+    recipeRegistryForSelection: (
+      selection: Parameters<typeof source.recipeRegistryForSelection>[0],
+    ) =>
+      selection.components.every(
+        (component) => component.recipeVersion === "2026-27.1",
+      )
+        ? recipeRegistry
+        : source.recipeRegistryForSelection(selection),
+  };
 });
 import {
   bindDegreeSelection,
