@@ -13,6 +13,44 @@ import {
 
 beforeEach(() => vi.stubGlobal("indexedDB", new IDBFactory()));
 afterEach(() => vi.unstubAllGlobals());
+it("confirms an unchanged check and keeps routine controls out of print", async () => {
+  localStorage.setItem("unifr.language", "en");
+  await new PlanStore(indexedDB).save(publishedPlan(), null);
+  let fail = false;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => {
+      if (fail) throw new Error("offline");
+      return Response.json({
+        items: publishedCourses(),
+        total: 2,
+        offset: 0,
+        limit: 100,
+        status: publishedStatus,
+      });
+    }),
+  );
+  render(
+    <MemoryRouter initialEntries={["/plan"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(
+    await screen.findByText(/No changes to your saved courses/),
+  ).toBeVisible();
+  const button = screen.getByRole("button", {
+    name: "Check catalogue updates",
+  });
+  expect(button.closest(".no-print")).not.toBeNull();
+  fail = true;
+  await userEvent.click(button);
+  expect(
+    await screen.findByText(/Catalogue updates could not be checked/),
+  ).toBeVisible();
+  expect(
+    screen.queryByText(/No changes to your saved courses/),
+  ).not.toBeInTheDocument();
+});
 for (const [language, title, refresh] of [
   [
     "en",

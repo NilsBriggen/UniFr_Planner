@@ -4,6 +4,7 @@ import type { Language } from "../i18n";
 import { usePlans } from "./context";
 import { sourceChanges } from "./published";
 import { sourceMessages } from "./source-messages";
+import { catalogueMessages } from "../catalogue-i18n";
 
 export default function SourceChanges({ language }: { language: Language }) {
   const { plan, published } = usePlans();
@@ -21,6 +22,18 @@ export default function SourceChanges({ language }: { language: Language }) {
     : [];
   return (
     <div className="page source-updates">
+      {published.catalogue?.status.published_at && (
+        <p className="print-only">
+          {t.catalogueDate}:{" "}
+          {new Date(published.catalogue.status.published_at).toLocaleDateString(
+            language,
+            { timeZone: "Europe/Zurich" },
+          )}
+          {published.catalogue.status.latest_sync_outcome?.startsWith(
+            "rejected",
+          ) && <> · {catalogueMessages[language].rejected}</>}
+        </p>
+      )}
       {changes.length > 0 && (
         <section aria-labelledby="source-changes-title" className="notice">
           <div>
@@ -51,11 +64,25 @@ export default function SourceChanges({ language }: { language: Language }) {
           </div>
         </section>
       )}
-      {published.loading && <p role="status">{t.loading}</p>}
-      {published.error && <p role="alert">{t.error}</p>}
-      <Button disabled={published.loading} onClick={published.refresh}>
-        {t.refresh}
-      </Button>
+      <div className="source-check no-print">
+        {published.loading && <p role="status">{t.loading}</p>}
+        {published.error && <p role="alert">{t.error}</p>}
+        {!published.loading && !published.error && published.checkedAt && (
+          <p role="status">
+            {changes.length
+              ? t.changesFound.replace("{count}", String(changes.length))
+              : t.noChanges}
+            {" · "}
+            {t.checked}:{" "}
+            {new Date(published.checkedAt).toLocaleString(language, {
+              timeZone: "Europe/Zurich",
+            })}
+          </p>
+        )}
+        <Button disabled={published.loading} onClick={published.refresh}>
+          {t.refresh}
+        </Button>
+      </div>
     </div>
   );
 }

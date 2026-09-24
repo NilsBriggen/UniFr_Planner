@@ -173,10 +173,18 @@ function AppShell() {
   const [language, setLanguage] = useState<Language>(() => {
     try {
       const value = localStorage.getItem("unifr.language");
-      return value === "fr" || value === "en" ? value : "de";
+      if (value === "de" || value === "fr" || value === "en") return value;
     } catch {
-      return "de";
+      /* Browser preferences still work when storage is unavailable. */
     }
+    for (const locale of navigator.languages?.length
+      ? navigator.languages
+      : [navigator.language]) {
+      const language = locale?.split("-")[0].toLowerCase();
+      if (language === "de" || language === "fr" || language === "en")
+        return language;
+    }
+    return "de";
   });
   const t = messages[language];
   const x = experienceMessages[language];

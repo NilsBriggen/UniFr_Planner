@@ -38,9 +38,9 @@ export const catalogueMessages = {
     unavailable: "Kein aktueller Kurskatalog verfügbar",
     unavailableBody:
       "Der Katalog ist derzeit nicht verfügbar. Bitte versuche es später erneut oder öffne das offizielle Vorlesungsverzeichnis.",
-    rejected: "Synchronisierung abgelehnt",
+    rejected: "Letzter geprüfter Katalogstand",
     rejectedBody:
-      "Die Quelle hat sich während des Imports verändert oder die Prüfung ist fehlgeschlagen. Nur ein zuvor veröffentlichter Katalog kann angezeigt werden.",
+      "Die neueste Übernahme konnte nicht vollständig geprüft werden. Du siehst den letzten geprüften Katalog mit dem unten angegebenen Veröffentlichungsdatum. Prüfe wichtige Termine im offiziellen Vorlesungsverzeichnis.",
     transport: "Katalog konnte nicht geladen werden",
     transportBody:
       "Die Verbindung zum Katalog ist nicht verfügbar. Deine Suchauswahl bleibt erhalten.",
@@ -53,7 +53,7 @@ export const catalogueMessages = {
     fixture: "Entwicklungsbeispiele · kein aktueller UniFr-Katalog",
     fixtureBody:
       "Diese Beispieldaten dienen nur zur Erprobung. Kurse und Quellverweise sind keine aktuellen Studienangebote.",
-    sourceState: "Aktueller veröffentlichter UniFr-Katalog",
+    sourceState: "Veröffentlichter UniFr-Katalog",
     sourceDetails: "Quelldetails",
     unresolved: "Termine ungeklärt",
     unresolvedBody:
@@ -125,9 +125,9 @@ export const catalogueMessages = {
     unavailable: "Aucun catalogue actuel disponible",
     unavailableBody:
       "Le catalogue est actuellement indisponible. Réessayez plus tard ou consultez le programme officiel des cours.",
-    rejected: "Synchronisation refusée",
+    rejected: "Dernière version validée du catalogue",
     rejectedBody:
-      "La source a changé pendant l’import ou la validation a échoué. Seul un catalogue précédemment publié peut être affiché.",
+      "La dernière mise à jour n’a pas pu être entièrement validée. Vous consultez la dernière version validée, publiée à la date indiquée ci-dessous. Vérifiez les horaires importants dans le programme officiel des cours.",
     transport: "Impossible de charger le catalogue",
     transportBody:
       "La connexion au catalogue est indisponible. Vos critères de recherche sont conservés.",
@@ -212,9 +212,9 @@ export const catalogueMessages = {
     unavailable: "No current catalogue available",
     unavailableBody:
       "The catalogue is currently unavailable. Please try again later or open the official timetable.",
-    rejected: "Sync rejected",
+    rejected: "Using the last validated catalogue",
     rejectedBody:
-      "The source changed during import or validation failed. Only a previously published catalogue can be shown.",
+      "The latest import could not be fully validated. You are viewing the last validated catalogue, published on the date shown below. Check important dates in the official course catalogue.",
     transport: "Catalogue could not be loaded",
     transportBody:
       "The catalogue connection is unavailable. Your search choices are preserved.",

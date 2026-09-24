@@ -9,6 +9,7 @@ export function usePublishedCatalogue(codes: string[]) {
   const [catalogue, setCatalogue] = useState<{
     key: string;
     value: PublishedCatalogue;
+    checkedAt: string;
   }>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -20,7 +21,8 @@ export function usePublishedCatalogue(codes: string[]) {
     setError(false);
     void loadSavedCourses(key.split(","), controller.signal)
       .then((value) => {
-        if (!controller.signal.aborted) setCatalogue({ key, value });
+        if (!controller.signal.aborted)
+          setCatalogue({ key, value, checkedAt: new Date().toISOString() });
       })
       .catch(() => {
         if (!controller.signal.aborted) setError(true);
@@ -56,6 +58,7 @@ export function usePublishedCatalogue(codes: string[]) {
   }, [key]);
   return {
     catalogue: key && catalogue?.key === key ? catalogue.value : undefined,
+    checkedAt: key && catalogue?.key === key ? catalogue.checkedAt : undefined,
     loading: !!key && loading,
     error: !!key && error,
     refresh: () => {

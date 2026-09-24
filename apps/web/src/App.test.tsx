@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
 function mount(path = "/") {
@@ -13,6 +13,31 @@ function mount(path = "/") {
 }
 
 describe("application shell", () => {
+  beforeEach(() => {
+    vi.spyOn(navigator, "languages", "get").mockReturnValue(["de-CH"]);
+  });
+  afterEach(() => vi.restoreAllMocks());
+  it.each([
+    [["fr-CH", "de-CH"], "fr", "Vos études. Votre parcours."],
+    [["it-CH", "en-GB"], "en", "Your studies. Your plan."],
+    [["it-CH"], "de", "Dein Studium. Dein Plan."],
+  ])(
+    "uses a supported browser language on first visit: %s",
+    (browser, language, title) => {
+      vi.spyOn(navigator, "languages", "get").mockReturnValue(browser);
+      mount();
+      expect(
+        screen.getByRole("heading", { level: 1, name: title }),
+      ).toBeVisible();
+      expect(document.documentElement.lang).toBe(language);
+    },
+  );
+  it("keeps an explicitly saved German preference on a French browser", () => {
+    vi.spyOn(navigator, "languages", "get").mockReturnValue(["fr-CH"]);
+    localStorage.setItem("unifr.language", "de");
+    mount();
+    expect(document.documentElement.lang).toBe("de");
+  });
   it("has three task destinations and settings in the header", () => {
     localStorage.setItem("unifr.language", "en");
     mount();

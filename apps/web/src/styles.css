@@ -440,14 +440,21 @@ input::placeholder {
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
 }
-.source-updates > .button {
+.source-check {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+.source-check > .button {
   border-color: transparent;
   background: transparent;
   font-size: 0.8125rem;
   font-weight: 400;
   padding-inline: var(--space-2);
 }
-.source-updates > .button:hover {
+.source-check > .button:hover {
   background: var(--color-soft);
 }
 .source-updates > .notice {
@@ -455,7 +462,7 @@ input::placeholder {
   max-width: none;
   margin: var(--space-2) 0;
 }
-.source-updates > p {
+.source-check > p {
   margin: 0;
   font-size: 0.8125rem;
 }

@@ -32,6 +32,7 @@ type PlansContext = {
 const Context = createContext<PlansContext>({
   published: {
     catalogue: undefined,
+    checkedAt: undefined,
     loading: false,
     error: false,
     refresh: () => {},
