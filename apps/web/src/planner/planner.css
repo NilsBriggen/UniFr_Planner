@@ -671,7 +671,9 @@
 .planner-page .setup-history-choice input[type="checkbox"] {
   width: 20px;
   height: 20px;
+  min-height: 20px;
   flex: 0 0 20px;
+  padding: 0;
 }
 .planner-page .setup-history-help {
   grid-column: 1 / -1;
