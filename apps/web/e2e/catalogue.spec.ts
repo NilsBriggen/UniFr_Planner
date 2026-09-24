@@ -1,6 +1,57 @@
 import { catalogueMessages } from "../src/catalogue-i18n";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { configuredStudyPlan, importStudyPlan } from "./studies-helpers";
+
+test("first populated catalogue result starts within desktop and phone viewports", async ({
+  page,
+}, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/catalogue");
+    const result = page.locator(".course-results > li").first();
+    await expect(result).toBeVisible();
+    const box = await result.boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.y + 60).toBeLessThan(
+      viewport.height - (viewport.width < 680 ? 66 : 0),
+    );
+    await page.screenshot({
+      path: testInfo.outputPath(`catalogue-${viewport.width}.png`),
+    });
+  }
+});
+
+test("first planned catalogue result starts within desktop and phone viewports", async ({
+  page,
+}, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
+  await importStudyPlan(page, configuredStudyPlan());
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/catalogue?term=AS-2026&focus=all");
+    const result = page.locator(".course-results > li").first();
+    await expect(result).toBeVisible();
+    const chip = page.locator(".filter-chips .button").first();
+    await expect(chip).toBeVisible();
+    expect((await chip.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const box = await result.boundingBox();
+    expect(box).not.toBeNull();
+    await page.screenshot({
+      path: testInfo.outputPath(`planned-catalogue-${viewport.width}.png`),
+    });
+    expect(box!.y + 60).toBeLessThan(
+      viewport.height - (viewport.width < 680 ? 66 : 0),
+    );
+  }
+});
 
 const locales = [
   {

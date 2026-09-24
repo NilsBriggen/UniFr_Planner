@@ -37,7 +37,7 @@
   flex-wrap: wrap;
   gap: var(--space-3) var(--space-4);
   align-items: end;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
 }
 .discovery-semester label {
   display: grid;
@@ -92,15 +92,55 @@
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
-  padding: var(--space-3) 0;
+  padding: var(--space-2) 0;
   border-block: 1px solid var(--color-line);
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
+}
+.discovery-scopes-desktop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.discovery-scopes-mobile {
+  display: none;
 }
 .discovery-controls .discovery-toggles {
   display: flex;
   flex-wrap: wrap;
   gap: 12px 24px;
   flex-basis: 100%;
+}
+.discovery-options {
+  flex-basis: 100%;
+  font-size: 0.875rem;
+}
+.discovery-options > summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  color: var(--color-blue);
+}
+.discovery-options-content {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0;
+}
+.discovery-options-content > label {
+  justify-content: flex-start;
+}
+.source-assignments {
+  border-top: 1px solid var(--color-line);
+  margin-top: 10px;
+  padding-top: 8px;
+}
+.source-assignment {
+  overflow-wrap: anywhere;
+}
+.source-assignment small {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.5;
+  color: var(--color-muted);
 }
 .discovery-controls label {
   display: flex;
@@ -332,6 +372,31 @@
 }
 
 @media (max-width: 680px) {
+  .discovery-scopes-desktop {
+    display: none;
+  }
+  .discovery-scopes-mobile {
+    display: block;
+    flex-basis: 100%;
+  }
+  .discovery-scopes-mobile > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--color-blue);
+    font-weight: 600;
+  }
+  .discovery-scope-choices {
+    display: grid;
+    gap: 8px;
+    padding: 8px 0;
+  }
+  .discovery-scope-choices .button {
+    min-height: 44px;
+    width: 100%;
+    white-space: normal;
+  }
   .discovery-controls > .button {
     flex: 1 1 100%;
     min-width: 0;

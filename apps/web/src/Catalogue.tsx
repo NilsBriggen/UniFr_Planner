@@ -567,13 +567,31 @@ function AssignmentContext({
   const matches = plan
     ? sourceAssignmentMatches(plan, offering.assignments)
     : [];
-  const ordered = [
-    ...matches,
-    ...offering.assignments.filter(
-      (assignment) => !matches.includes(assignment),
-    ),
-  ];
-  if (!ordered.length) return null;
+  const others = offering.assignments.filter(
+    (assignment) => !matches.includes(assignment),
+  );
+  if (!offering.assignments.length) return null;
+  const assignmentList = (assignments: Offering["assignments"]) => (
+    <ul>
+      {assignments.map((assignment, index) => (
+        <li key={`${assignment.programme}:${assignment.version}:${index}`}>
+          <strong>{assignment.programme}</strong> · {assignment.version}
+          {matches.includes(assignment) && (
+            <p>
+              <strong>{discoveryMessages[language].sourceListed}</strong>
+            </p>
+          )}
+          {plan &&
+            matches.includes(assignment) &&
+            sourceAssignmentApplicability(plan, assignment) ===
+              "unconfirmed" && (
+              <p>{discoveryMessages[language].sourceCohortUnconfirmed}</p>
+            )}
+          <p>{assignment.paths.join(" · ")}</p>
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <section className="assignment-context">
       <h3>{catalogueMessages[language].assignments}</h3>
@@ -582,25 +600,21 @@ function AssignmentContext({
           {discoveryMessages[language].sourceNotRecognition}
         </p>
       )}
-      <ul>
-        {ordered.map((assignment, index) => (
-          <li key={`${assignment.programme}:${assignment.version}:${index}`}>
-            <strong>{assignment.programme}</strong> · {assignment.version}
-            {matches.includes(assignment) && (
-              <p>
-                <strong>{discoveryMessages[language].sourceListed}</strong>
-              </p>
-            )}
-            {plan &&
-              matches.includes(assignment) &&
-              sourceAssignmentApplicability(plan, assignment) ===
-                "unconfirmed" && (
-                <p>{discoveryMessages[language].sourceCohortUnconfirmed}</p>
-              )}
-            <p>{assignment.paths.join(" · ")}</p>
-          </li>
-        ))}
-      </ul>
+      {matches.length > 0 && assignmentList(matches)}
+      {others.length > 0 && (
+        <details>
+          <summary>
+            {
+              {
+                en: `Other published programme assignments (${others.length})`,
+                de: `Weitere veröffentlichte Studiengangszuordnungen (${others.length})`,
+                fr: `Autres attributions publiées aux cursus (${others.length})`,
+              }[language]
+            }
+          </summary>
+          {assignmentList(others)}
+        </details>
+      )}
     </section>
   );
 }
@@ -643,6 +657,14 @@ function Detail({
         <article className="course-detail" key={offering.source_id}>
           {requestedTerm && !inTerm(offering) && <p>{t.otherTerms}</p>}
           <h2>{offering.terms.join(" · ")}</h2>
+          <div className="actions course-detail-primary-actions">
+            <PlanOfferingAction
+              offering={offering}
+              status={status}
+              language={language}
+              browseTerm={requestedTerm}
+            />
+          </div>
           <AssignmentContext offering={offering} language={language} />
           <section>
             <h3>{t.prerequisites}</h3>
@@ -665,12 +687,6 @@ function Detail({
             ))}
           </dl>
           <div className="actions">
-            <PlanOfferingAction
-              offering={offering}
-              status={status}
-              language={language}
-              browseTerm={new URLSearchParams(query).get("term")}
-            />
             {offering.source_url.startsWith(source) && (
               <a className="text-link" href={offering.source_url}>
                 {t.source} ↗
@@ -936,6 +952,32 @@ function Search({
     setDraftField(key, "");
     change(next);
   };
+  const scopeButtons = () => (
+    <>
+      {discovery?.hasProgramme && (
+        <Button
+          aria-pressed={mode === "requirements"}
+          onClick={() => updateChoice("focus", "requirements")}
+        >
+          {d.knownRequirements}
+        </Button>
+      )}
+      {discovery?.hasProgramme && (
+        <Button
+          aria-pressed={mode === "programme"}
+          onClick={() => updateChoice("focus", "programme")}
+        >
+          {d.listedProgramme}
+        </Button>
+      )}
+      <Button
+        aria-pressed={mode === "all"}
+        onClick={() => updateChoice("focus", "all")}
+      >
+        {d.all}
+      </Button>
+    </>
+  );
   useEffect(() => {
     const field = pendingFocus.current;
     if (!field || !expanded || !clientIssue) return;
@@ -1009,7 +1051,7 @@ function Search({
             new FormData(event.currentTarget).forEach((value, key) => {
               if (String(value).trim()) next.set(key, String(value).trim());
             });
-            for (const key of ["focus", "fits", "hide_added"])
+            for (const key of ["focus", "fits", "hide_added", "stage"])
               if (query.has(key)) next.set(key, query.get(key)!);
             if (plan && !next.has("term")) next.set("scope", "all");
             const nextIssue = validateFilterQuery(next);
@@ -1227,98 +1269,98 @@ function Search({
         {discovery && (
           <>
             <div className="discovery-controls" aria-label={d.heading}>
-              {discovery.hasProgramme && (
-                <Button
-                  aria-pressed={mode === "requirements"}
-                  onClick={() => updateChoice("focus", "requirements")}
-                >
-                  {d.knownRequirements}
-                </Button>
-              )}
-              {discovery.hasProgramme && (
-                <Button
-                  aria-pressed={mode === "programme"}
-                  onClick={() => updateChoice("focus", "programme")}
-                >
-                  {d.listedProgramme}
-                </Button>
-              )}
-              <Button
-                aria-pressed={mode === "all"}
-                onClick={() => updateChoice("focus", "all")}
-              >
-                {d.all}
-              </Button>
-              <label>
-                {
+              <div className="discovery-scopes-desktop">{scopeButtons()}</div>
+              <details className="discovery-scopes-mobile">
+                <summary>
+                  {d.heading}:{" "}
+                  {mode === "requirements"
+                    ? d.knownRequirements
+                    : mode === "programme"
+                      ? d.listedProgramme
+                      : d.all}
+                </summary>
+                <div className="discovery-scope-choices">{scopeButtons()}</div>
+              </details>
+              <details className="discovery-options">
+                <summary>
                   {
-                    en: "Prefer curriculum stage",
-                    de: "Studienphase bevorzugen",
-                    fr: "Privilégier l’étape du cursus",
-                  }[language]
-                }
-                <select
-                  value={preferredStage}
-                  onChange={(event) =>
-                    updateChoice("stage", event.target.value)
+                    {
+                      en: "More result options",
+                      de: "Weitere Ergebnisoptionen",
+                      fr: "Autres options de résultats",
+                    }[language]
                   }
-                >
-                  <option value="">
+                  {(preferredStage || fits || hideAdded) &&
+                    ` · ${Number(Boolean(preferredStage)) + Number(fits) + Number(hideAdded)}`}
+                </summary>
+                <div className="discovery-options-content">
+                  <label>
                     {
                       {
-                        en: "Show all stages",
-                        de: "Alle Studienphasen",
-                        fr: "Toutes les étapes",
+                        en: "Prefer curriculum stage",
+                        de: "Studienphase bevorzugen",
+                        fr: "Privilégier l’étape du cursus",
                       }[language]
                     }
-                  </option>
-                  {[1, 2, 3, 4].map((year) => (
-                    <option value={year} key={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <small>
-                {
-                  {
-                    en: "This changes order only; all stages stay available.",
-                    de: "Nur die Reihenfolge ändert sich; alle Studienphasen bleiben verfügbar.",
-                    fr: "Seul l’ordre change ; toutes les étapes restent disponibles.",
-                  }[language]
-                }
-              </small>
-              <div className="discovery-toggles">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={fits}
-                    onChange={(e) =>
-                      updateChoice("fits", e.target.checked ? "1" : "0")
+                    <select
+                      value={preferredStage}
+                      onChange={(event) =>
+                        updateChoice("stage", event.target.value)
+                      }
+                    >
+                      <option value="">
+                        {
+                          {
+                            en: "Show all stages",
+                            de: "Alle Studienphasen",
+                            fr: "Toutes les étapes",
+                          }[language]
+                        }
+                      </option>
+                      {[1, 2, 3, 4].map((year) => (
+                        <option value={year} key={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <small>
+                    {
+                      {
+                        en: "This changes order only; all stages stay available.",
+                        de: "Nur die Reihenfolge ändert sich; alle Studienphasen bleiben verfügbar.",
+                        fr: "Seul l’ordre change ; toutes les étapes restent disponibles.",
+                      }[language]
                     }
-                  />
-                  {d.fitsOnly}
-                </label>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={hideAdded}
-                    onChange={(e) =>
-                      updateChoice("hide_added", e.target.checked ? "1" : "0")
-                    }
-                  />
-                  {d.hideAdded}
-                </label>
-              </div>
+                  </small>
+                  <div className="discovery-toggles">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={fits}
+                        onChange={(e) =>
+                          updateChoice("fits", e.target.checked ? "1" : "0")
+                        }
+                      />
+                      {d.fitsOnly}
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={hideAdded}
+                        onChange={(e) =>
+                          updateChoice(
+                            "hide_added",
+                            e.target.checked ? "1" : "0",
+                          )
+                        }
+                      />
+                      {d.hideAdded}
+                    </label>
+                  </div>
+                </div>
+              </details>
             </div>
-            {discovery.hasProgramme && !hasMatches && mode === "all" && (
-              <p className="discovery-help">
-                {d.noMatches}{" "}
-                <Link className="text-link" to="/requirements">
-                  {d.viewRequirements}
-                </Link>
-              </p>
-            )}
             {discovery.requirementError && (
               <p role="alert">{d.requirementsError}</p>
             )}
@@ -1411,8 +1453,8 @@ function Search({
                       <div className="course-summary" key={offering.source_id}>
                         <div className="course-summary-main">
                           <p>
+                            <strong>{offering.ects ?? t.unknown} ECTS</strong> ·{" "}
                             {offering.terms.join(" · ")} ·{" "}
-                            {offering.ects ?? t.unknown} ECTS ·{" "}
                             {offering.languages.join(" / ")} ·{" "}
                             {offering.levels?.join(" / ") || t.unknown}
                           </p>
@@ -1429,17 +1471,39 @@ function Search({
                               language={language}
                             />
                           ) : (
-                            <span
-                              className={
-                                offering.meeting_state === "unresolved"
-                                  ? "meeting-status unresolved"
-                                  : "meeting-status"
-                              }
-                            >
-                              {offering.meeting_state === "unresolved"
-                                ? t.unresolved
-                                : t.resolved}
-                            </span>
+                            <div className="source-meeting-preview">
+                              {offering.schedule_summary && (
+                                <p>
+                                  {offering.schedule_summary.split("\n")[0]}
+                                </p>
+                              )}
+                              {!offering.schedule_summary &&
+                                offering.meetings[0]?.starts_at && (
+                                  <p>
+                                    {new Intl.DateTimeFormat(language, {
+                                      weekday: "short",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      timeZone: "Europe/Zurich",
+                                    }).format(
+                                      new Date(offering.meetings[0].starts_at),
+                                    )}
+                                    {offering.meetings[0].location &&
+                                      ` · ${offering.meetings[0].location}`}
+                                  </p>
+                                )}
+                              <span
+                                className={
+                                  offering.meeting_state === "unresolved"
+                                    ? "meeting-status unresolved"
+                                    : "meeting-status"
+                                }
+                              >
+                                {offering.meeting_state === "unresolved"
+                                  ? t.unresolved
+                                  : t.resolved}
+                              </span>
+                            </div>
                           )}
                         </div>
                         <PlanOfferingAction
@@ -1454,6 +1518,17 @@ function Search({
                 ))}
               </ul>
             )}
+            {discovery?.hasProgramme &&
+              !hasMatches &&
+              mode === "all" &&
+              page.total > 0 && (
+                <p className="discovery-help">
+                  {d.noMatches}{" "}
+                  <Link className="text-link" to="/requirements">
+                    {d.viewRequirements}
+                  </Link>
+                </p>
+              )}
             <div className="pagination">
               <Button
                 disabled={page.offset === 0}

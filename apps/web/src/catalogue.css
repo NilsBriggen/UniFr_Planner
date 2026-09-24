@@ -1,18 +1,25 @@
 .catalogue-page {
   max-width: 1400px;
+  padding-top: var(--space-4);
+}
+.catalogue-page > .eyebrow {
+  margin-bottom: 6px;
+}
+.catalogue-page > h1 {
+  margin-bottom: 12px;
 }
 .catalogue-provenance {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-2);
 }
 .catalogue-provenance .snapshot-age {
   margin-block: 8px;
 }
 .source-details {
   font-size: 0.875rem;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 }
 .source-details summary {
   cursor: pointer;
@@ -22,7 +29,7 @@
 .catalogue-degree {
   color: var(--color-muted);
   font-size: 0.875rem;
-  margin: 0 0 12px;
+  margin: 0 0 4px;
 }
 .catalogue-provenance > .notice:only-of-type {
   grid-column: 1 / -1;
@@ -55,7 +62,7 @@
   padding-left: 12px;
 }
 .catalogue-search {
-  margin-top: 28px;
+  margin-top: var(--space-2);
 }
 .search-bar {
   display: flex;
@@ -121,7 +128,8 @@
   margin: var(--space-3) 0;
 }
 .filter-chips .button {
-  padding: 8px 12px;
+  min-height: 44px;
+  padding: 10px 12px;
   font-size: 0.75rem;
   text-align: left;
   gap: 12px;
@@ -205,6 +213,17 @@
 }
 .course-detail .actions {
   align-items: center;
+}
+.course-detail-primary-actions {
+  margin: 12px 0 20px;
+}
+.assignment-context {
+  margin-block: 20px;
+}
+.assignment-context details > summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
 }
 .source-text {
   white-space: pre-line;
@@ -328,8 +347,8 @@
     margin-block: 4px;
   }
   .filter-chips .button {
-    min-height: 36px;
-    padding-block: 4px;
+    min-height: 44px;
+    padding-block: 8px;
   }
   .result-count {
     margin-block: 4px;

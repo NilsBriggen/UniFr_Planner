@@ -114,6 +114,139 @@ it("keeps advanced filters closed while retaining URL filter chips", async () =>
   expect(screen.getByLabelText("Faculty / domain")).toBeVisible();
 });
 
+it("puts the offering action before assignment details and keeps other source assignments available", async () => {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "en");
+  const plan = createPlan({
+    id: "assignment-plan",
+    scenarioId: "s",
+    name: "Study",
+    programme: "Computer Science",
+    startTerm: "AS-2026",
+    semesterCount: 2,
+    targetEcts: 180,
+  });
+  plan.degreeSelection = {
+    structureId: "ba-120-60",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-digitinf-informatics",
+        variantId: "major-120",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  };
+  await new PlanStore(indexedDB).save(plan, null);
+  const course = publishedCourses()[0];
+  course.offerings[0].assignments = [
+    { programme: "Other programme", version: "old", paths: ["Other path"] },
+    {
+      programme: "Computer Science 120",
+      version: "2022_1/V_01",
+      paths: ["2nd-3rd year", "BSc Computer Science"],
+    },
+  ];
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) =>
+      Response.json(
+        request.url.endsWith("/status/catalogue") ? publishedStatus : course,
+      ),
+    ),
+  );
+  render(
+    <MemoryRouter initialEntries={[`/catalogue/${course.code}`]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const article = (await screen.findByText("Other programme")).closest(
+    "article",
+  )!;
+  const action = article.querySelector(".course-detail-primary-actions")!;
+  const assignments = article.querySelector(".assignment-context")!;
+  expect(
+    action.compareDocumentPosition(assignments) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+  await waitFor(() =>
+    expect(screen.getByText("Computer Science 120")).toBeVisible(),
+  );
+  const other = screen.getByText("Other programme");
+  const disclosure = other.closest("details")!;
+  expect(disclosure).not.toHaveAttribute("open");
+  expect(disclosure.querySelector("summary")).toHaveTextContent("1");
+  await userEvent.click(disclosure.querySelector("summary")!);
+  expect(other).toBeVisible();
+});
+
+it("keeps optional discovery controls collapsed while preserving their choices", async () => {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "en");
+  await new PlanStore(indexedDB).save(publishedPlan(), null);
+  const courses = publishedCourses();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) =>
+      Response.json(
+        request.url.includes("/terms")
+          ? { terms: ["AS-2026"], faculties: [], languages: [], levels: [] }
+          : {
+              status: publishedStatus,
+              items: courses,
+              offset: 0,
+              limit: 20,
+              total: courses.length,
+            },
+      ),
+    ),
+  );
+  render(
+    <MemoryRouter initialEntries={["/catalogue?term=AS-2026&focus=all&fits=1"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const optional = await screen.findByText("Prefer curriculum stage");
+  const disclosure = optional.closest("details")!;
+  expect(disclosure).not.toHaveAttribute("open");
+  expect(
+    screen.getAllByRole("button", { name: "All courses" })[0],
+  ).toHaveAttribute("aria-pressed", "true");
+  await userEvent.click(disclosure.querySelector("summary")!);
+  expect(screen.getByLabelText("Prefer curriculum stage")).toBeVisible();
+  expect(screen.getByLabelText("Only courses that fit")).toBeChecked();
+});
+
+it("shows a published meeting preview on cards without a study plan", async () => {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "en");
+  const courses = publishedCourses();
+  courses[0].offerings[0].schedule_summary = "Tuesday 10:15, Room 101";
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) =>
+      Response.json(
+        request.url.includes("/terms")
+          ? { terms: ["AS-2026"], faculties: [], languages: [], levels: [] }
+          : {
+              status: publishedStatus,
+              items: courses,
+              offset: 0,
+              limit: 20,
+              total: courses.length,
+            },
+      ),
+    ),
+  );
+  render(
+    <MemoryRouter initialEntries={["/catalogue"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(await screen.findByText("Tuesday 10:15, Room 101")).toBeVisible();
+});
+
 it("keeps unsubmitted filter choices while changing discovery scope", async () => {
   vi.stubGlobal("indexedDB", new IDBFactory());
   localStorage.setItem("unifr.language", "en");
@@ -154,7 +287,9 @@ it("keeps unsubmitted filter choices while changing discovery scope", async () =
     screen.getByLabelText("Study level"),
     "Bachelor",
   );
-  await userEvent.click(screen.getByRole("button", { name: "All courses" }));
+  await userEvent.click(
+    screen.getAllByRole("button", { name: "All courses" })[0],
+  );
   expect(screen.getByLabelText("Faculty / domain")).toHaveValue(
     "Faculty of Science and Medicine, Mathematics",
   );

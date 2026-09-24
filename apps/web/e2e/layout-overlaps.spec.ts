@@ -11,10 +11,16 @@ for (const language of ["de", "fr", "en"] as const) {
     );
     await importStudyPlan(page, configuredStudyPlan(), language);
     await page.goto("/catalogue?term=AS-2026");
-    const scopes = page.locator(".discovery-controls > .button");
+    const disclosure = page.locator(".discovery-scopes-mobile");
+    const scopes = disclosure.locator(".discovery-scope-choices > .button");
     await expect(scopes).toHaveCount(3);
     for (const width of [320, 390, 680]) {
       await page.setViewportSize({ width, height: 844 });
+      const summary = disclosure.locator(":scope > summary");
+      await expect(summary).toBeVisible();
+      expect((await summary.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      if ((await disclosure.getAttribute("open")) === null)
+        await summary.click();
       for (const button of await scopes.all()) {
         await button.scrollIntoViewIfNeeded();
         const box = await button.evaluate((element) => {

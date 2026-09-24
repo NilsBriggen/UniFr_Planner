@@ -65,51 +65,6 @@ export function OfferingAdvice({
   const r = recommendationMessages[language];
   return (
     <>
-      {a.match && (
-        <p className="match-note">
-          {a.recommended && a.recommendationKind
-            ? r[a.recommendationKind]
-            : a.match === "subject"
-              ? t.sourceListed
-              : t.requirement}
-          {a.requirementTitles.length > 0 &&
-            ` · ${a.requirementTitles.join(" / ")}`}
-        </p>
-      )}
-      {a.sourceAssignments.map((assignment, index) => (
-        <p
-          className="source-assignment"
-          key={`${assignment.programme}:${assignment.version}:${index}`}
-        >
-          <strong>{assignment.programme}</strong> · {assignment.version}
-          {sourceStage(assignment) && <> · {sourceStage(assignment)}</>}
-          {assignment.paths[0] && <small>{assignment.paths[0]}</small>}
-        </p>
-      ))}
-      {a.match === "subject" && (
-        <p className="discovery-help">{t.sourceNotRecognition}</p>
-      )}
-      {a.sourceApplicabilityUnconfirmed && (
-        <p className="discovery-help" role="note">
-          {t.sourceCohortUnconfirmed}
-        </p>
-      )}
-      {a.recommended && a.contributionEcts !== 0 && (
-        <p className="recommendation-contribution">
-          {a.contributionEcts === null
-            ? r.unknownCredits
-            : `${a.contributionEcts.toLocaleString(language)} ${r.contribution}`}
-        </p>
-      )}
-      {a.selectedStatus && (
-        <p className="discovery-help">{r[a.selectedStatus]}</p>
-      )}
-      {a.match === "requirements" &&
-        !a.recommended &&
-        !a.selectedStatus &&
-        a.prerequisiteState !== "unmet" && (
-          <p className="discovery-help">{r.covered}</p>
-        )}
       <LessonPreview calendar={a.calendar} language={language} />
       {a.attendanceStale && (
         <p className="fit-note unknown" role="alert">
@@ -146,6 +101,55 @@ export function OfferingAdvice({
             : a.fit === "fits"
               ? t.fits
               : t.unknown}
+        </p>
+      )}
+      {a.match && (
+        <p className="match-note">
+          {a.recommended && a.recommendationKind
+            ? r[a.recommendationKind]
+            : a.match === "subject"
+              ? t.sourceListed
+              : t.requirement}
+          {a.requirementTitles.length > 0 &&
+            ` · ${a.requirementTitles.join(" / ")}`}
+        </p>
+      )}
+      {a.recommended && a.contributionEcts !== 0 && (
+        <p className="recommendation-contribution">
+          {a.contributionEcts === null
+            ? r.unknownCredits
+            : `${a.contributionEcts.toLocaleString(language)} ${r.contribution}`}
+        </p>
+      )}
+      {a.selectedStatus && (
+        <p className="discovery-help">{r[a.selectedStatus]}</p>
+      )}
+      {a.match === "requirements" &&
+        !a.recommended &&
+        !a.selectedStatus &&
+        a.prerequisiteState !== "unmet" && (
+          <p className="discovery-help">{r.covered}</p>
+        )}
+      {a.sourceAssignments.length > 0 && (
+        <div className="source-assignments">
+          {a.sourceAssignments.map((assignment, index) => (
+            <p
+              className="source-assignment"
+              key={`${assignment.programme}:${assignment.version}:${index}`}
+            >
+              <strong>{assignment.programme}</strong> · {assignment.version}
+              {sourceStage(assignment) && <> · {sourceStage(assignment)}</>}
+              {assignment.paths[0] && <small>{assignment.paths[0]}</small>}
+            </p>
+          ))}
+        </div>
+      )}
+      {a.match === "subject" && (
+        <p className="discovery-help">{t.sourceNotRecognition}</p>
+      )}
+      {a.sourceApplicabilityUnconfirmed && (
+        <p className="discovery-help" role="note">
+          {t.sourceCohortUnconfirmed}
         </p>
       )}
       {a.prerequisiteState !== "satisfied" && (
