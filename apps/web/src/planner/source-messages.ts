@@ -1,5 +1,6 @@
 export const sourceMessages = {
   en: {
+    catalogueStatus: "Catalogue status",
     title: "Published catalogue changes affect this plan",
     body: "Your choices, pins and saved timetable are unchanged. Review the affected courses and compare alternatives before updating your plan.",
     changed: "Published course details or timetable changed",
@@ -15,6 +16,7 @@ export const sourceMessages = {
     suggestions: "Compare alternatives",
   },
   de: {
+    catalogueStatus: "Katalogstatus",
     title: "Katalogänderungen betreffen diesen Plan",
     body: "Deine Auswahl, Fixierungen und gespeicherten Termine sind unverändert. Prüfe die betroffenen Kurse und vergleiche Alternativen, bevor du deinen Plan aktualisierst.",
     changed: "Veröffentlichte Kursangaben oder Termine geändert",
@@ -31,6 +33,7 @@ export const sourceMessages = {
     suggestions: "Alternativen vergleichen",
   },
   fr: {
+    catalogueStatus: "État du catalogue",
     title: "Des changements du catalogue concernent ce plan",
     body: "Vos choix, cours fixés et horaires enregistrés sont inchangés. Vérifiez les cours concernés et comparez les alternatives avant de modifier votre plan.",
     changed: "Les informations ou horaires publiés ont changé",

@@ -324,6 +324,7 @@ test("connected release: CS/BI credits, conflict, pinned alternative, weekly pro
       res.request().method() === "GET" &&
       (await res.json()).status?.snapshot_id === "release-overnight-fixture",
   );
+  await page.getByText("Catalogue status", { exact: false }).click();
   await page
     .getByRole("button", { name: "Check catalogue updates", exact: true })
     .click();

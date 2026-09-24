@@ -52,6 +52,7 @@ it("loads published alternatives for the selected CS plus BI plan and preserves 
   await userEvent.click(within(comparison).getByRole("checkbox"));
   courses[0].offerings[1].meetings[0].starts_at = "2026-09-21T12:00:00Z";
   courses[0].offerings[1].meetings[0].ends_at = "2026-09-21T13:00:00Z";
+  await userEvent.click(screen.getByText(/Catalogue status/));
   await userEvent.click(
     screen.getByRole("button", { name: "Check catalogue updates" }),
   );

@@ -13,7 +13,7 @@ import {
 
 beforeEach(() => vi.stubGlobal("indexedDB", new IDBFactory()));
 afterEach(() => vi.unstubAllGlobals());
-it("confirms an unchanged check and keeps routine controls out of print", async () => {
+it("keeps an unchanged catalogue check in a compact disclosure and errors prominent", async () => {
   localStorage.setItem("unifr.language", "en");
   await new PlanStore(indexedDB).save(publishedPlan(), null);
   let fail = false;
@@ -35,9 +35,16 @@ it("confirms an unchanged check and keeps routine controls out of print", async 
       <App />
     </MemoryRouter>,
   );
-  expect(
-    await screen.findByText(/No changes to your saved courses/),
-  ).toBeVisible();
+  const sourceStatus = await screen.findByText(/Catalogue status/);
+  expect(sourceStatus).toBeVisible();
+  const disclosure = sourceStatus.closest("details");
+  expect(disclosure).not.toHaveAttribute("open");
+  const unchanged = await within(disclosure!).findByText(
+    /No changes to your saved courses/,
+  );
+  expect(unchanged).not.toBeVisible();
+  await userEvent.click(sourceStatus);
+  expect(unchanged).toBeVisible();
   const button = screen.getByRole("button", {
     name: "Check catalogue updates",
   });
@@ -88,7 +95,12 @@ for (const [language, title, refresh] of [
         </MemoryRouter>,
       );
     const view = mount();
-    const refreshButton = await screen.findByRole("button", { name: refresh });
+    await userEvent.click(
+      await screen.findByText(
+        /Catalogue status|Katalogstatus|État du catalogue/,
+      ),
+    );
+    const refreshButton = screen.getByRole("button", { name: refresh });
     expect(
       screen.queryByRole("heading", { name: title }),
     ).not.toBeInTheDocument();

@@ -434,37 +434,66 @@ input::placeholder {
 }
 .page.source-updates {
   padding-block: var(--space-2) 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
+  display: flow-root;
 }
 .source-check {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline-start: auto;
+  font-size: 0.8125rem;
+}
+.source-check summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: var(--space-2);
+  color: var(--color-blue);
+  cursor: pointer;
+  list-style: none;
+}
+.source-check summary::-webkit-details-marker {
+  display: none;
+}
+.source-check summary::before {
+  content: "▸";
+  margin-inline-end: var(--space-2);
+}
+.source-check[open] summary::before {
+  content: "▾";
+}
+.source-check-details {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
+  padding-bottom: var(--space-2);
 }
-.source-check > .button {
+.source-check-details > .button {
   border-color: transparent;
   background: transparent;
   font-size: 0.8125rem;
   font-weight: 400;
   padding-inline: var(--space-2);
 }
-.source-check > .button:hover {
+.source-check-details > .button:hover {
   background: var(--color-soft);
 }
 .source-updates > .notice {
-  flex-basis: 100%;
   max-width: none;
   margin: var(--space-2) 0;
 }
-.source-check > p {
+.source-check-details > p {
   margin: 0;
   font-size: 0.8125rem;
+}
+.source-warning {
+  max-width: none;
+  margin: var(--space-2) 0;
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 3px solid var(--color-orange);
+  background: var(--color-warning-surface);
+  color: var(--color-warning);
 }
 .source-updates + .page {
   padding-top: var(--space-4);
@@ -601,14 +630,34 @@ input {
     flex: 1 1 140px;
     min-width: 0;
     max-width: 100%;
+    position: relative;
   }
   .plan-switcher span {
-    display: none;
+    display: block;
+    position: absolute;
+    inset-block-start: 3px;
+    inset-inline-start: 12px;
+    font-size: 0.625rem;
+    line-height: 12px;
+    pointer-events: none;
+    z-index: 1;
   }
   .plan-switcher select {
     width: 100%;
     min-width: 0;
     text-overflow: ellipsis;
+    padding-block: 15px 3px;
+    font-size: 0.75rem;
+  }
+  .study-navigation {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    white-space: nowrap;
+    scrollbar-width: thin;
+  }
+  .study-navigation a {
+    flex: 0 0 auto;
   }
   .guest-status {
     display: none;

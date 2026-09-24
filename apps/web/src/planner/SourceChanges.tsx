@@ -20,6 +20,8 @@ export default function SourceChanges({ language }: { language: Language }) {
   const changes = published.catalogue
     ? sourceChanges(plan, published.catalogue)
     : [];
+  const rejected =
+    published.catalogue?.status.latest_sync_outcome?.startsWith("rejected");
   return (
     <div className="page source-updates">
       {published.catalogue?.status.published_at && (
@@ -64,25 +66,44 @@ export default function SourceChanges({ language }: { language: Language }) {
           </div>
         </section>
       )}
-      <div className="source-check no-print">
-        {published.loading && <p role="status">{t.loading}</p>}
-        {published.error && <p role="alert">{t.error}</p>}
-        {!published.loading && !published.error && published.checkedAt && (
-          <p role="status">
-            {changes.length
-              ? t.changesFound.replace("{count}", String(changes.length))
-              : t.noChanges}
-            {" · "}
-            {t.checked}:{" "}
-            {new Date(published.checkedAt).toLocaleString(language, {
-              timeZone: "Europe/Zurich",
-            })}
-          </p>
-        )}
-        <Button disabled={published.loading} onClick={published.refresh}>
-          {t.refresh}
-        </Button>
-      </div>
+      {rejected && (
+        <p className="source-warning" role="status">
+          {catalogueMessages[language].rejected}
+        </p>
+      )}
+      {published.error && (
+        <p className="source-warning" role="alert">
+          {t.error}
+        </p>
+      )}
+      <details className="source-check no-print">
+        <summary>
+          {t.catalogueStatus}
+          {published.loading
+            ? " · …"
+            : published.checkedAt
+              ? ` · ${new Date(published.checkedAt).toLocaleDateString(language, { timeZone: "Europe/Zurich" })}`
+              : ""}
+        </summary>
+        <div className="source-check-details">
+          {published.loading && <p role="status">{t.loading}</p>}
+          {!published.loading && !published.error && published.checkedAt && (
+            <p role="status">
+              {changes.length
+                ? t.changesFound.replace("{count}", String(changes.length))
+                : t.noChanges}
+              {" · "}
+              {t.checked}:{" "}
+              {new Date(published.checkedAt).toLocaleString(language, {
+                timeZone: "Europe/Zurich",
+              })}
+            </p>
+          )}
+          <Button disabled={published.loading} onClick={published.refresh}>
+            {t.refresh}
+          </Button>
+        </div>
+      </details>
     </div>
   );
 }

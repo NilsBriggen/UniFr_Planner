@@ -200,6 +200,7 @@ function AppShell() {
         : undefined;
   const previousPath = useRef(location.pathname);
   const navigationRef = useRef<HTMLElement>(null);
+  const studyNavigationRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (previousPath.current !== location.pathname) {
       document.getElementById("main")?.focus({ preventScroll: true });
@@ -207,6 +208,12 @@ function AppShell() {
       previousPath.current = location.pathname;
     }
   }, [location.pathname]);
+  useEffect(() => {
+    const active = studyNavigationRef.current?.querySelector(
+      '[aria-current="page"]',
+    );
+    active?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  }, [location.pathname, language]);
   useEffect(() => {
     document.documentElement.lang = language;
     try {
@@ -255,6 +262,7 @@ function AppShell() {
             <span>{t.planLabel}</span>
             <select
               aria-label={t.planLabel}
+              title={plans.plan?.name ?? t.noPlan}
               disabled={!plans.ready || plans.busy || !plans.plans.length}
               value={plans.plan?.id ?? "empty"}
               onChange={(e) => void plans.select(e.target.value)}
@@ -354,7 +362,11 @@ function AppShell() {
             {["/plan", "/requirements", "/plan/completed"].includes(
               location.pathname,
             ) && (
-              <nav className="study-navigation" aria-label={x.studies}>
+              <nav
+                ref={studyNavigationRef}
+                className="study-navigation"
+                aria-label={x.studies}
+              >
                 <NavLink end to="/plan">
                   {x.overview}
                 </NavLink>
