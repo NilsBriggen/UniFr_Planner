@@ -23,6 +23,39 @@
   border-collapse: collapse;
   text-align: start;
 }
+.reconciliation-cards {
+  display: none;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.reconciliation-card {
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-control);
+  overflow-wrap: anywhere;
+}
+.reconciliation-card h3 {
+  margin-bottom: 0.65rem;
+  font-size: 1rem;
+}
+.reconciliation-card dl {
+  margin: 0;
+}
+.reconciliation-card dl > div {
+  display: grid;
+  gap: 0.15rem;
+  padding-block: 0.4rem;
+  border-top: 1px solid var(--color-line);
+}
+.reconciliation-card dt {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+.reconciliation-card dd {
+  margin: 0;
+}
 .reconciliation-scroll th,
 .reconciliation-scroll td {
   padding: 0.6rem;
@@ -90,14 +123,44 @@
   display: flex;
   gap: 0.6rem;
   align-items: center;
-  margin-block: 1rem;
+  min-height: var(--control-height);
+  margin-block: 0.5rem;
 }
-.requirement-duty input {
-  width: auto;
+.requirement-duty input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  margin: 0;
+  accent-color: var(--color-blue);
+}
+.requirement-duties {
+  min-width: 0;
+  margin-block: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: white;
+}
+.requirement-duties legend {
+  padding-inline: 0.35rem;
+  font-weight: 600;
 }
 .requirement-scenario {
-  display: block;
+  display: grid;
+  gap: 0.4rem;
+  max-width: 32rem;
   margin-block: 1rem;
+}
+.requirement-scenario select {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0.6rem;
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-control);
+  background: white;
+  color: inherit;
+  font: inherit;
 }
 .requirements-page select {
   max-width: 100%;
@@ -107,6 +170,13 @@
   margin-block: 1rem 1.5rem;
 }
 @media (max-width: 600px) {
+  .reconciliation-scroll table {
+    display: none;
+  }
+  .reconciliation-cards {
+    display: grid;
+    gap: 0.75rem;
+  }
   .requirement-node {
     padding-inline-start: 0.5rem;
   }
@@ -121,7 +191,8 @@
 .recipe-chooser fieldset {
   min-width: 0;
   margin: 0;
-  border: 1px solid var(--border, #d2d7dc);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
   padding: 1rem;
 }
 .recipe-chooser fieldset label {
@@ -156,11 +227,34 @@
   min-width: 0;
   min-height: 44px;
   padding: 0.6rem;
-  border: 1px solid var(--color-line, #bdc5ca);
-  border-radius: 4px;
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-control);
   background: white;
   font: inherit;
   color: inherit;
+}
+.recipe-chooser .planner-form .checkbox-label {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
+  gap: 0.6rem;
+}
+.recipe-chooser .planner-form .checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+  padding: 0;
+  accent-color: var(--color-blue);
+}
+.recipe-start-help {
+  grid-column: 1 / -1;
+  max-width: 65ch;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+.recipe-chooser .planner-form > button {
+  grid-column: 1 / -1;
 }
 .recipe-chooser .planner-form > fieldset {
   grid-column: 1 / -1;

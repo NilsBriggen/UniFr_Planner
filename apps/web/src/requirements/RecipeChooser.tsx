@@ -402,7 +402,7 @@ export function DegreeSelectionForm({
           }}
         />
         {setupMode && (
-          <p className="recipe-choice-summary">
+          <p className="recipe-choice-summary recipe-start-help">
             {
               {
                 en: "Start of this UniFr programme. If you transferred, record earlier studies separately as completed history when you know them.",

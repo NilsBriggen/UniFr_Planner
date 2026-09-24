@@ -205,15 +205,7 @@ export function Setup({ language }: { language: Language }) {
               language={language}
               onChange={(planning) => setSettings({ ...settings, planning })}
             />
-            <label
-              className="setup-history-choice"
-              style={{
-                gridColumn: "1 / -1",
-                display: "flex",
-                alignItems: "center",
-                gap: ".6rem",
-              }}
-            >
+            <label className="setup-history-choice">
               <input
                 type="checkbox"
                 checked={recordCompleted}
@@ -227,7 +219,7 @@ export function Setup({ language }: { language: Language }) {
                 }[language]
               }
             </label>
-            <p className="discovery-help" style={{ gridColumn: "1 / -1" }}>
+            <p className="discovery-help setup-history-help">
               {
                 {
                   en: "You can add prior study or transfer credits later. No courses are presumed completed.",

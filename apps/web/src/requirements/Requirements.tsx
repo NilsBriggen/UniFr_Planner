@@ -84,6 +84,22 @@ function CreditReconciliation({
       course.offering?.terms.some((term) => term.startsWith("AS")) &&
       course.offering.terms.some((term) => term.startsWith("SS")),
   );
+  const reason = (row: (typeof view.rows)[number]) =>
+    row.reason === "mapped"
+      ? row.confidence === "model_verified"
+        ? t.verified
+        : t.provisional
+      : row.reason === "additional"
+        ? t.additional
+        : row.reason === "unscheduled"
+          ? t.unscheduled
+          : row.reason === "unknown_ects"
+            ? t.unknownEcts
+            : row.reason === "evidence_pending"
+              ? t.evidencePending
+              : row.reason === "allocation_unresolved"
+                ? t.allocationUnresolved
+                : t.unmapped;
   return (
     <section className="credit-reconciliation" aria-label={t.heading}>
       <h2>{t.heading}</h2>
@@ -164,27 +180,47 @@ function CreditReconciliation({
                       : fmt(row.unallocatedEcts)}{" "}
                     ECTS
                   </td>
-                  <td>
-                    {row.reason === "mapped"
-                      ? row.confidence === "model_verified"
-                        ? t.verified
-                        : t.provisional
-                      : row.reason === "additional"
-                        ? t.additional
-                        : row.reason === "unscheduled"
-                          ? t.unscheduled
-                          : row.reason === "unknown_ects"
-                            ? t.unknownEcts
-                            : row.reason === "evidence_pending"
-                              ? t.evidencePending
-                              : row.reason === "allocation_unresolved"
-                                ? t.allocationUnresolved
-                                : t.unmapped}
-                  </td>
+                  <td>{reason(row)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <ul className="reconciliation-cards">
+            {view.rows.map((row) => (
+              <li className="reconciliation-card" key={row.courseId}>
+                <h3>
+                  {row.title} · {row.code}
+                </h3>
+                <dl>
+                  <div>
+                    <dt>{t.recordedCredits}</dt>
+                    <dd>{row.ects === null ? "?" : fmt(row.ects)} ECTS</dd>
+                  </div>
+                  <div>
+                    <dt>{t.requirement}</dt>
+                    <dd>{row.requirement ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>{t.contribution}</dt>
+                    <dd>{fmt(row.mappedEcts)} ECTS</dd>
+                  </div>
+                  <div>
+                    <dt>{t.balance}</dt>
+                    <dd>
+                      {row.unallocatedEcts === null
+                        ? "?"
+                        : fmt(row.unallocatedEcts)}{" "}
+                      ECTS
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{t.reason}</dt>
+                    <dd>{reason(row)}</dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </section>
@@ -398,14 +434,6 @@ function PlanRequirements({
           <Progress result={result} language={language} />
         </section>
       )}
-      {result && (
-        <CreditReconciliation
-          plan={plan}
-          result={result}
-          additional={additional}
-          language={language}
-        />
-      )}
       {plan.degreeSelection && !editingStudies ? (
         <section className="studies-summary" aria-label={editStudies[language]}>
           <div>
@@ -531,6 +559,12 @@ function PlanRequirements({
               </ul>
             </section>
           )}
+          <CreditReconciliation
+            plan={plan}
+            result={result}
+            additional={additional}
+            language={language}
+          />
           <section aria-label={t.override}>
             <h2>{t.override}</h2>
             <p>{t.overrideHelp}</p>
@@ -592,7 +626,7 @@ function PlanRequirements({
             </form>
           </section>
           {nodes.some((n) => n.kind === "checklist") && (
-            <fieldset>
+            <fieldset className="requirement-duties">
               <legend>{t.duties}</legend>
               {nodes
                 .filter((n) => n.kind === "checklist")

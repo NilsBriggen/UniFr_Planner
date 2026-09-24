@@ -551,7 +551,9 @@ it("shows selected courses separately from provisional requirement contribution 
       /Remaining requirement total cannot yet be confirmed/,
     ),
   ).toBeVisible();
-  expect(within(credits).getByText(/Linear Algebra II/)).toBeVisible();
+  expect(
+    within(within(credits).getByRole("table")).getByText(/Linear Algebra II/),
+  ).toBeVisible();
   expect(screen.queryByText(/Still to earn/)).not.toBeInTheDocument();
 });
 
