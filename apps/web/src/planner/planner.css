@@ -591,14 +591,10 @@
   }
 }
 .scoped-print-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
   margin: 20px 0;
   padding: 16px;
   border: 1px solid var(--color-line);
-  border-radius: 12px;
+  border-radius: var(--radius-panel);
 }
 .scoped-print-actions h2,
 .scoped-print-actions p {
@@ -643,4 +639,40 @@
   .calendar-check .attendance-controls {
     display: none !important;
   }
+}
+
+.scoped-print-actions > summary {
+  min-height: 44px;
+  align-content: center;
+  font-weight: 600;
+  cursor: pointer;
+}
+.scoped-print-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 12px;
+}
+.planning-semester .plan-exports {
+  margin: 12px 0;
+  padding: 0 12px;
+}
+.planning-semester .plan-exports[open] {
+  padding-bottom: 12px;
+}
+.planner-page .setup-history-choice {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.planner-page .setup-history-choice input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+}
+.planner-page .setup-history-help {
+  grid-column: 1 / -1;
 }

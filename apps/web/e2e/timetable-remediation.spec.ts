@@ -87,6 +87,7 @@ test("personal attendance, later weekday navigation and explicit semester print 
   await expect(page.getByText(/Personal attendance assumption/)).toBeVisible();
   await page.reload();
   await expect(page.locator(".timetable-event")).toHaveCount(2);
+  await page.locator(".calendar-exports > summary").click();
   const popupPromise = page.waitForEvent("popup");
   await page
     .getByRole("button", {

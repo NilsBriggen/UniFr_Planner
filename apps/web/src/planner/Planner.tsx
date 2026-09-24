@@ -1,3 +1,4 @@
+import { experienceMessages } from "../experience-messages";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Language } from "../i18n";
@@ -330,7 +331,7 @@ export function PlanBoard({ language }: { language: Language }) {
         {plan && (
           <div className="workspace-actions no-print">
             <SharePanel language={language} />
-            <Link className="button" to="/plan/completed">
+            <Link className="text-link" to="/plan/completed">
               {catchupMessages[language].title}
             </Link>
             <Link
@@ -360,30 +361,6 @@ export function PlanBoard({ language }: { language: Language }) {
       )}
       {plan && scenario && (
         <>
-          <div className="scoped-print-actions no-print">
-            <Button
-              onClick={() =>
-                printRoster(plan, language, planningSemester(plan))
-              }
-            >
-              {timetableMessages[language].preview} ·{" "}
-              {timetableMessages[language].roster} · {planningSemester(plan)}
-            </Button>
-            <Button
-              onClick={() => printRoster(plan, language, null, includeEmpty)}
-            >
-              {timetableMessages[language].roster} ·{" "}
-              {timetableMessages[language].whole}
-            </Button>
-            <label>
-              <input
-                type="checkbox"
-                checked={includeEmpty}
-                onChange={(event) => setIncludeEmpty(event.target.checked)}
-              />
-              {timetableMessages[language].includeEmpty}
-            </label>
-          </div>
           <Summary courses={scenario.courses} t={t} />
           <div className="plan-meta">
             <h2 className="plan-title">{plan.name}</h2>
@@ -474,7 +451,12 @@ export function PlanBoard({ language }: { language: Language }) {
                         {unknownEcts > 0
                           ? ` · ${unknownEcts} ${t.unknown}`
                           : ""}{" "}
-                        · {courses.length} {t.courseCount}
+                        · {courses.length}{" "}
+                        {language === "en"
+                          ? courses.length === 1
+                            ? "course"
+                            : "courses"
+                          : t.courseCount}
                       </span>
                     </summary>
                     {term && term !== "completed" && (
@@ -491,6 +473,46 @@ export function PlanBoard({ language }: { language: Language }) {
                       <p className="planning-label">
                         {catchupMessages[language].planning}
                       </p>
+                    )}
+                    {term === planningSemester(plan) && (
+                      <details className="plan-exports scoped-print-actions no-print">
+                        <summary>
+                          {experienceMessages[language].exports}
+                        </summary>
+                        <div className="scoped-print-options">
+                          <Button
+                            onClick={() =>
+                              printRoster(
+                                plan,
+                                language,
+                                planningSemester(plan),
+                              )
+                            }
+                          >
+                            {timetableMessages[language].preview} ·{" "}
+                            {timetableMessages[language].roster} ·{" "}
+                            {planningSemester(plan)}
+                          </Button>
+                          <Button
+                            onClick={() =>
+                              printRoster(plan, language, null, includeEmpty)
+                            }
+                          >
+                            {timetableMessages[language].roster} ·{" "}
+                            {timetableMessages[language].whole}
+                          </Button>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={includeEmpty}
+                              onChange={(event) =>
+                                setIncludeEmpty(event.target.checked)
+                              }
+                            />
+                            {timetableMessages[language].includeEmpty}
+                          </label>
+                        </div>
+                      </details>
                     )}
                     {courses.length === 0 && (
                       <p className="planner-help">{t.emptySemester}</p>

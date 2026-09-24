@@ -459,3 +459,9 @@
   cursor: pointer;
   overflow-wrap: anywhere;
 }
+
+.calendar-export-scope {
+  margin: 0 var(--space-4) var(--space-3);
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}

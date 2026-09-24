@@ -136,7 +136,7 @@ it("uses matched publication metadata and translated paper labels in week, agend
     agenda = scopedPrintHtml(scoped, "agenda");
   expect(week).toContain("Katalog veröffentlicht");
   expect(agenda).toContain("Katalog veröffentlicht");
-  expect(week).toContain("A4 Querformat");
+  expect(week).toContain("A4 quer");
   expect(agenda).toContain("A4 Hochformat");
   expect(
     String((await weeklyWorkbook(scoped)).worksheets[0].getCell("A3").value),
@@ -150,3 +150,13 @@ it("uses matched publication metadata and translated paper labels in week, agend
     "Katalog veröffentlicht",
   );
 });
+
+it.each(["en", "de", "fr"] as const)(
+  "print guidance states the paper size once in %s",
+  (language) => {
+    const html = weeklyPrintHtml({ ...input, language });
+    const tools = html.split('<div class="tools">')[1].split("<main")[0];
+    expect(tools.match(/A4/g)).toHaveLength(1);
+    expect(tools).not.toContain("Letter");
+  },
+);

@@ -1,7 +1,8 @@
 import AttendanceControls from "./AttendanceControls";
 import { timetableMessages } from "./timetable-messages";
 import { scopedPrintHtml } from "./scoped-print";
-import { openPrintHtml } from "./weekly-print";
+import { openPrintHtml, printWeek } from "./weekly-print";
+import { shareMessages } from "../sharing/messages";
 import { semesterLabel } from "./SemesterField";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -114,6 +115,7 @@ function Calendar({ language }: { language: Language }) {
   }, [preferenceKey, presentation]);
   const x = experienceMessages[language];
   const [error, setError] = useState(false);
+  const [printError, setPrintError] = useState(false);
   if (!plan || !scenario) return null;
   if (!validTerm)
     return (
@@ -226,6 +228,19 @@ function Calendar({ language }: { language: Language }) {
           <SaveStatus language={language} />
         </div>
         <div className="workspace-actions no-print">
+          <Button
+            className="text-link"
+            onClick={() => {
+              setPrintError(false);
+              try {
+                printWeek(exportInput);
+              } catch {
+                setPrintError(true);
+              }
+            }}
+          >
+            {t.print}
+          </Button>
           <SharePanel language={language} />
           <Link className="text-link" to="/plan">
             {messages[language].plan}
@@ -236,27 +251,7 @@ function Calendar({ language }: { language: Language }) {
           </Link>
         </div>
       </header>
-      <section
-        className="scoped-print-actions no-print"
-        aria-label={tx.preview}
-      >
-        <h2>{tx.preview}</h2>
-        <p>
-          {tx.week} · {monday.toString()} – {monday.add({ days: 6 }).toString()}{" "}
-          · A4 {tx.landscape}
-        </p>
-        <WeeklyDownloads input={exportInput} />
-        <Button
-          onClick={() => openPrintHtml(scopedPrintHtml(exportInput, "agenda"))}
-        >
-          {tx.agenda} · A4 {tx.portrait}
-        </Button>
-        <Button
-          onClick={() => openPrintHtml(scopedPrintHtml(exportInput, "roster"))}
-        >
-          {tx.roster} · {term} · A4 {tx.portrait}
-        </Button>
-      </section>
+      {printError && <p role="alert">{shareMessages[language].exportError}</p>}
       <div className="semester-overview-stats">
         <span>
           <strong>
@@ -265,10 +260,17 @@ function Calendar({ language }: { language: Language }) {
           {unknownCredits > 0 && ` + ${unknownCredits} ${t.unknown}`}
         </span>
         <span>
-          {semesterCourses.length} {discoveryMessages[language].selected}
+          {semesterCourses.length}{" "}
+          {language === "en" && semesterCourses.length === 1
+            ? "course selected"
+            : discoveryMessages[language].selected}
         </span>
         <span>
-          {calendar.events.length} {t.dates} · {zone}
+          {calendar.events.length}{" "}
+          {language === "en" && calendar.events.length === 1
+            ? "dated meeting"
+            : t.dates}{" "}
+          · {zone}
         </span>
         {conflicts.length > 0 && (
           <a className="schedule-indicator conflict" href="#schedule-check">
@@ -471,7 +473,19 @@ function Calendar({ language }: { language: Language }) {
         </div>
         <details className="calendar-exports no-print">
           <summary>{x.exports}</summary>
+          <p className="calendar-export-scope">
+            {tx.week} · {monday.toString()} –{" "}
+            {monday.add({ days: 6 }).toString()}
+          </p>
           <div className="calendar-export">
+            <WeeklyDownloads input={exportInput} />
+            <Button
+              onClick={() =>
+                openPrintHtml(scopedPrintHtml(exportInput, "roster"))
+              }
+            >
+              {tx.roster} · {term} · A4 {tx.portrait}
+            </Button>
             {calendar.unresolved.length ? (
               <Button disabled>{t.exportIcs}</Button>
             ) : (
@@ -491,7 +505,7 @@ function Calendar({ language }: { language: Language }) {
                 openPrintHtml(scopedPrintHtml(exportInput, "agenda"))
               }
             >
-              {tx.agenda}
+              {tx.agenda} · A4 {tx.portrait}
             </Button>
           </div>
         </details>
