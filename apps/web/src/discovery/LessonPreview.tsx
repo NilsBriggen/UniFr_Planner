@@ -5,6 +5,7 @@ import { lessonGroups } from "./presentation";
 import type { Assessment } from "./engine";
 import { discoveryMessages } from "./messages";
 import { recommendationMessages } from "./recommendation-messages";
+import { sourceStage } from "./sourceAssignments";
 
 export function LessonPreview({
   calendar,
@@ -66,11 +67,20 @@ export function OfferingAdvice({
         <p className="match-note">
           {a.recommended && a.recommendationKind
             ? r[a.recommendationKind]
-            : t.requirement}
+            : a.match === "subject" ? t.sourceListed : t.requirement}
           {a.requirementTitles.length > 0 &&
             ` · ${a.requirementTitles.join(" / ")}`}
         </p>
       )}
+      {a.sourceAssignments.map((assignment, index) => (
+        <p className="source-assignment" key={`${assignment.programme}:${assignment.version}:${index}`}>
+          <strong>{assignment.programme}</strong> · {assignment.version}
+          {sourceStage(assignment) && <> · {sourceStage(assignment)}</>}
+          {assignment.paths[0] && <small>{assignment.paths[0]}</small>}
+        </p>
+      ))}
+      {a.match === "subject" && <p className="discovery-help">{t.sourceNotRecognition}</p>}
+      {a.sourceApplicabilityUnconfirmed && <p className="discovery-help" role="note">{t.sourceCohortUnconfirmed}</p>}
       {a.recommended && a.contributionEcts !== 0 && (
         <p className="recommendation-contribution">
           {a.contributionEcts === null
@@ -81,7 +91,7 @@ export function OfferingAdvice({
       {a.selectedStatus && (
         <p className="discovery-help">{r[a.selectedStatus]}</p>
       )}
-      {a.match &&
+      {a.match === "requirements" &&
         !a.recommended &&
         !a.selectedStatus &&
         a.prerequisiteState !== "unmet" && (

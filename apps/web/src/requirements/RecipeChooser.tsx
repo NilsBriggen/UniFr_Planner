@@ -29,6 +29,8 @@ export function DegreeSelectionForm({
   commitLabel,
   compactPreview = false,
   setupMode = false,
+  startSemester,
+  onStartSemesterChange,
 }: {
   plan: Plan;
   language: Language;
@@ -38,6 +40,8 @@ export function DegreeSelectionForm({
   commitLabel?: string;
   compactPreview?: boolean;
   setupMode?: boolean;
+  startSemester?: string;
+  onStartSemesterChange?: (semester: string) => void;
 }) {
   const t = recipeMessages[language];
   const original = plan.degreeSelection?.components.find(
@@ -54,9 +58,10 @@ export function DegreeSelectionForm({
   const [structure, setStructure] = useState(
     plan.degreeSelection?.structureId ?? "",
   );
-  const [semester, setSemester] = useState(
+  const [localSemester, setSemester] = useState(
     original?.startSemester ?? plan.semesters[0],
   );
+  const semester = startSemester ?? localSemester;
   const [choices, setChoices] = useState<Record<string, SelectedComponent>>(
     Object.fromEntries(
       plan.degreeSelection?.components.map((c) => [c.slotId, c]) ?? [],
@@ -349,7 +354,7 @@ export function DegreeSelectionForm({
           <p className="recipe-choice-summary">
             {t.structure}:{" "}
             {layout.slots
-              .map((slot) => `${t[slot.role]} ${slot.ects} ECTS`)
+              .map((slot) => `${slot.optional ? `${t.optional} ` : ""}${t[slot.role]} ${slot.ects} ECTS`)
               .join(" + ")}
           </p>
         )}
@@ -360,6 +365,7 @@ export function DegreeSelectionForm({
           disabled={busy}
           onChange={(value) => {
             setSemester(value);
+            onStartSemesterChange?.(value);
             if (setupMode)
               setChoices((current) =>
                 Object.fromEntries(
@@ -374,6 +380,7 @@ export function DegreeSelectionForm({
             invalidate();
           }}
         />
+        {setupMode && <p className="recipe-choice-summary">{{ en: "Start of this UniFr programme. If you transferred, record earlier studies separately as completed history when you know them.", de: "Beginn dieses UniFr-Studiengangs. Frühere Studienleistungen nach einem Wechsel kannst du separat als Studienverlauf erfassen.", fr: "Début de ce cursus à l’UniFr. En cas de transfert, saisissez séparément les études antérieures dans votre historique." }[language]}</p>}
         {major &&
           layout?.slots
             .filter((s) => s.role !== "major")

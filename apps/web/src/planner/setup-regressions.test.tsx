@@ -78,6 +78,29 @@ it("keeps the structured study draft when switching to the manual fallback and b
   expect(screen.getByLabelText("Programme")).toHaveValue("External programme");
 });
 
+it("retains a configured 2024 start when switching to manual setup", async () => {
+  await setup();
+  fireEvent.change(screen.getByLabelText("Major · Starting semester · Year"), {
+    target: { value: "2024" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "My programme or combination is missing" }));
+  expect(screen.getByLabelText("Study start · Year")).toHaveValue(2024);
+  fireEvent.click(screen.getByRole("button", { name: "Choose a listed degree" }));
+  expect(screen.getByLabelText("Major · Starting semester · Year")).toHaveValue(2024);
+});
+
+it("lets a new student plan a later term without opening completed-course history", async () => {
+  await setup();
+  fireEvent.click(screen.getByRole("button", { name: "My programme or combination is missing" }));
+  fireEvent.change(screen.getByLabelText("Study start · Season"), { target: { value: "AS" } });
+  fireEvent.change(screen.getByLabelText("Study start · Year"), { target: { value: "2026" } });
+  fireEvent.change(screen.getByLabelText("Planning semester · Season"), { target: { value: "SS" } });
+  fireEvent.change(screen.getByLabelText("Planning semester · Year"), { target: { value: "2027" } });
+  fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
+  expect(await screen.findByRole("heading", { name: "Course catalogue" })).toBeVisible();
+  expect(screen.queryByRole("heading", { name: /Completed courses/i })).not.toBeInTheDocument();
+});
+
 it("keeps setup usable while invalid values are being typed", async () => {
   await setup();
   fireEvent.click(

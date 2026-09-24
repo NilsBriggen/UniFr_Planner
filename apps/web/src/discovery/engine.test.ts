@@ -162,6 +162,16 @@ it("does not call unknown dates or an incomplete existing timetable a fit", () =
     filterDiscovery(result, { programme: false, fits: true, hideAdded: false }),
   ).toEqual([]);
 });
+
+it("shows published dates for an out-of-horizon offering without claiming target fit", () => {
+  const p = createPlan({ id: "p", scenarioId: "s", name: "Short", programme: "Study", startTerm: "AS-2026", semesterCount: 1, targetEcts: 180 });
+  const spring = course("FUTURE", "Big Data", "2027-03-01T08:00:00Z", "2027-03-01T10:00:00Z");
+  spring.offerings[0].terms = ["SS-2027"];
+  const result = discoverCourses(p, [spring], "SS-2027", "en");
+  const assessment = result.assessments.get(offeringKey(spring.offerings[0]))!;
+  expect(assessment.calendar.events).toHaveLength(1);
+  expect(assessment.fit).toBe("unknown");
+});
 it("honours busy periods and recognises already selected canonical course codes", () => {
   const p = plan(),
     candidate = course("UE-SIN.01023", "Programming");
@@ -311,4 +321,31 @@ it("uses the composed CS plus BI exception rather than the standalone BI table",
   expect(
     result.assessments.get(offeringKey(bi.offerings[0]))?.match,
   ).toBeNull();
+});
+
+it("shows published programme assignments separately from reviewed requirement gains", async () => {
+  const { bindDegreeSelection } = await import("../requirements/adapter");
+  const p = bindDegreeSelection(plan(), { structureId: "ba-120-60", components: [
+    { slotId: "major", programmeId: "bachelor-digitinf-informatics", variantId: "major-120", startSemester: "AS-2026", recipeVersion: "2026-27.1" },
+    { slotId: "minor", programmeId: "bachelor-sci-mathematics", variantId: "minor-60", startSemester: "AS-2026", recipeVersion: "2026-27.1" },
+  ] });
+  const math = course("UE-SMA.01104", "Analysis II");
+  math.offerings[0].assignments = [{ programme: "Mathematics 60 (MATH 60)", version: "2026_1/V_01", paths: ["Mathematics (MATH 60), minor 60 > Mathematics, minor MATH60, compulsory courses (from AS2026 on)"] }];
+  const assessment = discoverCourses(p, [math], "SS-2027", "en").assessments.get(offeringKey(math.offerings[0]))!;
+  expect(assessment.match).toBe("subject");
+  expect(assessment.recommended).toBe(false);
+  expect(assessment.sourceAssignments).toHaveLength(1);
+  expect(filterDiscovery(discoverCourses(p, [math], "SS-2027", "en"), { programme: true, fits: false, hideAdded: false })).toHaveLength(1);
+});
+
+it("keeps newer Biology source assignments visible to an older transfer with an uncertainty flag", () => {
+  const p = plan();
+  p.degreeSelection = { structureId: "ba-120-60", components: [{ slotId: "major", programmeId: "bachelor-sci-biology", variantId: "major-120", startSemester: "AS-2024", recipeVersion: "2026-27.1" }] };
+  const biology = course("UE-SBL.00015", "Biology field course");
+  biology.offerings[0].assignments = [{ programme: "Biology 120", version: "2025_1/V_01", paths: ["BSc in Biology, Major, 2nd-3rd year (from AS2025 on)"] }];
+  const result = discoverCourses(p, [biology], "AS-2026", "en");
+  const assessment = result.assessments.get(offeringKey(biology.offerings[0]))!;
+  expect(assessment.match).toBe("subject");
+  expect(assessment.sourceApplicabilityUnconfirmed).toBe(true);
+  expect(assessment.recommended).toBe(false);
 });

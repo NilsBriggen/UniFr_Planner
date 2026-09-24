@@ -21,6 +21,8 @@ import {
   selectedChoices,
 } from "../requirements/planning";
 import { resolveRecipeEligibility } from "../../../../packages/domain/src/eligibility";
+import { sourceAssignmentApplicability, sourceAssignmentMatches } from "./sourceAssignments";
+import type { Offering } from "../api/client";
 
 export type Assessment = {
   match: "requirements" | "subject" | null;
@@ -37,6 +39,8 @@ export type Assessment = {
   calendar: CalendarResult;
   selected: boolean;
   prerequisitesUnknown: boolean;
+  sourceAssignments: Offering["assignments"];
+  sourceApplicabilityUnconfirmed: boolean;
 };
 export type Discovery = {
   courses: Course[];
@@ -89,6 +93,7 @@ export function discoverCourses(
   const assessments = new Map<string, Assessment>();
   for (const course of courses)
     for (const offering of course.offerings) {
+      const sourceAssignments = sourceAssignmentMatches(plan, offering.assignments);
       const candidate = fromOffering(
         offering,
         "discovery-candidate",
@@ -300,7 +305,9 @@ export function discoverCourses(
         }
       }
       assessments.set(offeringKey(offering), {
-        match: matches.length ? "requirements" : null,
+        match: matches.length ? "requirements" : sourceAssignments.length ? "subject" : null,
+        sourceAssignments,
+        sourceApplicabilityUnconfirmed: sourceAssignments.some((assignment) => sourceAssignmentApplicability(plan, assignment) === "unconfirmed"),
         requirementTitles: matches.map(
           (node) => node.title[language as "en" | "de" | "fr"],
         ),
@@ -311,7 +318,9 @@ export function discoverCourses(
         prerequisiteState,
         reviewState,
         selectedStatus: existing?.status ?? null,
-        fit: conflicts.length
+        fit: !plan.semesters.includes(term)
+          ? "unknown"
+          : conflicts.length
           ? "conflict"
           : calendar.unresolved.length || base.unresolved.length
             ? "unknown"
@@ -337,6 +346,7 @@ export function discoverCourses(
         const a = assessments.get(offeringKey(o))!;
         return [
           a.recommended ? 1 : 0,
+          a.sourceAssignments.length ? 1 : 0,
           a.recommendationKind === "required"
             ? 3
             : a.recommendationKind === "elective"
@@ -353,7 +363,7 @@ export function discoverCourses(
           a.contributionEcts ?? -1,
         ];
       })
-      .sort(compare)[0] ?? [0, 0, 0, 0, 0];
+      .sort(compare)[0] ?? [0, 0, 0, 0, 0, 0];
   function compare(a: number[], b: number[]) {
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return b[i] - a[i];
     return 0;
@@ -369,7 +379,7 @@ export function discoverCourses(
         a.code.localeCompare(b.code, "en"),
     ),
     assessments,
-    hasProgramme: !!root || !!degree,
+    hasProgramme: !!root || !!degree || !!plan.degreeSelection,
     requirementError,
   };
 }

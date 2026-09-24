@@ -33,6 +33,7 @@ export function Setup({ language }: { language: Language }) {
   const [step, setStep] = useState<"studies" | "settings">("studies");
   const [error, setError] = useState(false);
   const [rangeError, setRangeError] = useState(false);
+  const [recordCompleted, setRecordCompleted] = useState(false);
   const [settings, setSettings] = useState({
     name: "Personal study plan",
     programme: "Personal programme",
@@ -93,11 +94,9 @@ export function Setup({ language }: { language: Language }) {
         return;
       }
       const next = destination(settings.planning, !!selection);
-      navigate(
-        distance > 0
-          ? `/plan/completed?returnTo=${encodeURIComponent(next)}`
-          : next,
-      );
+      navigate(recordCompleted
+        ? `/plan/completed?returnTo=${encodeURIComponent(next)}`
+        : next);
     } catch {
       setError(true);
     }
@@ -115,6 +114,10 @@ export function Setup({ language }: { language: Language }) {
           language={language}
           busy={!ready || busy}
           setupMode
+          startSemester={settings.start}
+          onStartSemesterChange={(start) =>
+            setSettings((current) => ({ ...current, start }))
+          }
           commitLabel={setup.continue}
           onCommit={async (resolved) => {
             const name = degreeProgrammeLabel(resolved, language);
@@ -197,6 +200,11 @@ export function Setup({ language }: { language: Language }) {
               language={language}
               onChange={(planning) => setSettings({ ...settings, planning })}
             />
+            <label className="setup-history-choice" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: ".6rem" }}>
+              <input type="checkbox" checked={recordCompleted} onChange={(event) => setRecordCompleted(event.target.checked)} />
+              {{ en: "I have completed courses to record now", de: "Ich möchte bereits abgeschlossene Kurse jetzt erfassen", fr: "Je souhaite saisir maintenant des cours déjà terminés" }[language]}
+            </label>
+            <p className="discovery-help" style={{ gridColumn: "1 / -1" }}>{{ en: "You can add prior study or transfer credits later. No courses are presumed completed.", de: "Frühere Studienleistungen oder Transferkredite kannst du später ergänzen. Es werden keine abgeschlossenen Kurse angenommen.", fr: "Vous pourrez ajouter des études antérieures ou des crédits transférés plus tard. Aucun cours n’est présumé réussi." }[language]}</p>
             <details className="setup-options">
               <summary>{setup.optional}</summary>
               <div className="planner-fields">
@@ -284,12 +292,10 @@ export function Setup({ language }: { language: Language }) {
       <SaveStatus language={language} />
       {rangeError && <p role="alert">{c.rangeError}</p>}
       {error && <p role="alert">{t.actionError}</p>}
-      <Link className="text-link" to="/catalogue">
-        {setup.setLater}
-      </Link>
-      <Link className="text-link" to="/plan">
-        {t.import}
-      </Link>
+      <nav className="setup-secondary-links" style={{ display: "flex", flexWrap: "wrap", columnGap: "1.5rem", rowGap: ".75rem", marginTop: "1rem" }} aria-label={{ en: "Other setup options", de: "Weitere Optionen", fr: "Autres options" }[language]}>
+        <Link className="text-link" to="/catalogue">{setup.setLater}</Link>
+        <Link className="text-link" to="/plan">{t.import}</Link>
+      </nav>
     </section>
   );
 }

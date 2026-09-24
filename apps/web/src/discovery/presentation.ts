@@ -6,13 +6,14 @@ export const offeringKey = (offering: Offering) =>
 
 export function filterDiscovery(
   discovery: Discovery,
-  options: { programme: boolean; fits: boolean; hideAdded: boolean },
+  options: { programme?: boolean; mode?: "requirements" | "programme" | "all"; fits: boolean; hideAdded: boolean },
 ) {
+  const mode = options.mode ?? (options.programme ? "programme" : "all");
   return discovery.courses.flatMap((course) => {
     const offerings = course.offerings.filter((offering) => {
       const a = discovery.assessments.get(offeringKey(offering))!;
       return (
-        (!options.programme || a.recommended) &&
+        (mode === "all" || (mode === "requirements" ? a.recommended : a.recommended || a.sourceAssignments.length > 0)) &&
         (!options.fits || a.fit === "fits") &&
         (!options.hideAdded || !a.selected)
       );
