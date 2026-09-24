@@ -90,3 +90,31 @@ it("prints only the selected week, escapes source text and retains all exact les
   expect(html).not.toContain("Next week");
   expect(html).toContain("incomplete dates");
 });
+it("names undated selections with credits and gives every short parallel event a same-page key", async () => {
+  const course = (id: string, ects: number) => ({
+    id,
+    code: id,
+    titles: { en: id },
+    ects,
+    status: "planned" as const,
+    semester: "AS-2026",
+    pinned: false,
+    offering: null,
+  });
+  const scoped = {
+    ...input,
+    courses: [course("Bachelor thesis", 15), course("Colloquium", 3)],
+  };
+  const html = weeklyPrintHtml(scoped);
+  expect(html).toContain("Bachelor thesis");
+  expect(html).toContain("Colloquium");
+  expect(html).toContain("18 ECTS");
+  expect(html.indexOf('class="week-key"')).toBeGreaterThan(0);
+  expect(html.indexOf('class="week-key"')).toBeLessThan(
+    html.indexOf('class="lesson-list"'),
+  );
+  expect(html).toContain("Room not published");
+  const workbook = await weeklyWorkbook(scoped);
+  expect(JSON.stringify(workbook.model)).toContain("Bachelor thesis");
+  expect(JSON.stringify(workbook.model)).toContain("Colloquium");
+});

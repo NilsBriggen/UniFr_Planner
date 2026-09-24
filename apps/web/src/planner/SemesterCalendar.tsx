@@ -1,3 +1,7 @@
+import AttendanceControls from "./AttendanceControls";
+import { timetableMessages } from "./timetable-messages";
+import { scopedPrintHtml } from "./scoped-print";
+import { openPrintHtml } from "./weekly-print";
 import { semesterLabel } from "./SemesterField";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -59,7 +63,8 @@ function EventCard({
         <time dateTime={event.start}>{format(event.start)}</time> –{" "}
         <time dateTime={event.end}>{format(event.end)}</time>
       </p>
-      <p>{event.location}</p>
+      <p>{event.location || timetableMessages[language].roomUnknown}</p>
+      {event.sessionType && <p>{event.sessionType}</p>}
     </article>
   );
 }
@@ -182,6 +187,31 @@ function Calendar({ language }: { language: Language }) {
     (c) => c.semester === term && c.status !== "completed",
   );
   const unknownCredits = semesterCourses.filter((c) => c.ects === null).length;
+  const tx = timetableMessages[language];
+  const exportInput = {
+    name: plan.name,
+    term,
+    monday: monday.toString(),
+    events: all,
+    cancelled: calendar.cancelled,
+    courses: semesterCourses,
+    language,
+    unresolved: calendar.unresolved.length > 0,
+    conflicts,
+  };
+  const conflictGroups = new Map<string, typeof conflicts>();
+  for (const conflict of conflicts) {
+    const key = [
+      conflict.kind,
+      ...[conflict.first, conflict.second].sort(),
+    ].join("|");
+    conflictGroups.set(key, [...(conflictGroups.get(key) ?? []), conflict]);
+  }
+  const externalPairs = new Set(
+    conflicts
+      .filter((c) => c.kind === "hard")
+      .map((c) => [c.first, c.second].sort().join("|")),
+  ).size;
   return (
     <section className="page planner-page semester-page">
       <header className="workspace-heading">
@@ -205,6 +235,27 @@ function Calendar({ language }: { language: Language }) {
           </Link>
         </div>
       </header>
+      <section
+        className="scoped-print-actions no-print"
+        aria-label={tx.preview}
+      >
+        <h2>{tx.preview}</h2>
+        <p>
+          {tx.week} · {monday.toString()} – {monday.add({ days: 6 }).toString()}{" "}
+          · A4 landscape
+        </p>
+        <WeeklyDownloads input={exportInput} />
+        <Button
+          onClick={() => openPrintHtml(scopedPrintHtml(exportInput, "agenda"))}
+        >
+          {tx.agenda} · A4 portrait
+        </Button>
+        <Button
+          onClick={() => openPrintHtml(scopedPrintHtml(exportInput, "roster"))}
+        >
+          {tx.roster} · {term} · A4 portrait
+        </Button>
+      </section>
       <div className="semester-overview-stats">
         <span>
           <strong>
@@ -220,7 +271,11 @@ function Calendar({ language }: { language: Language }) {
         </span>
         {conflicts.length > 0 && (
           <a className="schedule-indicator conflict" href="#schedule-check">
-            {discoveryMessages[language].conflictCount} · {conflicts.length}
+            {externalPairs} {tx.pairs} ·{" "}
+            {conflicts.filter((c) => c.kind !== "internal").length}{" "}
+            {tx.collisions} ·{" "}
+            {conflicts.filter((c) => c.kind === "internal").length}{" "}
+            {tx.internalCount}
           </a>
         )}
         {calendar.unresolved.length > 0 && (
@@ -371,6 +426,10 @@ function Calendar({ language }: { language: Language }) {
               language={language}
               courses={scenario.courses}
               conflicts={conflicts}
+              onDay={(day) => {
+                setDate(day);
+                setView("day");
+              }}
             />
           ) : (
             <>
@@ -426,18 +485,13 @@ function Calendar({ language }: { language: Language }) {
                 {t.exportIcs}
               </Download>
             )}
-            <Button onClick={() => window.print()}>{t.print}</Button>
-            <WeeklyDownloads
-              input={{
-                name: plan.name,
-                term,
-                monday: monday.toString(),
-                events: all,
-                courses: scenario.courses,
-                language,
-                unresolved: calendar.unresolved.length > 0,
-              }}
-            />
+            <Button
+              onClick={() =>
+                openPrintHtml(scopedPrintHtml(exportInput, "agenda"))
+              }
+            >
+              {tx.agenda}
+            </Button>
           </div>
         </details>
       </div>
@@ -460,27 +514,46 @@ function Calendar({ language }: { language: Language }) {
           {(calendar.events.length > 0 || calendar.cancelled.length > 0) &&
             conflicts.length === 0 &&
             !calendar.unresolved.length && <p>{t.clear}</p>}
-          <ul>
-            {conflicts.map((conflict, n) => (
-              <li key={n}>
-                <strong>
-                  {
-                    t[
-                      conflict.kind === "unavailable"
-                        ? "unavailable"
-                        : conflict.kind
-                    ]
-                  }
-                </strong>{" "}
-                · {name(conflict.first)} / {name(conflict.second)} ·{" "}
-                {new Intl.DateTimeFormat(language, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                  timeZone: zone,
-                }).format(new Date(conflict.start))}
-              </li>
-            ))}
-          </ul>
+          {[...conflictGroups.entries()].map(([key, items]) => (
+            <details key={key}>
+              <summary>
+                {items[0].kind === "internal" ? tx.internal : t[items[0].kind]}{" "}
+                · {name(items[0].first)}
+                {items[0].first !== items[0].second &&
+                  ` / ${name(items[0].second)}`}{" "}
+                · {items.length} {tx.collisions}
+              </summary>
+              <ul>
+                {items.map((conflict, n) => (
+                  <li key={n}>
+                    {new Intl.DateTimeFormat(language, {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: zone,
+                    }).format(new Date(conflict.start))}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+          {semesterCourses.map((course) => (
+            <AttendanceControls
+              key={course.id}
+              course={course}
+              language={language}
+              disabled={busy}
+              onChange={(attendance) =>
+                change(
+                  updateScenario(plan, (s) => ({
+                    ...s,
+                    courses: s.courses.map((c) =>
+                      c.id === course.id ? { ...c, attendance } : c,
+                    ),
+                  })),
+                )
+              }
+            />
+          ))}
           <label className="no-print">
             {t.travelMinutes}
             <input

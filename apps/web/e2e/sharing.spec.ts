@@ -209,7 +209,10 @@ test("share owner updates automatically while another guest can only import a co
     ).toBe(403);
     await page.goto("/plan");
     await page
-      .getByRole("button", { name: "Pin course · DEMO-001", exact: true })
+      .getByRole("button", {
+        name: "Lock course placement · DEMO-001",
+        exact: true,
+      })
       .click();
     await expect
       .poll(

@@ -1,3 +1,4 @@
+import { timetableMessages } from "../src/planner/timetable-messages";
 import {
   chooseManualSetup,
   openPlanJson,
@@ -221,7 +222,7 @@ for (const language of ["de", "fr", "en"] as const) {
     await page.keyboard.press("Enter");
     await expect(allocation).toHaveValue("AS-2026");
     const pin = page.getByRole("button", {
-      name: `${t.pin} · DEMO-001`,
+      name: `${timetableMessages[language].pin} · DEMO-001`,
       exact: true,
     });
     await pin.focus();

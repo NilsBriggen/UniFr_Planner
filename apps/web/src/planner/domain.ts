@@ -28,6 +28,13 @@ export const selectionSchema = z.strictObject({
   status: z.enum(["completed", "current", "planned", "unscheduled"]),
   semester: term.nullable(),
   pinned: z.boolean(),
+  attendance: z
+    .strictObject({
+      sourceFingerprint: z.string().min(1).max(100),
+      excludedMeetingKeys: z.array(z.string().min(1).max(100)).max(1000),
+      provisional: z.literal(true),
+    })
+    .optional(),
   offering: z
     .strictObject({
       assignments: z
@@ -73,6 +80,19 @@ const scenarioSchema = z.strictObject({
   unavailable: z.array(busySchema).max(500),
   travelMinutes: z.number().int().min(0).max(180),
   requirementEvidence: requirementEvidenceSchema.optional(),
+  priorStudy: z
+    .array(
+      z.strictObject({
+        id,
+        institution: text,
+        period: text,
+        approximateEcts: z.number().min(0).max(600).nullable(),
+        status: z.enum(["self_reported", "recognition_pending"]),
+        notes: z.string().max(2000),
+      }),
+    )
+    .max(100)
+    .optional(),
 });
 export const planSchema = z
   .strictObject({

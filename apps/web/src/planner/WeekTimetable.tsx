@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { Language } from "../i18n";
 import { discoveryMessages } from "../discovery/messages";
@@ -7,6 +7,7 @@ import { type CalendarEvent, type Conflict, zone } from "./calendar";
 import { type Selection } from "./domain";
 import { layoutWeek, courseColour } from "./week-layout";
 import "./timetable.css";
+import { timetableMessages } from "./timetable-messages";
 
 const minuteHeight = 1.4;
 
@@ -16,13 +17,16 @@ export default function WeekTimetable({
   language,
   courses,
   conflicts,
+  onDay,
 }: {
   events: CalendarEvent[];
   monday: string;
   language: Language;
   courses: Selection[];
   conflicts: Conflict[];
+  onDay?: (day: string) => void;
 }) {
+  const [readable, setReadable] = useState(false);
   const week = useMemo(() => layoutWeek(events, monday), [events, monday]);
   const t = discoveryMessages[language],
     p = plannerMessages[language];
@@ -47,6 +51,52 @@ export default function WeekTimetable({
   return (
     <>
       {!hasEvents && <p>{p.noEvents}</p>}
+      {onDay && (
+        <nav
+          className="week-day-overview no-print"
+          aria-label={timetableMessages[language].dayOverview}
+        >
+          {week.days.map((day) => (
+            <button
+              className="button"
+              key={day.date}
+              onClick={() => onDay(day.date)}
+            >
+              {format(`${day.date}T12:00:00Z`, { weekday: "short" })} ·{" "}
+              {day.lessons.length}
+            </button>
+          ))}
+        </nav>
+      )}
+      <details
+        className="week-readable-list no-print"
+        onToggle={(event) => setReadable(event.currentTarget.open)}
+      >
+        <summary>{timetableMessages[language].allDates}</summary>
+        {readable &&
+          week.days
+            .filter((d) => d.lessons.length)
+            .map((day) => (
+              <section key={day.date}>
+                <h3>
+                  {format(`${day.date}T12:00:00Z`, {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </h3>
+                {day.lessons.map((l) => (
+                  <p key={l.event.id}>
+                    <strong>{l.event.title}</strong> · {clock(l.startMinute)}–
+                    {clock(l.endMinute)} ·{" "}
+                    {l.event.location ||
+                      timetableMessages[language].roomUnknown}{" "}
+                    · {l.event.sessionType}
+                  </p>
+                ))}
+              </section>
+            ))}
+      </details>
       <div
         className="timetable-scroll"
         role="region"
@@ -136,8 +186,12 @@ export default function WeekTimetable({
                       </time>
                     </p>
                     <p className="event-room" title={lesson.event.location}>
-                      {lesson.event.location}
+                      {lesson.event.location ||
+                        timetableMessages[language].roomUnknown}
                     </p>
+                    {lesson.event.sessionType && (
+                      <p>{lesson.event.sessionType}</p>
+                    )}
                   </article>
                 );
               })}

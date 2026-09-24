@@ -216,6 +216,9 @@ export function generateSuggestions(input: {
   const beforeHard = new Set(
     beforeCalendar.conflicts.filter((c) => c.kind === "hard").map(key),
   );
+  const beforeInternal = new Set(
+    beforeCalendar.conflicts.filter((c) => c.kind === "internal").map(key),
+  );
   const base = JSON.stringify(plan);
   // Inspect every record before candidate deduplication. A shared identity with
   // different evidence is ambiguous, including permissive/restrictive variants.
@@ -278,6 +281,9 @@ export function generateSuggestions(input: {
           continue;
         const after: Selection = {
           ...copy(source),
+          ...(same && before.attendance
+            ? { attendance: copy(before.attendance) }
+            : {}),
           id: before.id,
           pinned: before.pinned,
           semester: term,
@@ -354,7 +360,9 @@ export function generateSuggestions(input: {
         const calendar = calendarState(next, preferences);
         if (
           calendar.conflicts.some(
-            (c) => c.kind === "hard" && !beforeHard.has(key(c)),
+            (c) =>
+              (c.kind === "hard" && !beforeHard.has(key(c))) ||
+              (c.kind === "internal" && !beforeInternal.has(key(c))),
           )
         ) {
           reject("newConflict", after.code);

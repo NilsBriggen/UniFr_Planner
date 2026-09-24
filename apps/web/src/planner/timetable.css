@@ -401,3 +401,61 @@
     display: block;
   }
 }
+.week-day-overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+}
+.week-day-overview button {
+  min-height: 44px;
+  padding: 8px 14px;
+  font: inherit;
+}
+.week-readable-list {
+  margin: 8px 0 16px;
+}
+.week-readable-list summary {
+  padding: 12px 0;
+  cursor: pointer;
+}
+.week-readable-list p {
+  overflow-wrap: anywhere;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+.attendance-controls {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+}
+.attendance-controls summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.attendance-controls fieldset {
+  max-height: 420px;
+  overflow: auto;
+}
+.attendance-controls label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.attendance-controls input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.calendar-check details {
+  margin-block: 12px;
+}
+.calendar-check summary {
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}

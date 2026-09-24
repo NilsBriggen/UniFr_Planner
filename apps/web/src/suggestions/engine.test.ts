@@ -525,3 +525,29 @@ describe("reviewable revisions", () => {
     ).toThrow("stale");
   });
 });
+it("does not recommend replacing an external clash with new internal source overlaps", () => {
+  const input = setup();
+  const candidate = input.catalogue[0].course;
+  candidate.offering!.meetings.push({
+    ...candidate.offering!.meetings[0],
+    note: "Exercice",
+    location: "Other room",
+  });
+  const result = generateSuggestions(input);
+  expect(result.rejected).toContainEqual(
+    expect.objectContaining({ detail: "A", reason: "newConflict" }),
+  );
+  expect(result.suggestions).toHaveLength(0);
+});
+it("retains attendance assumptions for review when suggesting a replacement source for the same course", async () => {
+  const { attendanceChoice, selectedMeetings } = await import(
+    "../planner/attendance"
+  );
+  const input = setup();
+  const before = input.plan.scenarios[0].courses[0];
+  before.attendance = attendanceChoice(before, [0]);
+  const result = generateSuggestions(input);
+  expect(result.suggestions.length).toBeGreaterThan(0);
+  expect(result.suggestions[0].after.attendance).toEqual(before.attendance);
+  expect(selectedMeetings(result.suggestions[0].after).stale).toBe(true);
+});

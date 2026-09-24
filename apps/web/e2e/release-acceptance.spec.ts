@@ -1,3 +1,4 @@
+import { timetableMessages } from "../src/planner/timetable-messages";
 import { chooseManualSetup, openPlanTools } from "./studies-helpers";
 import { expect, test, type Page } from "@playwright/test";
 import { readFile, writeFile } from "node:fs/promises";
@@ -101,7 +102,10 @@ async function createStudentPlan(page: Page) {
     await expect(page.locator(".save-status")).toHaveText(p.saved);
   }
   await page
-    .getByRole("button", { name: `${p.pin} · DEMO-001`, exact: true })
+    .getByRole("button", {
+      name: `${timetableMessages.en.pin} · DEMO-001`,
+      exact: true,
+    })
     .click();
   await expect(
     page.getByLabel(`${p.semester} · DEMO-001`, { exact: true }),
@@ -328,7 +332,10 @@ test("connected release: CS/BI credits, conflict, pinned alternative, weekly pro
   try {
     await page.goto("/plan");
     await page
-      .getByRole("button", { name: `${p.pin} · DEMO-005`, exact: true })
+      .getByRole("button", {
+        name: `${timetableMessages.en.pin} · DEMO-005`,
+        exact: true,
+      })
       .click();
     const synced = await exportPlan(page);
     await page.goto("/settings");

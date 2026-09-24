@@ -30,6 +30,9 @@ import {
   studyLabel,
 } from "../requirements/study-summary";
 import { Download, SaveStatus } from "./PlanControls";
+import { extendPlanToTerm } from "./extendPlan";
+import { printRoster } from "./scoped-print";
+import { timetableMessages } from "./timetable-messages";
 import { semesterLabel } from "./SemesterField";
 
 export { Download, SaveStatus } from "./PlanControls";
@@ -209,12 +212,13 @@ function CourseCard({
       <div className="course-controls no-print">
         <Button
           aria-pressed={course.pinned}
-          aria-label={`${course.pinned ? t.unpin : t.pin} · ${code}`}
+          aria-label={`${course.pinned ? t.unpin : timetableMessages[language].pin} · ${code}`}
+          title={timetableMessages[language].pinHelp}
           onClick={() => change(setPinned(plan, course.id, !course.pinned))}
         >
-          {course.pinned ? t.pinned : t.pin}
+          {course.pinned ? t.pinned : timetableMessages[language].pin}
         </Button>
-        {course.pinned && <p>{t.pinHelp}</p>}
+        <p>{timetableMessages[language].pinHelp}</p>
         <label>
           {t.semester}
           <select
@@ -286,6 +290,7 @@ export function PlanBoard({ language }: { language: Language }) {
   const t = plannerMessages[language];
   const [error, setError] = useState(false);
   const board = useRef<HTMLDivElement>(null);
+  const [includeEmpty, setIncludeEmpty] = useState(false);
   useEffect(() => {
     let previous: { element: HTMLDetailsElement; open: boolean }[] | undefined;
     const beforePrint = () => {
@@ -355,6 +360,30 @@ export function PlanBoard({ language }: { language: Language }) {
       )}
       {plan && scenario && (
         <>
+          <div className="scoped-print-actions no-print">
+            <Button
+              onClick={() =>
+                printRoster(plan, language, planningSemester(plan))
+              }
+            >
+              {timetableMessages[language].preview} ·{" "}
+              {timetableMessages[language].roster} · {planningSemester(plan)}
+            </Button>
+            <Button
+              onClick={() => printRoster(plan, language, null, includeEmpty)}
+            >
+              {timetableMessages[language].roster} ·{" "}
+              {timetableMessages[language].whole}
+            </Button>
+            <label>
+              <input
+                type="checkbox"
+                checked={includeEmpty}
+                onChange={(event) => setIncludeEmpty(event.target.checked)}
+              />
+              {timetableMessages[language].includeEmpty}
+            </label>
+          </div>
           <Summary courses={scenario.courses} t={t} />
           <div className="plan-meta">
             <h2 className="plan-title">{plan.name}</h2>
@@ -382,6 +411,21 @@ export function PlanBoard({ language }: { language: Language }) {
               ))}
             </select>
           </label>
+          <Button
+            className="no-print"
+            disabled={busy || plan.semesters.length >= 24}
+            onClick={() => {
+              const next = 1 + Math.max(...plan.semesters.map(semesterIndex));
+              change(
+                extendPlanToTerm(
+                  plan,
+                  `${next % 2 ? "AS" : "SS"}-${Math.floor(next / 2)}`,
+                ),
+              );
+            }}
+          >
+            {timetableMessages[language].extend}
+          </Button>
           <p className="planner-help">{t.boardHelp}</p>
           <fieldset disabled={busy} className="board-fieldset">
             <div className="semester-board" ref={board}>
@@ -418,7 +462,7 @@ export function PlanBoard({ language }: { language: Language }) {
                 ).length;
                 return (
                   <details
-                    className={`semester-column${term === planningSemester(plan) ? " planning-semester" : ""}`}
+                    className={`semester-column${term === planningSemester(plan) ? " planning-semester" : ""}${!courses.length ? " empty-semester" : ""}`}
                     key={term ?? "unassigned"}
                     open={term === planningSemester(plan)}
                     aria-label={label}
@@ -581,7 +625,14 @@ export function PlanBoard({ language }: { language: Language }) {
                   >
                     {t.exportJson}
                   </Download>
-                  <Button onClick={() => window.print()}>{t.print}</Button>
+                  <Button
+                    onClick={() =>
+                      printRoster(plan, language, null, includeEmpty)
+                    }
+                  >
+                    {timetableMessages[language].roster} ·{" "}
+                    {timetableMessages[language].whole}
+                  </Button>
                   <Link className="text-link" to="/catalogue">
                     {messages[language].explore}
                   </Link>

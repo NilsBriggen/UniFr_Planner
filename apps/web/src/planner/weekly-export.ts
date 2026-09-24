@@ -1,8 +1,17 @@
 import { Temporal } from "@js-temporal/polyfill";
 import type { Language } from "../i18n";
-import { type CalendarEvent, zone } from "./calendar";
+import {
+  calendarFor,
+  detectConflicts,
+  localDate,
+  type Conflict,
+  type CalendarEvent,
+  zone,
+} from "./calendar";
 import { type Selection } from "./domain";
 import { layoutWeek, courseColour } from "./week-layout";
+import { timetableMessages } from "./timetable-messages";
+import { selectedMeetings } from "./attendance";
 import { shareMessages } from "../sharing/messages";
 
 export type WeeklyExport = {
@@ -13,7 +22,29 @@ export type WeeklyExport = {
   courses: Selection[];
   language: Language;
   unresolved: boolean;
+  conflicts?: Conflict[];
 };
+export function exportManifest(input: WeeklyExport) {
+  const weekOwners = new Set(
+    layoutWeek(input.events, input.monday).days.flatMap((d) =>
+      d.lessons.map((l) => l.event.owner),
+    ),
+  );
+  const t = timetableMessages[input.language];
+  return input.courses
+    .filter((c) => c.semester === input.term && c.status !== "completed")
+    .map((course) => ({
+      course,
+      title: course.titles[input.language] ?? course.titles.en ?? course.code,
+      reason: selectedMeetings(course).unresolved
+        ? t.provisional
+        : calendarFor([course], input.term, input.language).unresolved.length
+          ? t.unknown
+          : weekOwners.has(course.id)
+            ? t.inWeek
+            : t.otherWeek,
+    }));
+}
 export const weekColours = ["E1EEF5", "E7F1E5", "FAF0DA", "F1E8ED", "E1EFEE"];
 export const minuteText = (minute: number) =>
   `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(Math.floor(minute % 60)).padStart(2, "0")}`;
@@ -46,6 +77,15 @@ export async function weeklyWorkbook(input: WeeklyExport) {
   workbook.created = new Date();
   const t = shareMessages[input.language],
     week = layoutWeek(input.events, input.monday);
+  const tx = timetableMessages[input.language];
+  const scopedConflicts = (
+    input.conflicts ?? detectConflicts(input.events, [], 0)
+  ).filter(
+    (c) =>
+      localDate(c.start) >= input.monday &&
+      localDate(c.start) <= week.days[6].date,
+  );
+  const warning = `${input.unresolved ? t.missingDates : t.notesHelp} · ${scopedConflicts.filter((c) => c.kind !== "internal").length} ${tx.collisions} · ${scopedConflicts.filter((c) => c.kind === "internal").length} ${tx.internalCount}`;
   const sheet = workbook.addWorksheet(t.weekly, {
     views: [{ state: "frozen", xSplit: 1, ySplit: 5, showGridLines: false }],
   });
@@ -81,7 +121,7 @@ export async function weeklyWorkbook(input: WeeklyExport) {
   sheet.getCell("A2").value =
     `${t.weekly} · ${input.monday} – ${week.days[6].date} · ${input.term} · ${zone}`;
   sheet.mergeCells("A3:H3");
-  sheet.getCell("A3").value = input.unresolved ? t.missingDates : t.notesHelp;
+  sheet.getCell("A3").value = warning;
   sheet.getRow(3).height = 32;
   sheet.getCell("A3").alignment = { wrapText: true, vertical: "middle" };
   sheet.getCell("A5").value = t.time;
@@ -159,7 +199,7 @@ export async function weeklyWorkbook(input: WeeklyExport) {
           other.startMinute < lesson.endMinute &&
           other.endMinute > lesson.startMinute,
       );
-      const label = `${minuteText(lesson.startMinute)}–${minuteText(lesson.endMinute)}\n${lesson.event.title}${lesson.event.location ? `\n${lesson.event.location}` : ""}`;
+      const label = `${minuteText(lesson.startMinute)}–${minuteText(lesson.endMinute)}\n${lesson.event.title}\n${lesson.event.location || tx.roomUnknown}${lesson.event.sessionType ? `\n${lesson.event.sessionType}` : ""}`;
       const cell = sheet.getCell(first, dayIndex + 2);
       if (
         !overlaps &&
@@ -206,7 +246,7 @@ export async function weeklyWorkbook(input: WeeklyExport) {
   list.getCell("A1").value = `${input.name} · ${input.monday} · ${zone}`;
   list.getRow(1).height = 28;
   list.mergeCells("A2:G2");
-  list.getCell("A2").value = input.unresolved ? t.missingDates : t.notesHelp;
+  list.getCell("A2").value = warning;
   list.getCell("A2").alignment = { wrapText: true };
   list.getRow(2).height = 30;
   list.addRow([
@@ -232,7 +272,7 @@ export async function weeklyWorkbook(input: WeeklyExport) {
         lesson.startMinute / 1440,
         lesson.endMinute / 1440,
         lesson.event.title,
-        lesson.event.location,
+        lesson.event.location || tx.roomUnknown,
         conflict ? t.overlap : "",
         course?.offering?.source_url ?? "",
       ]);
@@ -299,6 +339,46 @@ export async function weeklyWorkbook(input: WeeklyExport) {
     fitToHeight: 0,
     printTitlesRow: "1:3",
   };
+  const manifest = exportManifest(input);
+  if (manifest.length) {
+    const coverage = workbook.addWorksheet(
+      timetableMessages[input.language].roster
+        .replaceAll("/", "-")
+        .slice(0, 31),
+    );
+    coverage.columns = [
+      { width: 45 },
+      { width: 24 },
+      { width: 12 },
+      { width: 90 },
+    ];
+    coverage.addRow([input.name, input.term, zone]);
+    coverage.addRow([
+      t.course,
+      "Code",
+      "ECTS",
+      timetableMessages[input.language].manifest,
+    ]);
+    for (const item of manifest)
+      coverage.addRow([
+        item.title,
+        item.course.code,
+        item.course.ects,
+        item.reason,
+      ]);
+    coverage.eachRow((row) => {
+      row.alignment = { wrapText: true, vertical: "top" };
+      row.height = 45;
+    });
+    coverage.pageSetup = {
+      orientation: "landscape",
+      paperSize: 9,
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      printTitlesRow: "1:2",
+    };
+  }
   return workbook;
 }
 export async function downloadWeek(input: WeeklyExport) {

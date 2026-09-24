@@ -556,3 +556,57 @@
     font-size: 1.25rem;
   }
 }
+.scoped-print-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+}
+.scoped-print-actions h2,
+.scoped-print-actions p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.scoped-print-actions label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.scoped-print-actions input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+@media (max-width: 1000px) {
+  .semester-board {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .semester-column {
+    width: 100%;
+    min-width: 0;
+  }
+  .semester-column.planning-semester {
+    order: -1;
+  }
+}
+@media print {
+  .empty-semester {
+    display: none !important;
+  }
+  .semester-column {
+    break-inside: auto !important;
+  }
+  .plan-course {
+    break-inside: avoid;
+  }
+  .calendar-check details,
+  .calendar-check label,
+  .calendar-check .attendance-controls {
+    display: none !important;
+  }
+}

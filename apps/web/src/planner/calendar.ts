@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill";
 import { RRule } from "rrule";
 import type { Meeting } from "../api/client";
 import type { Selection, Unavailable } from "./domain";
+import { selectedMeetings } from "./attendance";
 
 export const zone = "Europe/Zurich";
 export type CalendarEvent = {
@@ -11,6 +12,9 @@ export type CalendarEvent = {
   start: string;
   end: string;
   location: string;
+  sessionType?: string;
+  sourceUid?: string;
+  sourceUrl?: string;
 };
 export type CalendarResult = {
   events: CalendarEvent[];
@@ -19,7 +23,7 @@ export type CalendarResult = {
 };
 export type DateRange = { start: string; end: string };
 export type Conflict = {
-  kind: "hard" | "travel" | "unavailable";
+  kind: "hard" | "internal" | "travel" | "unavailable";
   first: string;
   second: string;
   start: string;
@@ -276,6 +280,8 @@ export function expandMeetings(
           start: a,
           end: b,
           location: chosen.location,
+          sessionType: chosen.note,
+          sourceUid: chosen.source_uid ?? undefined,
         };
         (chosen.cancelled ? cancelled : accepted).push(item);
       }
@@ -311,7 +317,7 @@ export function detectConflicts(
       if (a.id === b.id) continue;
       if (gap < 0)
         found.push({
-          kind: "hard",
+          kind: a.owner === b.owner ? "internal" : "hard",
           first: a.owner,
           second: b.owner,
           start: b.start,
@@ -372,12 +378,17 @@ export function calendarFor(
     // Catalogue availability filtering deliberately marks all recurrences as
     // unresolved. Here, individual meeting metadata is actually expanded and
     // validated; its coarse filter flag is not proof that timestamps are absent.
+    const attendance = selectedMeetings(course);
     const expanded = expandMeetings(
       course.id,
       course.titles[language] ?? course.titles.en ?? course.code,
-      course.offering.meetings,
+      attendance.meetings,
       termRange(term),
     );
+    if (attendance.unresolved)
+      expanded.unresolved.push(`${course.id}:attendance`);
+    for (const event of [...expanded.events, ...expanded.cancelled])
+      event.sourceUrl = course.offering.source_url;
     // A term label alone cannot establish a complete calendar. The source
     // model has no explicit "no meetings required" evidence; require an
     // active or cancelled occurrence in this term, or retain uncertainty.
