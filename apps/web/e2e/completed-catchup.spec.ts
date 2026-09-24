@@ -20,6 +20,12 @@ test("2024 study start plans 2026 and records historical plus manual completion 
   await page
     .getByLabel("Planning semester · Year", { exact: true })
     .fill("2026");
+  await page
+    .getByRole("checkbox", {
+      name: "I have completed courses to record now",
+      exact: true,
+    })
+    .check();
   await page.getByRole("button", { name: "Start planning" }).click();
   await expect(page).toHaveURL(/\/plan\/completed/);
   const archive = page.getByRole("region", {
@@ -109,6 +115,12 @@ test("manual entry works when historical archive requests fail", async ({
   await page
     .getByLabel("Planning semester · Year", { exact: true })
     .fill("2026");
+  await page
+    .getByRole("checkbox", {
+      name: "I have completed courses to record now",
+      exact: true,
+    })
+    .check();
   await page.getByRole("button", { name: "Start planning" }).click();
   await expect(
     page.getByText(

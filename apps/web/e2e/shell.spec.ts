@@ -43,6 +43,7 @@ test("logo stays unchanged and the responsive shell has a visual baseline", asyn
   page,
   request,
 }, testInfo) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "de"));
   const response = await request.get("/unifr-logo.png");
   expect(
     createHash("sha256")
@@ -73,6 +74,7 @@ test("logo stays unchanged and the responsive shell has a visual baseline", asyn
 test("keyboard skip link reaches the main content and controls have touch targets", async ({
   page,
 }) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "de"));
   await page.goto("/");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Zum Inhalt" })).toBeFocused();
@@ -187,3 +189,30 @@ test("compact navigation keeps localized labels intact and focused content above
     clearance.navigationHeight,
   );
 });
+
+for (const [locale, expected] of [
+  ["de-CH", "de"],
+  ["fr-CH", "fr"],
+  ["en-US", "en"],
+] as const) {
+  test(`browser language ${locale} initializes the shell and saved choice takes precedence`, async ({
+    browser,
+    baseURL,
+  }) => {
+    const context = await browser.newContext({ baseURL, locale });
+    try {
+      const page = await context.newPage();
+      await page.goto("/");
+      await expect(page.locator("html")).toHaveAttribute("lang", expected);
+      expect(await page.evaluate(() => navigator.language)).toBe(locale);
+      await page.getByRole("button", { name: "Français", exact: true }).click();
+      await page.reload();
+      await expect(page.locator("html")).toHaveAttribute("lang", "fr");
+      expect(
+        await page.evaluate(() => localStorage.getItem("unifr.language")),
+      ).toBe("fr");
+    } finally {
+      await context.close();
+    }
+  });
+}

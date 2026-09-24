@@ -325,9 +325,26 @@ test("the selected week downloads as an editable workbook and a complete landsca
     .click();
   const popup = await popupEvent;
   await expect(
-    popup.getByRole("heading", { name: "My weekly printout" }),
+    popup.getByRole("heading", { name: "My weekly printout", exact: true }),
   ).toBeVisible();
-  await expect(popup.locator(".lesson-list")).toContainText("Algebra");
+  await expect(popup.locator(".calendar-sheet .events article")).toHaveText([
+    "S1",
+  ]);
+  await expect(popup.locator(".calendar-sheet .week-key li")).toHaveText([
+    /S1 Algebra · 12:00–13:00 · PER 21/,
+  ]);
+  await expect(
+    popup.locator(".lesson-list table").first().locator("tbody tr"),
+  ).toHaveCount(1);
+  await expect(popup.locator(".lesson-list table").first()).toContainText(
+    "Algebra",
+  );
+  await expect(
+    popup.locator(".lesson-list table").nth(1).locator("tbody tr"),
+  ).toHaveCount(1);
+  await expect(popup.locator(".lesson-list table").nth(1)).toContainText(
+    "DEMO-001",
+  );
   await popup.emulateMedia({ media: "print" });
   await popup.pdf({
     path: info.outputPath("weekly-print.pdf"),

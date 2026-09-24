@@ -71,6 +71,7 @@ test("the university logo returns to the home route", async ({ page }) => {
 test("course query and settled scroll position survive a detail round trip", async ({
   page,
 }) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "de"));
   await page.setViewportSize({ width: 390, height: 600 });
   await page.goto("/catalogue?q=Example");
   const results = page.locator(".course-results > li");

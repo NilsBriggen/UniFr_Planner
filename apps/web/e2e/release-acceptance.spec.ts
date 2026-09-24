@@ -1,3 +1,4 @@
+import { reconciliationMessages } from "../src/requirements/reconciliationMessages";
 import { timetableMessages } from "../src/planner/timetable-messages";
 import { chooseManualSetup, openPlanTools } from "./studies-helpers";
 import { expect, test, type Page } from "@playwright/test";
@@ -144,11 +145,30 @@ async function assertStudentProgress(page: Page, plan: Plan) {
       .locator("div")
       .filter({ has: page.getByText(r.earned, { exact: true }) }),
   ).toHaveText(`${r.earned}11 ECTS`);
+  const reconciliation = page
+    .getByRole("region", {
+      name: reconciliationMessages.en.heading,
+      exact: true,
+    })
+    .first();
+  await expect(reconciliation).toContainText(
+    "Recorded completed courses: 11 ECTS",
+  );
+  await expect(reconciliation).toContainText(
+    "Selected course credits: 12 ECTS",
+  );
+  await expect(reconciliation).toContainText(
+    "Contribution to modelled requirements: 11 ECTS",
+  );
+  await expect(reconciliation).toContainText(
+    "Unallocated selected credits: 12 ECTS",
+  );
   await expect(
-    summary
-      .locator("div")
-      .filter({ has: page.getByText(r.toEarn, { exact: true }) }),
-  ).toHaveText(`${r.toEarn}172 ECTS`);
+    reconciliation.getByText(reconciliationMessages.en.unconfirmed, {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(summary.getByText(r.toEarn, { exact: true })).toHaveCount(0);
   // Tentative BI applicability must not be presented as an approved regulation.
   await expect(page.locator(".requirement-status").first()).toHaveText(
     r.needs_clarification,
@@ -159,7 +179,12 @@ async function assertWeek(page: Page, starts: string[], conflicts: number) {
   await page.goto(`/semester/${term}`);
   await expect(page.locator(".calendar-check li")).toHaveCount(conflicts);
   if (conflicts)
-    await expect(page.locator(".calendar-check li")).toContainText(p.hard);
+    await expect(
+      page
+        .locator(".calendar-check > details")
+        .filter({ has: page.locator("ul") })
+        .locator(":scope > summary"),
+    ).toContainText(p.hard);
   else await expect(page.getByText(p.clear, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: p.week, exact: true }).click();
   await page.getByLabel(p.date, { exact: true }).fill("2026-09-21");

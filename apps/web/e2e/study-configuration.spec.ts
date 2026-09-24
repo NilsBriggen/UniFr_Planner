@@ -123,8 +123,22 @@ for (const language of ["en", "de", "fr"] as const) {
     await page.getByRole("button", { name: s.start, exact: true }).click();
     await expect(page).toHaveURL(/catalogue\?term=AS-2026&focus=programme$/);
     await expect(
-      page.getByRole("button", { name: d.recommended, exact: true }),
+      page.getByRole("button", { name: d.listedProgramme, exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
+    // Published programme membership and known requirement matching are separate scopes.
+    await expect(page.locator(".course-results > li")).toHaveCount(1);
+    await page
+      .getByRole("button", { name: d.knownRequirements, exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: d.knownRequirements, exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await page
+      .getByRole("checkbox", { name: d.hideAdded, exact: true })
+      .click();
+    await expect(
+      page.getByRole("checkbox", { name: d.hideAdded, exact: true }),
+    ).toBeChecked();
     await expect(page.locator(".course-results > li")).toHaveCount(1);
     const programming = page.locator(".course-results > li").first();
     await expect(programming).toContainText("UE-SIN.01023");
@@ -153,6 +167,15 @@ for (const language of ["en", "de", "fr"] as const) {
     await expect(page.locator(".course-results > li")).toHaveCount(0);
     await expect(page.getByText(d.noMatches).first()).toBeVisible();
     await page.getByRole("button", { name: d.all, exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: d.all, exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await page
+      .getByRole("checkbox", { name: d.hideAdded, exact: true })
+      .click();
+    await expect(
+      page.getByRole("checkbox", { name: d.hideAdded, exact: true }),
+    ).not.toBeChecked();
     await expect(page.locator(".course-results > li")).toHaveCount(2);
     await page.goto("/requirements");
     await page
@@ -234,7 +257,7 @@ test("existing unconfigured plans remain usable and keep their courses when stud
   await page.goto("/catalogue?term=AS-2026");
   await expect(
     page.getByRole("button", {
-      name: discoveryMessages.en.recommended,
+      name: discoveryMessages.en.listedProgramme,
       exact: true,
     }),
   ).toHaveCount(0);
@@ -254,10 +277,16 @@ test("existing unconfigured plans remain usable and keep their courses when stud
   await page.goto("/catalogue?term=AS-2026");
   await expect(
     page.getByRole("button", {
-      name: discoveryMessages.en.recommended,
+      name: discoveryMessages.en.listedProgramme,
       exact: true,
     }),
   ).toHaveAttribute("aria-pressed", "true");
+  await page
+    .getByRole("button", {
+      name: discoveryMessages.en.knownRequirements,
+      exact: true,
+    })
+    .click();
   await expect(page.locator(".course-results > li")).toHaveCount(0);
 });
 
@@ -273,6 +302,12 @@ test("a configured continuing student reaches semester recommendations after cat
     .getByLabel("Plan name", { exact: true })
     .fill("Continuing configured degree");
   await page
+    .getByRole("checkbox", {
+      name: "I have completed courses to record now",
+      exact: true,
+    })
+    .check();
+  await page
     .getByRole("button", { name: setupMessages.en.start, exact: true })
     .click();
   await expect(page).toHaveURL(/\/plan\/completed/);
@@ -280,5 +315,17 @@ test("a configured continuing student reaches semester recommendations after cat
     .getByRole("link", { name: catchupMessages.en.later, exact: true })
     .click();
   await expect(page).toHaveURL(/catalogue\?term=AS-2026&focus=programme$/);
+  await expect(
+    page.getByRole("button", {
+      name: discoveryMessages.en.listedProgramme,
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page
+    .getByRole("button", {
+      name: discoveryMessages.en.knownRequirements,
+      exact: true,
+    })
+    .click();
   await expect(page.locator(".course-results > li")).toHaveCount(1);
 });

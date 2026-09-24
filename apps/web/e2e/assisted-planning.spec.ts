@@ -165,7 +165,7 @@ test("semester discovery explains lesson times and updates its overview as cours
     .click();
   await expect(page).toHaveURL(/scope=all/);
   await expect(page.locator(".discovery-semester")).toContainText(
-    "Browsing other semesters too",
+    "Browsing the course catalogue. Academic contribution has not been established.",
   );
   await expect(algebra).toBeVisible();
 });

@@ -342,7 +342,7 @@ for (const language of ["de", "fr", "en"] as const) {
       ),
     ).toBe(true);
     await page.emulateMedia({ media: "print" });
-    await expect(page.locator(".print-only")).toBeVisible();
+    await expect(page.locator("section.print-only")).toBeVisible();
     await expect(
       page.getByRole("navigation", { name: shell.nav }),
     ).toBeHidden();

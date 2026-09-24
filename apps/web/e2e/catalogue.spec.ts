@@ -1,3 +1,4 @@
+import { catalogueMessages } from "../src/catalogue-i18n";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -8,7 +9,7 @@ const locales = [
     submit: "Suchen",
     filter: "Filter",
     term: "Semester",
-    preview: "Stundenplan ansehen",
+    preview: catalogueMessages.de.preview,
     close: "Schliessen",
     stale: "Entwicklungsbeispiele · kein aktueller UniFr-Katalog",
     unresolved: "Termine ungeklärt",
@@ -24,7 +25,7 @@ const locales = [
     submit: "Rechercher",
     filter: "Filtres",
     term: "Semestre",
-    preview: "Voir les horaires",
+    preview: catalogueMessages.fr.preview,
     close: "Fermer",
     stale: "Exemples de développement · pas de catalogue UniFr actuel",
     unresolved: "Horaires non résolus",
@@ -40,7 +41,7 @@ const locales = [
     submit: "Search",
     filter: "Filters",
     term: "Semester",
-    preview: "Preview schedule",
+    preview: catalogueMessages.en.preview,
     close: "Close",
     stale: "Development examples · not a current UniFr catalogue",
     unresolved: "Meeting times unresolved",
@@ -59,7 +60,7 @@ const exceptions = [
     added: "Zusätzliche Termine laut Quelle",
     override: "Ersetzter Termin laut Quelle",
     note: "Quellenausnahmen · Wiederholungen werden nicht aufgelöst.",
-    preview: "Stundenplan ansehen",
+    preview: catalogueMessages.de.preview,
     unresolved: "Termine ungeklärt",
   },
   {
@@ -68,7 +69,7 @@ const exceptions = [
     added: "Dates supplémentaires selon la source",
     override: "Occurrence remplacée selon la source",
     note: "Exceptions de la source · les récurrences ne sont pas développées.",
-    preview: "Voir les horaires",
+    preview: catalogueMessages.fr.preview,
     unresolved: "Horaires non résolus",
   },
   {
@@ -77,7 +78,7 @@ const exceptions = [
     added: "Additional dates from source",
     override: "Replaced occurrence from source",
     note: "Source exceptions · recurrences are not expanded.",
-    preview: "Preview schedule",
+    preview: catalogueMessages.en.preview,
     unresolved: "Meeting times unresolved",
   },
 ];
@@ -237,6 +238,7 @@ for (const locale of locales) {
 test("keyboard-only search and modal traps focus and restores it", async ({
   page,
 }) => {
+  await page.addInitScript(() => localStorage.setItem("unifr.language", "de"));
   await page.goto("/catalogue");
   const search = page.getByLabel("Kurse suchen", { exact: true });
   await expect(search).toBeVisible();
@@ -263,7 +265,7 @@ test("keyboard-only search and modal traps focus and restores it", async ({
     let i = 0;
     i < 12 &&
     !(await page
-      .getByRole("button", { name: "Stundenplan ansehen" })
+      .getByRole("button", { name: catalogueMessages.de.preview })
       .evaluate((el) => el === document.activeElement));
     i++
   )
@@ -271,11 +273,24 @@ test("keyboard-only search and modal traps focus and restores it", async ({
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByRole("button", { name: "Schliessen" })).toBeFocused();
+  const dialogControls = page
+    .getByRole("dialog")
+    .locator(
+      "button:visible, summary:visible, a:visible, input:visible, select:visible",
+    );
   await page.keyboard.press("Shift+Tab");
-  await expect(page.getByRole("button", { name: "Schliessen" })).toBeFocused();
+  await expect(dialogControls.last()).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(dialogControls.first()).toBeFocused();
+  for (let index = 1; index < (await dialogControls.count()); index++) {
+    await page.keyboard.press("Tab");
+    await expect(dialogControls.nth(index)).toBeFocused();
+  }
+  await page.keyboard.press("Tab");
+  await expect(dialogControls.first()).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(
-    page.getByRole("button", { name: "Stundenplan ansehen" }),
+    page.getByRole("button", { name: catalogueMessages.de.preview }),
   ).toBeFocused();
   for (const control of await page
     .locator(
@@ -377,14 +392,18 @@ test("real rejected database renders unavailable, never empty catalogue", async 
     [
       "Deutsch",
       "Kein aktueller Kurskatalog verfügbar",
-      "Synchronisierung abgelehnt",
+      catalogueMessages.de.rejected,
     ],
     [
       "Français",
       "Aucun catalogue actuel disponible",
-      "Synchronisation refusée",
+      catalogueMessages.fr.rejected,
     ],
-    ["English", "No current catalogue available", "Sync rejected"],
+    [
+      "English",
+      "No current catalogue available",
+      catalogueMessages.en.rejected,
+    ],
   ]) {
     await page.goto("/catalogue");
     await page.getByRole("button", { name, exact: true }).click();
