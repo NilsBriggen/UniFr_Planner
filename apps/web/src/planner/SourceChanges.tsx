@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "../components";
 import type { Language } from "../i18n";
 import { usePlans } from "./context";
@@ -8,6 +8,7 @@ import { catalogueMessages } from "../catalogue-i18n";
 
 export default function SourceChanges({ language }: { language: Language }) {
   const { plan, published } = usePlans();
+  const location = useLocation();
   const t = sourceMessages[language];
   if (
     !plan ||
@@ -22,6 +23,13 @@ export default function SourceChanges({ language }: { language: Language }) {
     : [];
   const rejected =
     published.catalogue?.status.latest_sync_outcome?.startsWith("rejected");
+  if (
+    location.pathname.startsWith("/catalogue") &&
+    !changes.length &&
+    !published.error &&
+    !rejected
+  )
+    return null;
   return (
     <div className="page source-updates">
       {published.catalogue?.status.published_at && (
@@ -82,7 +90,7 @@ export default function SourceChanges({ language }: { language: Language }) {
           {published.loading
             ? " · …"
             : published.checkedAt
-              ? ` · ${new Date(published.checkedAt).toLocaleDateString(language, { timeZone: "Europe/Zurich" })}`
+              ? ` · ${t.checked} ${new Date(published.checkedAt).toLocaleDateString(language, { timeZone: "Europe/Zurich" })}`
               : ""}
         </summary>
         <div className="source-check-details">

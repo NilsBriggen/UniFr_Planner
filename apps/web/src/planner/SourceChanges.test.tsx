@@ -42,6 +42,7 @@ it("keeps an unchanged catalogue check in a compact disclosure and errors promin
   const unchanged = await within(disclosure!).findByText(
     /No changes to your saved courses/,
   );
+  expect(sourceStatus).toHaveTextContent("Checked");
   expect(unchanged).not.toBeVisible();
   await userEvent.click(sourceStatus);
   expect(unchanged).toBeVisible();

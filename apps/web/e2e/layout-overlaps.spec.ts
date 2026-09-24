@@ -22,6 +22,8 @@ for (const language of ["de", "fr", "en"] as const) {
       if ((await disclosure.getAttribute("open")) === null)
         await summary.click();
       for (const button of await scopes.all()) {
+        if ((await disclosure.getAttribute("open")) === null)
+          await summary.click();
         await button.scrollIntoViewIfNeeded();
         const box = await button.evaluate((element) => {
           const rect = element.getBoundingClientRect();
@@ -42,6 +44,8 @@ for (const language of ["de", "fr", "en"] as const) {
         expect(box.ownsCenter).toBe(true);
         await button.click();
         await expect(button).toHaveAttribute("aria-pressed", "true");
+        await expect(disclosure).not.toHaveAttribute("open");
+        await expect(summary).toBeFocused();
       }
     }
   });

@@ -13,6 +13,7 @@ import {
 import { usePlans } from "../planner/context";
 import { plannerMessages } from "../planner/messages";
 import { discoveryMessages } from "./messages";
+import { countLabel } from "../planner/countLabels";
 
 export default function SemesterSummary({
   term,
@@ -72,7 +73,7 @@ export default function SemesterSummary({
           </span>
         </summary>
         <p>
-          {courses.length} {t.selected}
+          {courses.length} {countLabel(language, "selected", courses.length)}
         </p>
         <p className="planner-help">
           {Math.round(plan.targetEcts / plan.semesters.length)} {t.reference}

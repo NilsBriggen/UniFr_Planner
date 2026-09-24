@@ -24,6 +24,7 @@ import {
 } from "./history";
 import ManualCompletion from "./ManualCompletion";
 import { SaveStatus } from "./PlanControls";
+import { countLabel } from "./countLabels";
 
 export default function CompletedCourses({ language }: { language: Language }) {
   const { plan } = usePlans();
@@ -424,7 +425,7 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
                       : t.unavailable
                     : results.offerings.length === 0
                       ? t.empty
-                      : `${results.total} ${p.courseCount}`}
+                      : `${results.total} ${countLabel(language, "course", results.total)}`}
             </p>
 
             {!loading && termsError && (

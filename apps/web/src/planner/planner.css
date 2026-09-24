@@ -385,9 +385,6 @@
   border-bottom: 1px solid var(--color-line);
   padding: 12px 0;
 }
-.print-only {
-  display: none;
-}
 @media (max-width: 1000px) {
   .calendar-week {
     grid-template-columns: 1fr;
@@ -449,9 +446,6 @@
   }
   .page {
     padding: 0 !important;
-  }
-  .print-only {
-    display: block;
   }
   .semester-board {
     display: block;

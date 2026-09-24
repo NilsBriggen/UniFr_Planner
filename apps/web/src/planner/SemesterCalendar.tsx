@@ -35,6 +35,7 @@ import SharePanel from "../sharing/SharePanel";
 import WeeklyDownloads from "./WeeklyDownloads";
 import { experienceMessages } from "../experience-messages";
 import { defaultCalendarDate, readCalendarView } from "./calendar-view";
+import { countLabel } from "./countLabels";
 
 function EventCard({
   event,
@@ -239,7 +240,7 @@ function Calendar({ language }: { language: Language }) {
               }
             }}
           >
-            {t.print}
+            {shareMessages[language].print}
           </Button>
           <SharePanel language={language} />
           <Link className="text-link" to="/plan">
@@ -261,16 +262,11 @@ function Calendar({ language }: { language: Language }) {
         </span>
         <span>
           {semesterCourses.length}{" "}
-          {language === "en" && semesterCourses.length === 1
-            ? "course selected"
-            : discoveryMessages[language].selected}
+          {countLabel(language, "selected", semesterCourses.length)}
         </span>
         <span>
           {calendar.events.length}{" "}
-          {language === "en" && calendar.events.length === 1
-            ? "dated meeting"
-            : t.dates}{" "}
-          · {zone}
+          {countLabel(language, "meeting", calendar.events.length)} · {zone}
         </span>
         {conflicts.length > 0 && (
           <a className="schedule-indicator conflict" href="#schedule-check">

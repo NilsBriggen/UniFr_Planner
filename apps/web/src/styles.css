@@ -213,6 +213,9 @@ p {
   white-space: nowrap;
   border: 0;
 }
+.print-only {
+  display: none;
+}
 .languages .button {
   min-width: 44px;
   padding: 10px;
@@ -795,5 +798,8 @@ input {
 @media print {
   .study-navigation {
     display: none;
+  }
+  .print-only {
+    display: block;
   }
 }

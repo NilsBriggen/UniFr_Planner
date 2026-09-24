@@ -35,6 +35,7 @@ import { extendPlanToTerm } from "./extendPlan";
 import { printRoster } from "./scoped-print";
 import { timetableMessages } from "./timetable-messages";
 import { semesterLabel } from "./SemesterField";
+import { countLabel } from "./countLabels";
 
 export { Download, SaveStatus } from "./PlanControls";
 export { Setup } from "./Setup";
@@ -148,7 +149,8 @@ function ImportPlan({ language }: { language: Language }) {
           <ul>
             {preview.scenarios.map((s) => (
               <li key={s.id}>
-                {s.name} · {s.courses.length} {t.courseCount} ·{" "}
+                {s.name} · {s.courses.length}{" "}
+                {countLabel(language, "course", s.courses.length)} ·{" "}
                 {summarize(s.courses).completed} {t.completed} ECTS
               </li>
             ))}
@@ -452,11 +454,7 @@ export function PlanBoard({ language }: { language: Language }) {
                           ? ` · ${unknownEcts} ${t.unknown}`
                           : ""}{" "}
                         · {courses.length}{" "}
-                        {language === "en"
-                          ? courses.length === 1
-                            ? "course"
-                            : "courses"
-                          : t.courseCount}
+                        {countLabel(language, "course", courses.length)}
                       </span>
                     </summary>
                     {term && term !== "completed" && (

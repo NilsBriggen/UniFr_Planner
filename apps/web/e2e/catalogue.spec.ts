@@ -31,12 +31,21 @@ test("first planned catalogue result starts within desktop and phone viewports",
 }, testInfo) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   await importStudyPlan(page, configuredStudyPlan());
+  await page.goto("/catalogue/DEMO-001?term=AS-2026");
+  await page
+    .getByRole("button", { name: "Add to semester", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Remove from semester", exact: true }),
+  ).toBeVisible();
   for (const viewport of [
     { width: 1366, height: 768 },
     { width: 390, height: 844 },
   ]) {
     await page.setViewportSize(viewport);
     await page.goto("/catalogue?term=AS-2026&focus=all");
+    await expect(page.locator(".source-updates .print-only")).toBeHidden();
+    await expect(page.locator(".source-updates .source-check")).toHaveCount(0);
     const result = page.locator(".course-results > li").first();
     await expect(result).toBeVisible();
     const chip = page.locator(".filter-chips .button").first();
@@ -70,6 +79,7 @@ const locales = [
     remove: "Entfernen",
     next: "Weiter",
     title: "Algebra",
+    oneResult: "1 Kurs",
   },
   {
     name: "Français",
@@ -87,6 +97,7 @@ const locales = [
     remove: "Supprimer",
     next: "Suivant",
     title: "Algèbre",
+    oneResult: "1 cours",
   },
   {
     name: "English",
@@ -104,6 +115,7 @@ const locales = [
     remove: "Remove",
     next: "Next",
     title: "Algebra",
+    oneResult: "1 course",
   },
 ];
 
@@ -203,6 +215,7 @@ for (const locale of locales) {
     await expect(
       page.getByRole("link", { name: new RegExp(locale.title) }),
     ).toHaveCount(1);
+    await expect(page.locator(".result-count")).toHaveText(locale.oneResult);
     await expect(
       page.getByRole("button", {
         name: new RegExp(locale.remove + ".*Algebra"),
@@ -264,8 +277,8 @@ for (const locale of locales) {
       .click();
     await page.getByRole("link", { name: /DEMO-003/ }).click();
     await expect(
-      page.getByText(locale.unresolved, { exact: true }).first(),
-    ).toBeVisible();
+      page.locator(".course-detail .schedule-warning").first(),
+    ).toContainText(locale.unresolvedBody);
     await page.getByRole("button", { name: locale.preview }).click();
     await expect(
       page

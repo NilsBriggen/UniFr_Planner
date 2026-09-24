@@ -31,6 +31,15 @@ it("positions Zurich times and gives overlapping lessons separate lanes", () => 
     [780, 840, 0, 1],
   ]);
 });
+it("opens a late class week one hour before its first lesson", () => {
+  const week = layoutWeek(
+    [event("noon", "2026-09-21T10:00:00Z", "2026-09-21T11:00:00Z")],
+    "2026-09-21",
+  );
+  expect(week.days[0].lessons[0].startMinute).toBe(12 * 60);
+  expect(week.startMinute).toBe(11 * 60);
+  expect(layoutWeek([], "2026-09-21").startMinute).toBe(8 * 60);
+});
 it("splits overnight lessons at local midnight and retains weekend sessions", () => {
   const week = layoutWeek(
     [

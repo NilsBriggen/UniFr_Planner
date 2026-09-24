@@ -36,6 +36,7 @@ import {
   semesterIndex,
 } from "./planner/domain";
 import { catchupMessages } from "./planner/catchup-messages";
+import { countLabel } from "./planner/countLabels";
 import { useDiscovery, useDiscoveryIndex } from "./discovery/useDiscovery";
 import { filterDiscovery, offeringKey } from "./discovery/presentation";
 import { discoveryMessages } from "./discovery/messages";
@@ -952,12 +953,25 @@ function Search({
     setDraftField(key, "");
     change(next);
   };
+  const chooseScope = (
+    value: "requirements" | "programme" | "all",
+    button: HTMLButtonElement,
+  ) => {
+    const disclosure = button.closest<HTMLDetailsElement>(
+      ".discovery-scopes-mobile",
+    );
+    if (disclosure) {
+      disclosure.open = false;
+      disclosure.querySelector("summary")?.focus({ preventScroll: true });
+    }
+    updateChoice("focus", value);
+  };
   const scopeButtons = () => (
     <>
       {discovery?.hasProgramme && (
         <Button
           aria-pressed={mode === "requirements"}
-          onClick={() => updateChoice("focus", "requirements")}
+          onClick={(event) => chooseScope("requirements", event.currentTarget)}
         >
           {d.knownRequirements}
         </Button>
@@ -965,14 +979,14 @@ function Search({
       {discovery?.hasProgramme && (
         <Button
           aria-pressed={mode === "programme"}
-          onClick={() => updateChoice("focus", "programme")}
+          onClick={(event) => chooseScope("programme", event.currentTarget)}
         >
           {d.listedProgramme}
         </Button>
       )}
       <Button
         aria-pressed={mode === "all"}
-        onClick={() => updateChoice("focus", "all")}
+        onClick={(event) => chooseScope("all", event.currentTarget)}
       >
         {d.all}
       </Button>
@@ -1369,7 +1383,7 @@ function Search({
         {page && (
           <>
             <p className="result-count" role="status">
-              {page.total} {t.results}
+              {page.total} {countLabel(language, "course", page.total)}
             </p>
             {page.total === 0 && !findingMatches && !loading ? (
               <StatusNotice>

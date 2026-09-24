@@ -77,8 +77,15 @@ export function layoutWeek(events: CalendarEvent[], monday: string) {
   const lessons = days.flatMap((day) => day.lessons);
   return {
     days,
-    startMinute:
-      Math.floor(Math.min(480, ...lessons.map((l) => l.startMinute)) / 60) * 60,
+    startMinute: lessons.length
+      ? Math.max(
+          0,
+          Math.floor(
+            (Math.min(...lessons.map((lesson) => lesson.startMinute)) - 60) /
+              60,
+          ) * 60,
+        )
+      : 480,
     endMinute:
       Math.ceil(Math.max(1080, ...lessons.map((l) => l.endMinute)) / 60) * 60,
   };
