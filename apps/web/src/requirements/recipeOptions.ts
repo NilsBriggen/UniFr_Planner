@@ -2,29 +2,39 @@ import { recipeRegistry } from "../../../../packages/domain/src/registry";
 import type {
   ProgrammeRecipe,
   ProgrammeVariant,
+  RecipeRegistry,
   StructureSlot,
 } from "../../../../packages/domain/src/recipes";
 export function inheritedStructures(
   programme: ProgrammeRecipe,
   variant: ProgrammeVariant,
+  registry: RecipeRegistry = recipeRegistry,
 ): string[] {
   if (variant.structureIds) return variant.structureIds;
   if (!variant.extends) return [];
   const [pid, vid] = variant.extends.split("/");
-  const parent = recipeRegistry.programmes.find((p) => p.id === pid);
+  const parent = registry.programmes.find((p) => p.id === pid);
   const pv = parent?.variants.find((v) => v.id === vid);
-  return parent && pv ? inheritedStructures(parent, pv) : [];
+  return parent && pv ? inheritedStructures(parent, pv, registry) : [];
 }
-export function majorProgrammes(degree: string, faculty: string) {
-  return recipeRegistry.programmes.filter(
+export function majorProgrammes(
+  degree: string,
+  faculty: string,
+  registry: RecipeRegistry = recipeRegistry,
+) {
+  return registry.programmes.filter(
     (p) =>
       p.degree === degree &&
       (!faculty || p.faculty === faculty) &&
       p.variants.some((v) => v.role === "major"),
   );
 }
-export function slotOptions(slot: StructureSlot, major: ProgrammeRecipe) {
-  return recipeRegistry.programmes
+export function slotOptions(
+  slot: StructureSlot,
+  major: ProgrammeRecipe,
+  registry: RecipeRegistry = recipeRegistry,
+) {
+  return registry.programmes
     .filter(
       (p) =>
         p.degree === major.degree &&

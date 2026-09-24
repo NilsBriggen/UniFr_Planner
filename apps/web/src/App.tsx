@@ -26,6 +26,7 @@ const Setup = lazy(() =>
 const Requirements = lazy(() => import("./requirements/Requirements"));
 const Suggestions = lazy(() => import("./suggestions/Suggestions"));
 import SourceChanges from "./planner/SourceChanges";
+import { catalogueLinkFor } from "./discovery/catalogueContext";
 const Accounts = lazy(() => import("./accounts/Accounts"));
 const Operations = lazy(() => import("./Operations"));
 import { SharingProvider } from "./sharing/context";
@@ -312,7 +313,12 @@ function AppShell() {
                   ? location.pathname.startsWith("/semester/")
                     ? location.pathname
                     : `/semester/${plans.plan ? planningSemester(plans.plan) : currentSemester()}`
-                  : path
+                  : key === "catalogue"
+                    ? catalogueLinkFor(
+                        plans.plan?.id,
+                        plans.plan?.activeScenarioId,
+                      )
+                    : path
               }
             >
               <span className="nav-icon" aria-hidden="true">

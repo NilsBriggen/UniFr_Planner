@@ -1,5 +1,7 @@
 export const recipeMessages = {
   en: {
+    retainedEdition:
+      "This plan keeps its saved curriculum edition. You can edit using those rules, or preview the current edition before choosing to upgrade. Saved courses are preserved.",
     editionUnavailable:
       "This plan uses a curriculum edition that is unavailable here. Its saved selection is unchanged. Review the current curriculum only if you intend to change editions.",
     reviewCurrentEdition: "Review with current curriculum",
@@ -68,6 +70,8 @@ export const recipeMessages = {
     },
   },
   de: {
+    retainedEdition:
+      "Dieser Plan behält seine gespeicherte Studienplanversion. Du kannst ihn mit diesen Regeln bearbeiten oder die aktuelle Version prüfen und bewusst übernehmen. Gespeicherte Kurse bleiben erhalten.",
     editionUnavailable:
       "Dieser Plan verwendet eine hier nicht verfügbare Studienplanversion. Die gespeicherte Auswahl bleibt unverändert. Prüfe den aktuellen Studienplan nur, wenn du die Version wechseln möchtest.",
     reviewCurrentEdition: "Mit aktuellem Studienplan prüfen",
@@ -136,6 +140,8 @@ export const recipeMessages = {
     },
   },
   fr: {
+    retainedEdition:
+      "Ce plan conserve sa version enregistrée du cursus. Vous pouvez le modifier avec ces règles ou examiner la version actuelle avant de décider de l’adopter. Les cours enregistrés sont conservés.",
     editionUnavailable:
       "Ce plan utilise une version du cursus indisponible ici. La sélection enregistrée reste inchangée. Consultez le cursus actuel uniquement si vous souhaitez changer de version.",
     reviewCurrentEdition: "Examiner avec le cursus actuel",

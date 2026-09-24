@@ -6,7 +6,10 @@ import {
   slotOptions,
 } from "./recipeOptions";
 import { useEffect, useMemo, useState } from "react";
-import { recipeRegistry } from "../../../../packages/domain/src/registry";
+import {
+  recipeRegistry,
+  recipeRegistryForSelection,
+} from "../../../../packages/domain/src/registry";
 import {
   composeDegree,
   type SelectedComponent,
@@ -44,10 +47,27 @@ export function DegreeSelectionForm({
   onStartSemesterChange?: (semester: string) => void;
 }) {
   const t = recipeMessages[language];
+  const [useCurrentEdition, setUseCurrentEdition] = useState(false);
+  const retainedRegistry = useMemo(() => {
+    try {
+      return plan.degreeSelection
+        ? recipeRegistryForSelection(plan.degreeSelection)
+        : recipeRegistry;
+    } catch {
+      return null;
+    }
+  }, [plan.degreeSelection]);
+  const registry = useCurrentEdition
+    ? recipeRegistry
+    : (retainedRegistry ?? recipeRegistry);
+  const unavailableEdition = retainedRegistry === null;
+  const olderEdition =
+    retainedRegistry !== null &&
+    retainedRegistry.edition !== recipeRegistry.edition;
   const original = plan.degreeSelection?.components.find(
     (c) => c.slotId === "major",
   );
-  const originalProgramme = recipeRegistry.programmes.find(
+  const originalProgramme = registry.programmes.find(
     (p) => p.id === original?.programmeId,
   );
   const [degree, setDegree] = useState(originalProgramme?.degree ?? "bachelor");
@@ -70,33 +90,29 @@ export function DegreeSelectionForm({
   const [preview, setPreview] = useState<ResolvedDegree | null>(() => {
     try {
       return plan.degreeSelection
-        ? composeDegree(recipeRegistry, plan.degreeSelection)
+        ? composeDegree(registry, plan.degreeSelection)
         : null;
     } catch {
       return null;
     }
   });
   const [error, setError] = useState("");
-  const unavailableEdition =
-    plan.degreeSelection?.components.some(
-      (component) => component.recipeVersion !== recipeRegistry.edition,
-    ) ?? false;
-  const [useCurrentEdition, setUseCurrentEdition] = useState(false);
   const [differentStarts, setDifferentStarts] = useState<
     Record<string, boolean>
   >({});
 
-  const major = recipeRegistry.programmes.find((p) => p.id === main);
+  const major = registry.programmes.find((p) => p.id === main);
   const track = major?.variants.find((v) => v.id === variant);
   const structures = useMemo(
-    () => (major && track ? inheritedStructures(major, track) : []),
-    [major, track],
+    () => (major && track ? inheritedStructures(major, track, registry) : []),
+    [major, track, registry],
   );
-  const layout = recipeRegistry.structures.find((s) => s.id === structure);
-  const programmes = majorProgrammes(degree, faculty).filter((programme) =>
-    (programme.titles?.[language] ?? programme.title)
-      .toLocaleLowerCase(language)
-      .includes(search.trim().toLocaleLowerCase(language)),
+  const layout = registry.structures.find((s) => s.id === structure);
+  const programmes = majorProgrammes(degree, faculty, registry).filter(
+    (programme) =>
+      (programme.titles?.[language] ?? programme.title)
+        .toLocaleLowerCase(language)
+        .includes(search.trim().toLocaleLowerCase(language)),
   );
   const majorVariants =
     major?.variants.filter((candidate) => candidate.role === "major") ?? [];
@@ -127,9 +143,9 @@ export function DegreeSelectionForm({
     }
   }
   useEffect(() => {
-    const available = majorProgrammes(degree, faculty);
+    const available = majorProgrammes(degree, faculty, registry);
     if (!main && available.length === 1) setMain(available[0].id);
-  }, [degree, faculty, main]);
+  }, [degree, faculty, main, registry]);
   useEffect(() => {
     const variants =
       major?.variants.filter((candidate) => candidate.role === "major") ?? [];
@@ -144,19 +160,19 @@ export function DegreeSelectionForm({
     for (const slot of layout.slots.filter(
       (candidate) => candidate.role !== "major" && !candidate.optional,
     )) {
-      const options = slotOptions(slot, major);
+      const options = slotOptions(slot, major, registry);
       if (!choices[slot.id] && options.length === 1)
         additions[slot.id] = {
           slotId: slot.id,
           programmeId: options[0].programme.id,
           variantId: options[0].variant.id,
           startSemester: semester,
-          recipeVersion: recipeRegistry.edition,
+          recipeVersion: registry.edition,
         };
     }
     if (Object.keys(additions).length)
       setChoices((current) => ({ ...current, ...additions }));
-  }, [choices, layout, major, semester]);
+  }, [choices, layout, major, semester, registry]);
   return (
     <section
       id="study-configuration"
@@ -165,9 +181,11 @@ export function DegreeSelectionForm({
     >
       <h2>{t.title}</h2>
       {plan.requirements && <p>{t.migration}</p>}
-      {unavailableEdition && !useCurrentEdition && (
+      {(unavailableEdition || olderEdition) && !useCurrentEdition && (
         <div className="recipe-edition-notice">
-          <p role="status">{t.editionUnavailable}</p>
+          <p role="status">
+            {unavailableEdition ? t.editionUnavailable : t.retainedEdition}
+          </p>
           <Button
             disabled={busy}
             onClick={() => {
@@ -197,19 +215,19 @@ export function DegreeSelectionForm({
                   variantId: variant,
                   startSemester: semester,
                   recipeVersion: useCurrentEdition
-                    ? recipeRegistry.edition
-                    : (original?.recipeVersion ?? recipeRegistry.edition),
+                    ? registry.edition
+                    : (original?.recipeVersion ?? registry.edition),
                 },
                 ...Object.values(choices)
                   .filter((c) => c.slotId !== majorSlot.id)
                   .map((component) =>
                     useCurrentEdition
-                      ? { ...component, recipeVersion: recipeRegistry.edition }
+                      ? { ...component, recipeVersion: registry.edition }
                       : component,
                   ),
               ],
             };
-            const resolved = composeDegree(recipeRegistry, selection);
+            const resolved = composeDegree(registry, selection);
             setPreview(resolved);
             setError("");
             if (setupMode) {
@@ -335,7 +353,7 @@ export function DegreeSelectionForm({
             >
               <option value="">{t.choose}</option>
               {structures.map((id) => {
-                const s = recipeRegistry.structures.find((s) => s.id === id)!;
+                const s = registry.structures.find((s) => s.id === id)!;
                 return (
                   <option key={id} value={id}>
                     {s.slots
@@ -354,7 +372,10 @@ export function DegreeSelectionForm({
           <p className="recipe-choice-summary">
             {t.structure}:{" "}
             {layout.slots
-              .map((slot) => `${slot.optional ? `${t.optional} ` : ""}${t[slot.role]} ${slot.ects} ECTS`)
+              .map(
+                (slot) =>
+                  `${slot.optional ? `${t.optional} ` : ""}${t[slot.role]} ${slot.ects} ECTS`,
+              )
               .join(" + ")}
           </p>
         )}
@@ -380,7 +401,17 @@ export function DegreeSelectionForm({
             invalidate();
           }}
         />
-        {setupMode && <p className="recipe-choice-summary">{{ en: "Start of this UniFr programme. If you transferred, record earlier studies separately as completed history when you know them.", de: "Beginn dieses UniFr-Studiengangs. Frühere Studienleistungen nach einem Wechsel kannst du separat als Studienverlauf erfassen.", fr: "Début de ce cursus à l’UniFr. En cas de transfert, saisissez séparément les études antérieures dans votre historique." }[language]}</p>}
+        {setupMode && (
+          <p className="recipe-choice-summary">
+            {
+              {
+                en: "Start of this UniFr programme. If you transferred, record earlier studies separately as completed history when you know them.",
+                de: "Beginn dieses UniFr-Studiengangs. Frühere Studienleistungen nach einem Wechsel kannst du separat als Studienverlauf erfassen.",
+                fr: "Début de ce cursus à l’UniFr. En cas de transfert, saisissez séparément les études antérieures dans votre historique.",
+              }[language]
+            }
+          </p>
+        )}
         {major &&
           layout?.slots
             .filter((s) => s.role !== "major")
@@ -419,7 +450,7 @@ export function DegreeSelectionForm({
                               variantId,
                               startSemester:
                                 current[slot.id]?.startSemester ?? semester,
-                              recipeVersion: recipeRegistry.edition,
+                              recipeVersion: registry.edition,
                             };
                           return next;
                         });
@@ -429,7 +460,7 @@ export function DegreeSelectionForm({
                       <option value="">
                         {slot.optional ? t.none : t.choose}
                       </option>
-                      {slotOptions(slot, major).map(
+                      {slotOptions(slot, major, registry).map(
                         ({ programme: p, variant: v }) => (
                           <option
                             key={`${p.id}/${v.id}`}
@@ -517,7 +548,7 @@ export function DegreeSelectionForm({
             <summary>{t.pinned}</summary>
             <ul>
               {preview.selection.components.map((c) => {
-                const p = recipeRegistry.programmes.find(
+                const p = registry.programmes.find(
                   (p) => p.id === c.programmeId,
                 )!;
                 return (
@@ -535,7 +566,7 @@ export function DegreeSelectionForm({
               <ul>
                 {preview.appliedRules.map((id) => (
                   <li key={id}>
-                    {recipeRegistry.combinationRules.find((r) => r.id === id)
+                    {registry.combinationRules.find((r) => r.id === id)
                       ?.explanation ?? id}
                   </li>
                 ))}
@@ -558,13 +589,12 @@ export function DegreeSelectionForm({
                 ...new Set(
                   preview.selection.components.flatMap(
                     (c) =>
-                      recipeRegistry.programmes.find(
-                        (p) => p.id === c.programmeId,
-                      )?.sourceIds ?? [],
+                      registry.programmes.find((p) => p.id === c.programmeId)
+                        ?.sourceIds ?? [],
                   ),
                 ),
               ].map((id) => {
-                const source = recipeRegistry.sources.find((s) => s.id === id);
+                const source = registry.sources.find((s) => s.id === id);
                 return source ? (
                   <li key={id}>
                     <a href={source.url}>{source.title}</a>
