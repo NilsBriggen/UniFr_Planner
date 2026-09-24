@@ -1,0 +1,744 @@
+{
+  "edition": "2026-27.2",
+  "reviewedAt": "2026-09-24",
+  "scope": "W02 audited programme paths; public-source evidence only",
+  "status": "partial_requirements",
+  "priorEditionModified": false,
+  "automaticallyCertifiedDegrees": 0,
+  "entries": [
+    {
+      "programmeId": "bachelor-digitinf-informatics",
+      "variantId": "major-120",
+      "cohortFrom": null,
+      "cohortTo": null,
+      "curriculumVersion": "2026.1",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 120,
+      "leafCreditObligations": 123,
+      "reviewedStaticCodes": [
+        "EIG.00132",
+        "SIN.01021",
+        "SIN.01022",
+        "SIN.01023",
+        "SIN.02020",
+        "SIN.02022",
+        "SIN.02023",
+        "SIN.03023",
+        "SIN.03024",
+        "SIN.04022",
+        "SIN.04023",
+        "SIN.04028",
+        "SIN.05020",
+        "SIN.05022",
+        "SIN.06020",
+        "SIN.06021",
+        "SIN.06023",
+        "SMA.07003",
+        "SMA.07004"
+      ],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-digitinf-informatics",
+        "cs-current",
+        "cs-2024",
+        "cs-2025"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Source course rows total 123 ECTS although the major is stated as 120. Propaedeutic course mapping, assessment and transition applicability remain unresolved."
+      ]
+    },
+    {
+      "programmeId": "bachelor-sci-mathematics",
+      "variantId": "minor-60",
+      "cohortFrom": "AS-2026",
+      "cohortTo": "SS-2027",
+      "curriculumVersion": "MATH60-2026-PV-SMA.0000067",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 60,
+      "leafCreditObligations": 60,
+      "reviewedStaticCodes": [
+        "SMA.01103",
+        "SMA.01104",
+        "SMA.01203",
+        "SMA.01204",
+        "SMA.01303",
+        "SMA.02441",
+        "SMA.02442",
+        "SMA.02502",
+        "SMA.03810"
+      ],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-sci-mathematics",
+        "math-minor-2026-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Fixed teaching-unit codes reviewed against 2026 MATH60 table. Adviser approval is required for the optional courses; SMA.038xx is a seminar family, not an eligible exact code.",
+        "Assessment annex, Article25 validation and earlier-plan transition annex remain unreviewed. The optional MATH+30 teaching qualification is not a duty of this Bachelor minor."
+      ]
+    },
+    {
+      "programmeId": "bachelor-digitinf-businessinformatics",
+      "variantId": "major-180",
+      "cohortFrom": null,
+      "cohortTo": null,
+      "curriculumVersion": "bi-major-department-summary-review",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 180,
+      "leafCreditObligations": 181.5,
+      "reviewedStaticCodes": [],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-digitinf-businessinformatics",
+        "ses-minors",
+        "ses-full",
+        "bi-department",
+        "bi-60-web-extract",
+        "bi-major-summary-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Department summary lists first-year60, second-year60, third-year compulsory32.5, electives at least14 and thesis15: minimum181.5 versus advertised180. Do not reduce a rule to conceal this source conflict.",
+        "Summary uses legacy MAN/ECO codes and omits stable codes for most compulsory courses. Current SES regulation and annual code crosswalk remain unreviewed; no title guessing."
+      ]
+    },
+    {
+      "programmeId": "bachelor-pedpsy-psychology",
+      "variantId": "major-180",
+      "cohortFrom": "AS-2019",
+      "cohortTo": null,
+      "curriculumVersion": "psychology-bachelor180-complete-structure",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 180,
+      "leafCreditObligations": 180,
+      "reviewedStaticCodes": [
+        "L25.00002",
+        "L25.00007",
+        "L25.00009",
+        "L25.00010",
+        "L25.00014",
+        "L25.00042",
+        "L25.00117",
+        "L25.00133",
+        "L25.00134",
+        "L25.00160",
+        "L25.00302",
+        "L25.00468",
+        "L25.00650",
+        "L25.00652",
+        "L25.00669",
+        "L25.00875",
+        "L25.01019",
+        "L25.01020",
+        "L25.01021",
+        "L25.01022",
+        "L25.01023",
+        "L25.01024",
+        "L25.01025",
+        "L25.01026",
+        "L25.01027",
+        "L25.01028",
+        "L25.01029",
+        "L25.01050",
+        "L25.01051",
+        "L25.01053",
+        "L25.01054",
+        "L25.01056",
+        "L25.01057",
+        "L25.01083",
+        "L25.01084",
+        "L25.01113",
+        "L25.01114",
+        "L25.01204"
+      ],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-pedpsy-psychology",
+        "psychology-180",
+        "psychology-courses",
+        "psychology-fr-plan-review",
+        "psychology-fr-courses-2026-review",
+        "psychology-de-courses-2026-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "M11 eligibility remains manual until explicit softskills labels are captured",
+        "Grade/attempt and prerequisite state not executable in current pure credit engine",
+        "M3 Neurobiology I+II combined6 in old plan, current table lists each3; whether pair compulsory as one choice needs clarification",
+        "Some current elective rows differ from2019 illustrative list; annual department membership applies only2026/27",
+        "Annual French mappings apply only to2026/27; M3 equivalents and future-dated Neurobiology entries require review."
+      ]
+    },
+    {
+      "programmeId": "bachelor-ius-law",
+      "variantId": "major-180",
+      "cohortFrom": "AS-2023",
+      "cohortTo": null,
+      "curriculumVersion": "law-bachelor-fulltime-as2023",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 180,
+      "leafCreditObligations": 180,
+      "reviewedStaticCodes": [],
+      "exactSelectorNodes": [
+        "law-iur-1-1",
+        "law-iur-1-2",
+        "law-iur-1-3",
+        "law-iur-1-4",
+        "law-iur-1-5",
+        "law-iur-1-6"
+      ],
+      "sourceIds": [
+        "directory-bachelor-ius-law",
+        "law-plan-de",
+        "law-transition",
+        "law-iur1-ddr-02405",
+        "law-iur1-ddr-00697",
+        "law-iur1-ddr-00621",
+        "law-iur1-ddr-00353",
+        "law-iur1-ddr-00490",
+        "law-iur1-ddr-00358"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Full-time exam regulation and attempt/progression rules not fully retrieved or validated",
+        "Archived law-regulation-2023 is PART-TIME regulation; must not use it as full-time authority",
+        "Transition regulation archived and scope checked, but detailed conversion rules not encoded",
+        "Noncredit obligation census incomplete",
+        "IUR I six annual subjects have reviewed exact French codes and total60; the additional3-credit propaedeutic written work remains a separate unmapped requirement. IUR II/III codes remain unmapped."
+      ]
+    },
+    {
+      "programmeId": "master-eco-economics",
+      "variantId": "major-90",
+      "cohortFrom": null,
+      "cohortTo": null,
+      "curriculumVersion": "economics-standard-summary-2026-review",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 90,
+      "leafCreditObligations": 90,
+      "reviewedStaticCodes": [],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-master-eco-economics",
+        "economics-master-structure-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Faculty summary: mandatory12 + elective58 + thesis20 =90. Mandatory units are Advanced Microeconomics and Econometric Methods and Applications; exact annual code/version mapping requires regulatory review.",
+        "Option27 is included inside the58 elective credits, never additional. Up to15 elective credits may come from other faculty courses; option membership and cap remain unresolved.",
+        "Official linked Calameo study plan returned HTTP403 on direct public retrieval24September2026. Faculty summary is archived; no inaccessible plan or guessed course title is treated as reviewed eligibility."
+      ]
+    },
+    {
+      "programmeId": "master-digitinf-informatics",
+      "variantId": "major-90",
+      "cohortFrom": "AS-2026",
+      "cohortTo": "SS-2027",
+      "curriculumVersion": "JMCS-2012-track2023-exams2026",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 90,
+      "leafCreditObligations": 90,
+      "reviewedStaticCodes": [],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-master-digitinf-informatics",
+        "msc-cs-study-plan-review",
+        "msc-cs-track-annex-review",
+        "msc-cs-exams-2026-review",
+        "msc-cs-teaching-rules-2026-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Core90 = teaching units60 + thesis30. At least40 credits in lectures/exercises,10 in seminars/internships, and5 credits in each of at least3 tracks must be checked.",
+        "Annual JMCS course IDs use a different namespace from UniFr SIN codes; no title-only crosswalk is accepted. Bern/Neuchâtel achievements and thesis remain individual evidence.",
+        "Pass grade4.0, continuous evaluation and one-repeat limit are sourced but cannot be certified by the credit engine. Optional specialisation25 credits+same-track thesis and optional additional minor30 are not mandatory for the standalone90."
+      ]
+    },
+    {
+      "programmeId": "bachelor-sci-biology",
+      "variantId": "major-120",
+      "cohortFrom": "AS-2026",
+      "cohortTo": "SS-2027",
+      "curriculumVersion": "biology-2023-current2026",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 120,
+      "leafCreditObligations": 120.0,
+      "reviewedStaticCodes": [
+        "SBC.00106",
+        "SBC.00119",
+        "SBC.07004",
+        "SBL.00013",
+        "SBL.00014",
+        "SBL.00015",
+        "SBL.00018",
+        "SBL.00019",
+        "SBL.00020",
+        "SBL.00021",
+        "SBL.00031",
+        "SBL.00040",
+        "SBL.00041",
+        "SBL.00045",
+        "SBL.00055",
+        "SBL.00057",
+        "SBL.00063",
+        "SBL.00065",
+        "SBL.00066",
+        "SBL.00073",
+        "SBL.00074",
+        "SBL.00075",
+        "SME.05103"
+      ],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-sci-biology",
+        "biology-major-2026-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Four source validation packages36+24+37+23=120. Exact codes mapped for23 fixed units (72ECTS);48 propaedeutic credits need branch-specific code mapping.",
+        "Audited SBL.00069 is absent from the current compulsory table; no title or old-course equivalence is inferred.",
+        "Assessment annexes, two scientific-integrity library trainings (§1.6), transition applicability and CH60 replacement of already credited chemistry remain unresolved."
+      ]
+    },
+    {
+      "programmeId": "bachelor-sci-chemistry",
+      "variantId": "minor-60",
+      "cohortFrom": "AS-2026",
+      "cohortTo": "SS-2027",
+      "curriculumVersion": "CH60-2025-PV-SCH.0000070",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 60,
+      "leafCreditObligations": 60,
+      "reviewedStaticCodes": [
+        "SCH.01014",
+        "SCH.01031",
+        "SCH.01033",
+        "SCH.01054",
+        "SCH.01067",
+        "SCH.01072",
+        "SCH.01084",
+        "SCH.02120",
+        "SCH.02212",
+        "SCH.02222",
+        "SCH.02312"
+      ],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-sci-chemistry",
+        "chemistry-minor-2026-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "CH60 ordinary minor is distinct from CHD60 teaching variant. Baseline obligatory rows total35;25 additional credits are selected with the adviser.",
+        "Previously credited propaedeutic/other-programme units marked* require replacement, not reuse. SCH.01031 and SCH.01024 exclude one another. Personal replacements and examination annex remain unresolved.",
+        "SCH.02235 is not automatically eligible without prior SCH.01031(orSCH.01024),SCH.01033 andSCH.01072. SCH.02350 requires priorSCH.02339. These conditionally eligible options remain excluded pending individual prerequisite evidence."
+      ]
+    },
+    {
+      "programmeId": "bachelor-hist-history",
+      "variantId": "major-120",
+      "cohortFrom": "AS-2016",
+      "cohortTo": "SS-2027",
+      "curriculumVersion": "history120-2016",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 120,
+      "leafCreditObligations": 120,
+      "reviewedStaticCodes": [],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-hist-history",
+        "history120-plan-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Source total15+4×15+15+18+12=120. Stable annual code/module mappings, including auditedL14.02354, remain unreviewed.",
+        "Advanced and Bachelor-thesis modules must use different historical periods. Methodology may be one6-credit or two3-credit units; information/bibliographic competence has separate evaluation.",
+        "Reading proficiency in at least two Swiss national languages plus English is required. Latin/Greek recommendations for later Master specialisation are not universal Bachelor duties.",
+        "Article3 excludes History, History of Modernity and Contemporary History as the secondary subject. Combination and individual recognition need review; assessment is not certified."
+      ]
+    },
+    {
+      "programmeId": "bachelor-lang-german",
+      "variantId": "minor-60",
+      "cohortFrom": "AS-2023",
+      "cohortTo": "SS-2027",
+      "curriculumVersion": "german60-2023",
+      "directorySelectable": true,
+      "candidateRelevanceAvailable": true,
+      "requirementCoverage": "partial_requirements",
+      "fullyReviewed": false,
+      "targetEcts": 60,
+      "leafCreditObligations": 60,
+      "reviewedStaticCodes": [],
+      "exactSelectorNodes": [],
+      "sourceIds": [
+        "directory-bachelor-lang-german",
+        "german60-plan-review"
+      ],
+      "moduleCoverage": "structured",
+      "prerequisites": "partial_or_unreviewed",
+      "nonCreditDuties": "partial_or_unreviewed",
+      "languageEquivalenceExclusions": "partial_or_unreviewed",
+      "transitions": "partial_or_unreviewed",
+      "assessmentProgression": "not_certified",
+      "remainingGaps": [
+        "Five compulsory12-credit modules; three written seminar papers and two-part library training explicitly represented. Annual exact codes, including auditedL03.00759, remain unreviewed.",
+        "Course language and all assessed work are German; language preparation is outside this60-credit subject. Foundation-first is guidance, not an invented universal course prerequisite.",
+        "One repeat within four examination sessions; second failure of starred obligatory units excludes the affected programmes. Other failed units have replacement rules. Seminar papers count double for module grades; not certified by the credit engine.",
+        "Effective AS2023; voluntary migration from2016 plan needs adviser confirmation. All students must follow the new plan from AS2027; existing plans remain pinned."
+      ]
+    }
+  ],
+  "archives": [
+    {
+      "archive": "data/programmes/sources/2026-09-24/Anhang-zum-Studienplan-230511.pdf",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Anhang-zum-Studienplan-230511.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "82592eb9c1cdc890ea8db641872c89b9bfa208fecd399f189c0fcb58a8184765",
+      "sourceId": "msc-cs-track-annex-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/DDR.00353.html",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133902",
+      "retrievedAt": "2026-09-24",
+      "sha256": "c7747f1e00a8f9c234707d51cdcb22322e796abdb655a954b5df5f9332977d2f",
+      "sourceId": "law-iur1-ddr-00353",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/DDR.00358.html",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133903",
+      "retrievedAt": "2026-09-24",
+      "sha256": "9ef6022d2f1d4e8c6103e956482c8aa35d8f25e23dc38ee469c745595bdc3363",
+      "sourceId": "law-iur1-ddr-00358",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/DDR.00490.html",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133905",
+      "retrievedAt": "2026-09-24",
+      "sha256": "5b94aff57c3a9b46ce31d8565484e1f0b71a604d718a5111668e65e646e956e5",
+      "sourceId": "law-iur1-ddr-00490",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/DDR.00621.html",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133907",
+      "retrievedAt": "2026-09-24",
+      "sha256": "0c3a1b55c3bbd91d00cf327cd9f63eb582bddd0c116e28c66875b1acec1f64a4",
+      "sourceId": "law-iur1-ddr-00621",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/DDR.00697.html",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133904",
+      "retrievedAt": "2026-09-24",
+      "sha256": "80bcf835a809e10c0716e0bd07bf497bbd7f7d2a5570b84515bf5d0952f96ab1",
+      "sourceId": "law-iur1-ddr-00697",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/DDR.02405.html",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133906",
+      "retrievedAt": "2026-09-24",
+      "sha256": "e85651314faa3d23aa1b02a72cea6a19f1c0e9acafd2b04e770520f4e6af2c81",
+      "sourceId": "law-iur1-ddr-02405",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/Exam-Rules-260306.pdf",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Exam-Rules-260306.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "7afc47e0ced01c7939eade95a2a4f2d0c5e1574dc2fee0b40adcde360dfe2152",
+      "sourceId": "msc-cs-exams-2026-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/Plan_BCo_CH_fr.pdf",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BCo_CH_fr.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "6d1c6e4ef13a7ea417379a73e31111e5c23ca419e261b014a7daa93cee8912db",
+      "sourceId": "chemistry-minor-2026-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/Plan_BCo_MA_fr.pdf",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BCo_MA_fr.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "3576095531401ee4c3bdf817a7558568821fdd9740131273fa68231d2b7f6d09",
+      "sourceId": "math-minor-2026-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/Plan_BSc_BL_fr.pdf",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BSc_BL_fr.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "29d17877f8b2a79ac9a65fe7a8b144c67c94ca8ca9eecb388f394a5240e13ed8",
+      "sourceId": "biology-major-2026-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/Plan_BSc_IN_fr.pdf",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BSc_IN_fr.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "c031431e2b80d835218ee14a6edf20649afcd63f23173c82c9efb3a5059262bd",
+      "sourceId": null,
+      "reviewScope": "Research-only evidence; no eligibility derived automatically"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/Studienplan-120522.pdf",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Studienplan-120522.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "909c878d16321f0eb5c5387b15de6152aa8b087fed0bcedce7f4d62745c23b73",
+      "sourceId": "msc-cs-study-plan-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/Teaching-Unit-Rules-260728.pdf",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Teaching-Unit-Rules-260728.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "43682cced7bb0c41997771e46490f29889d8978c4f50913227b1cc5ae491202d",
+      "sourceId": "msc-cs-teaching-rules-2026-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/bi-courses.html",
+      "url": "https://www.unifr.ch/inf/fr/ba-cours-infgest.html",
+      "retrievedAt": "2026-09-24",
+      "sha256": "35e8675906568d690cc3594b1ae84a8ac9cd1ed53ff049039b2fa391dbe8995c",
+      "sourceId": "bi-major-summary-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/bi-major.html",
+      "url": "https://www.unifr.ch/inf/fr/bsc-informatique-gestion/",
+      "retrievedAt": "2026-09-24",
+      "sha256": "2b0d85d3c5acf479a0ecea5a6cbe591cf5959dcf80a3d943fd0c6fa4dbf58ca0",
+      "sourceId": null,
+      "reviewScope": "Research-only evidence; no eligibility derived automatically"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/bi-structure.png",
+      "url": "https://www.unifr.ch/inf/assets/public/studies/plan_etudes_bachelor_informatique_gestion.png",
+      "retrievedAt": "2026-09-24",
+      "sha256": "9d3b6bc1464f798cf5f19843d249790a6044293c024f72add9dcc3ff3ec5ea47",
+      "sourceId": null,
+      "reviewScope": "Research-only evidence; no eligibility derived automatically"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/economics-master.html",
+      "url": "https://www.unifr.ch/ses/en/studies/master/ma-economics.html",
+      "retrievedAt": "2026-09-24",
+      "sha256": "bf5dfdffc537c774924b5f35f681f35bb8adae926b6e151d567fe1d15253ec10",
+      "sourceId": "economics-master-structure-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/german60.pdf",
+      "url": "https://www.unifr.ch/germanistik/assets/public/files/studienplaene/PLE_Germanistik_BA60_221207.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "5055ee7dff55b64e69e0eda8aedd3f1e3645c373bb359a9c6c1b2f976250207e",
+      "sourceId": "german60-plan-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/history120.pdf",
+      "url": "https://www.unifr.ch/hist/assets/public/files/studium/studienplaene-ba-2016/Histoire_BA_120_250216.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "98e82767b3dc062ffb44bc1cf15ddbb4693348d5b024118cb68fc02d103d643b",
+      "sourceId": "history120-plan-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/msc-cs-courses.html",
+      "url": "https://mcs.unibnf.ch/program/courses-timetable/course-list/",
+      "retrievedAt": "2026-09-24",
+      "sha256": "46da94507327208d36cdce2d6da9becb1cb3056b1d5b19347b6cb46f3f20a003",
+      "sourceId": null,
+      "reviewScope": "Research-only evidence; no eligibility derived automatically"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/msc-cs.html",
+      "url": "https://mcs.unibnf.ch/program/",
+      "retrievedAt": "2026-09-24",
+      "sha256": "74b3f9e2f7885def93f2357609585664dd6e08c83afabbc8a045c3d0d967de38",
+      "sourceId": null,
+      "reviewScope": "Research-only evidence; no eligibility derived automatically"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/psychology-de.html",
+      "url": "https://commonweb.unifr.ch/psycho/Pub/web_site/bsc-180-de.html",
+      "retrievedAt": "2026-09-24",
+      "sha256": "fc80b6ef0dc025c476f47828077af0466d9cbee93865f599ede22accf3c62f51",
+      "sourceId": "psychology-de-courses-2026-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/psychology-fr-plan.pdf",
+      "url": "https://www.unifr.ch/psycho/assets/public/bachelor/plans/PLE_Psycho_BA180_Fr_rat29012019_v03.pdf",
+      "retrievedAt": "2026-09-24",
+      "sha256": "e33fbdbd51f2e60608ba4d45143e94b31887d17bd3ec5f638e61bb68d15751ad",
+      "sourceId": "psychology-fr-plan-review",
+      "reviewScope": "Published rule citations"
+    },
+    {
+      "archive": "data/programmes/sources/2026-09-24/psychology-fr.html",
+      "url": "https://commonweb.unifr.ch/psycho/Pub/web_site/bsc-180-fr.html",
+      "retrievedAt": "2026-09-24",
+      "sha256": "fc6a35b1c8c8e348ebdb47b130eabe13f8b248f7350ad354b5e2921036fce63b",
+      "sourceId": "psychology-fr-courses-2026-review",
+      "reviewScope": "Published rule citations"
+    }
+  ],
+  "visualInspection": {
+    "Plan_BCo_MA_fr.pdf": [
+      6
+    ],
+    "psychology-fr-plan.pdf": [
+      22
+    ],
+    "Plan_BCo_CH_fr.pdf": [
+      3
+    ],
+    "Studienplan-120522.pdf": [
+      1,
+      2,
+      3
+    ],
+    "Plan_BSc_BL_fr.pdf": [
+      8,
+      9,
+      10,
+      12
+    ],
+    "history120.pdf": [
+      4
+    ],
+    "german60.pdf": [
+      4,
+      5
+    ],
+    "../2026-09-21/curricula/law-plan-de.pdf": [
+      1
+    ]
+  },
+  "sourceConflicts": [
+    {
+      "programme": "CS120",
+      "finding": "Current source still states120 but validation44+79=123; unchanged unresolved."
+    },
+    {
+      "programme": "BI180",
+      "finding": "Undated department summary60+60+32.5+14+15=181.5 versus180; no fabricated reduction."
+    },
+    {
+      "programme": "LawIURI",
+      "finding": "Full-time source explicitly lists six subjects60 plus separate propaedeutic written work3.63 is not a conflict once written work is included. Group exam validation remains unresolved."
+    },
+    {
+      "programme": "PsychologyM3",
+      "finding": "2019 plan combines NeurobiologyI+II; annual table separates3+3; French2026/27 table labels these rows2027/28. No automatic equivalence/pair rule introduced."
+    }
+  ],
+  "negativeControls": [
+    "Altered MathPDF archive rejected by recipes:check with digest mismatch, original bytes restored.",
+    "Removed French thesisL25.00134 mapping caused regression failure; restored registry passes."
+  ],
+  "validation": [
+    "recipes:build passed",
+    "recipes:check passed",
+    "recipes:test5/5 passed",
+    "domain tests164/164 passed",
+    "new curriculum data tests9/9 passed"
+  ],
+  "notClaimed": [
+    "No degree completion certification",
+    "No private transcript/grade/attempt validation",
+    "No inferred JMCS-to-SIN identifier crosswalk",
+    "No title-based History/German eligibility",
+    "No publication or production changes by this worker"
+  ]
+}

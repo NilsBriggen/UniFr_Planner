@@ -1701,6 +1701,166 @@
       ],
       "sha256": "1eb56a72cff8da1a76baab9bd5da2651c314c6a6cc03be487563ade54babdcec",
       "url": "https://studies.unifr.ch/en/course-offerings/courses/?ba=1&do=0&ma=1"
+    },
+    {
+      "id": "math-minor-2026-review",
+      "programmeIds": [
+        "bachelor-sci-mathematics"
+      ],
+      "sha256": "3576095531401ee4c3bdf817a7558568821fdd9740131273fa68231d2b7f6d09",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BCo_MA_fr.pdf"
+    },
+    {
+      "id": "psychology-fr-plan-review",
+      "programmeIds": [
+        "bachelor-pedpsy-psychology"
+      ],
+      "sha256": "e33fbdbd51f2e60608ba4d45143e94b31887d17bd3ec5f638e61bb68d15751ad",
+      "url": "https://www.unifr.ch/psycho/assets/public/bachelor/plans/PLE_Psycho_BA180_Fr_rat29012019_v03.pdf"
+    },
+    {
+      "id": "psychology-fr-courses-2026-review",
+      "programmeIds": [
+        "bachelor-pedpsy-psychology"
+      ],
+      "sha256": "fc6a35b1c8c8e348ebdb47b130eabe13f8b248f7350ad354b5e2921036fce63b",
+      "url": "https://commonweb.unifr.ch/psycho/Pub/web_site/bsc-180-fr.html"
+    },
+    {
+      "id": "law-iur1-ddr-02405",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "e85651314faa3d23aa1b02a72cea6a19f1c0e9acafd2b04e770520f4e6af2c81",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133906"
+    },
+    {
+      "id": "law-iur1-ddr-00697",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "80bcf835a809e10c0716e0bd07bf497bbd7f7d2a5570b84515bf5d0952f96ab1",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133904"
+    },
+    {
+      "id": "law-iur1-ddr-00621",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "0c3a1b55c3bbd91d00cf327cd9f63eb582bddd0c116e28c66875b1acec1f64a4",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133907"
+    },
+    {
+      "id": "law-iur1-ddr-00353",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "c7747f1e00a8f9c234707d51cdcb22322e796abdb655a954b5df5f9332977d2f",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133902"
+    },
+    {
+      "id": "law-iur1-ddr-00490",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "5b94aff57c3a9b46ce31d8565484e1f0b71a604d718a5111668e65e646e956e5",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133905"
+    },
+    {
+      "id": "law-iur1-ddr-00358",
+      "programmeIds": [
+        "bachelor-ius-law"
+      ],
+      "sha256": "9ef6022d2f1d4e8c6103e956482c8aa35d8f25e23dc38ee469c745595bdc3363",
+      "url": "https://www.unifr.ch/timetable/en/course.html?show=133903"
+    },
+    {
+      "id": "msc-cs-study-plan-review",
+      "programmeIds": [
+        "master-digitinf-informatics"
+      ],
+      "sha256": "909c878d16321f0eb5c5387b15de6152aa8b087fed0bcedce7f4d62745c23b73",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Studienplan-120522.pdf"
+    },
+    {
+      "id": "msc-cs-track-annex-review",
+      "programmeIds": [
+        "master-digitinf-informatics"
+      ],
+      "sha256": "82592eb9c1cdc890ea8db641872c89b9bfa208fecd399f189c0fcb58a8184765",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Anhang-zum-Studienplan-230511.pdf"
+    },
+    {
+      "id": "msc-cs-exams-2026-review",
+      "programmeIds": [
+        "master-digitinf-informatics"
+      ],
+      "sha256": "7afc47e0ced01c7939eade95a2a4f2d0c5e1574dc2fee0b40adcde360dfe2152",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Exam-Rules-260306.pdf"
+    },
+    {
+      "id": "msc-cs-teaching-rules-2026-review",
+      "programmeIds": [
+        "master-digitinf-informatics"
+      ],
+      "sha256": "43682cced7bb0c41997771e46490f29889d8978c4f50913227b1cc5ae491202d",
+      "url": "https://mcs.unibnf.ch/wp-content/uploads/Teaching-Unit-Rules-260728.pdf"
+    },
+    {
+      "id": "economics-master-structure-review",
+      "programmeIds": [
+        "master-eco-economics"
+      ],
+      "sha256": "bf5dfdffc537c774924b5f35f681f35bb8adae926b6e151d567fe1d15253ec10",
+      "url": "https://www.unifr.ch/ses/en/studies/master/ma-economics.html"
+    },
+    {
+      "id": "bi-major-summary-review",
+      "programmeIds": [
+        "bachelor-digitinf-businessinformatics"
+      ],
+      "sha256": "35e8675906568d690cc3594b1ae84a8ac9cd1ed53ff049039b2fa391dbe8995c",
+      "url": "https://www.unifr.ch/inf/fr/ba-cours-infgest.html"
+    },
+    {
+      "id": "chemistry-minor-2026-review",
+      "programmeIds": [
+        "bachelor-sci-chemistry"
+      ],
+      "sha256": "6d1c6e4ef13a7ea417379a73e31111e5c23ca419e261b014a7daa93cee8912db",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BCo_CH_fr.pdf"
+    },
+    {
+      "id": "psychology-de-courses-2026-review",
+      "programmeIds": [
+        "bachelor-pedpsy-psychology"
+      ],
+      "sha256": "fc80b6ef0dc025c476f47828077af0466d9cbee93865f599ede22accf3c62f51",
+      "url": "https://commonweb.unifr.ch/psycho/Pub/web_site/bsc-180-de.html"
+    },
+    {
+      "id": "biology-major-2026-review",
+      "programmeIds": [
+        "bachelor-sci-biology"
+      ],
+      "sha256": "29d17877f8b2a79ac9a65fe7a8b144c67c94ca8ca9eecb388f394a5240e13ed8",
+      "url": "https://cdn.unifr.ch/scimed/plans/current/Plan_BSc_BL_fr.pdf"
+    },
+    {
+      "id": "history120-plan-review",
+      "programmeIds": [
+        "bachelor-hist-history"
+      ],
+      "sha256": "98e82767b3dc062ffb44bc1cf15ddbb4693348d5b024118cb68fc02d103d643b",
+      "url": "https://www.unifr.ch/hist/assets/public/files/studium/studienplaene-ba-2016/Histoire_BA_120_250216.pdf"
+    },
+    {
+      "id": "german60-plan-review",
+      "programmeIds": [
+        "bachelor-lang-german"
+      ],
+      "sha256": "5055ee7dff55b64e69e0eda8aedd3f1e3645c373bb359a9c6c1b2f976250207e",
+      "url": "https://www.unifr.ch/germanistik/assets/public/files/studienplaene/PLE_Germanistik_BA60_221207.pdf"
     }
   ],
   "edition": "2026-27.2",

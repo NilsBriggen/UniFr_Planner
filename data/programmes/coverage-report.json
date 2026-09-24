@@ -333,7 +333,6 @@
         "Full-time exam regulation and attempt/progression rules not fully retrieved or validated",
         "Archived law-regulation-2023 is PART-TIME regulation; must not use it as full-time authority",
         "Transition regulation archived and scope checked, but detailed conversion rules not encoded",
-        "Stable eligible course codes absent from structural plan",
         "Noncredit obligation census incomplete",
         "Programme review incomplete"
       ],
@@ -341,7 +340,13 @@
       "sourceIds": [
         "directory-bachelor-ius-law",
         "law-plan-de",
-        "law-transition"
+        "law-transition",
+        "law-iur1-ddr-02405",
+        "law-iur1-ddr-00697",
+        "law-iur1-ddr-00621",
+        "law-iur1-ddr-00353",
+        "law-iur1-ddr-00490",
+        "law-iur1-ddr-00358"
       ],
       "title": "Law",
       "variants": [
@@ -350,22 +355,15 @@
             "Full-time exam regulation and attempt/progression rules not fully retrieved or validated",
             "Archived law-regulation-2023 is PART-TIME regulation; must not use it as full-time authority",
             "Transition regulation archived and scope checked, but detailed conversion rules not encoded",
-            "Stable eligible course codes absent from structural plan",
             "Noncredit obligation census incomplete",
+            "IUR I six annual subjects have reviewed exact French codes and total60; the additional3-credit propaedeutic written work remains a separate unmapped requirement. IUR II/III codes remain unmapped.",
             "Full-time exam regulation and attempt/progression rules not fully retrieved or validated",
             "Archived law-regulation-2023 is PART-TIME regulation; must not use it as full-time authority",
             "Transition regulation archived and scope checked, but detailed conversion rules not encoded",
-            "Stable eligible course codes absent from structural plan",
             "Noncredit obligation census incomplete",
             "Component review incomplete",
             "Unreviewed requirement: law-180",
             "Unreviewed requirement: law-iur-1",
-            "Unreviewed requirement: law-iur-1-1",
-            "Unreviewed requirement: law-iur-1-2",
-            "Unreviewed requirement: law-iur-1-3",
-            "Unreviewed requirement: law-iur-1-4",
-            "Unreviewed requirement: law-iur-1-5",
-            "Unreviewed requirement: law-iur-1-6",
             "Unreviewed requirement: law-iur-1-7",
             "Unreviewed requirement: law-iur-2",
             "Unreviewed requirement: law-iur-2-1",
@@ -392,7 +390,6 @@
             "Full-time exam regulation and attempt/progression rules not fully retrieved or validated",
             "Archived law-regulation-2023 is PART-TIME regulation; must not use it as full-time authority",
             "Transition regulation archived and scope checked, but detailed conversion rules not encoded",
-            "Stable eligible course codes absent from structural plan",
             "Noncredit obligation census incomplete",
             "Component review incomplete",
             "Missing cohort applicability",
@@ -406,7 +403,6 @@
             "Full-time exam regulation and attempt/progression rules not fully retrieved or validated",
             "Archived law-regulation-2023 is PART-TIME regulation; must not use it as full-time authority",
             "Transition regulation archived and scope checked, but detailed conversion rules not encoded",
-            "Stable eligible course codes absent from structural plan",
             "Noncredit obligation census incomplete",
             "Component review incomplete",
             "Missing cohort applicability",
@@ -867,7 +863,8 @@
       ],
       "programmeId": "bachelor-lang-german",
       "sourceIds": [
-        "directory-bachelor-lang-german"
+        "directory-bachelor-lang-german",
+        "german60-plan-review"
       ],
       "title": "German",
       "variants": [
@@ -883,11 +880,40 @@
         },
         {
           "gaps": [
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
+            "Five compulsory12-credit modules; three written seminar papers and two-part library training explicitly represented. Annual exact codes, including auditedL03.00759, remain unreviewed.",
+            "Course language and all assessed work are German; language preparation is outside this60-credit subject. Foundation-first is guidance, not an invented universal course prerequisite.",
+            "One repeat within four examination sessions; second failure of starred obligatory units excludes the affected programmes. Other failed units have replacement rules. Seminar papers count double for module grades; not certified by the credit engine.",
+            "Effective AS2023; voluntary migration from2016 plan needs adviser confirmation. All students must follow the new plan from AS2027; existing plans remain pinned.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
-            "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: german60",
+            "Unreviewed requirement: german-foundation",
+            "Unreviewed requirement: german-foundation-0",
+            "Unreviewed requirement: german-foundation-1",
+            "Unreviewed requirement: german-foundation-2",
+            "Unreviewed requirement: german-foundation-3",
+            "Unreviewed requirement: german-linguistics",
+            "Unreviewed requirement: german-linguistics-0",
+            "Unreviewed requirement: german-linguistics-1",
+            "Unreviewed requirement: german-linguistics-2",
+            "Unreviewed requirement: german-linguistics-3",
+            "Unreviewed requirement: german-medieval",
+            "Unreviewed requirement: german-medieval-0",
+            "Unreviewed requirement: german-medieval-1",
+            "Unreviewed requirement: german-medieval-2",
+            "Unreviewed requirement: german-medieval-3",
+            "Unreviewed requirement: german-literature",
+            "Unreviewed requirement: german-literature-0",
+            "Unreviewed requirement: german-literature-1",
+            "Unreviewed requirement: german-literature-2",
+            "Unreviewed requirement: german-literature-3",
+            "Unreviewed requirement: german-historical",
+            "Unreviewed requirement: german-historical-0",
+            "Unreviewed requirement: german-historical-1",
+            "Unreviewed requirement: german-historical-2",
+            "Unreviewed requirement: german-historical-3",
+            "Unreviewed requirement: german-library-training",
+            "Unreviewed requirement: german-assessment"
           ],
           "id": "minor-60"
         }
@@ -1232,17 +1258,49 @@
       ],
       "programmeId": "bachelor-hist-history",
       "sourceIds": [
-        "directory-bachelor-hist-history"
+        "directory-bachelor-hist-history",
+        "history120-plan-review"
       ],
       "title": "History",
       "variants": [
         {
           "gaps": [
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
+            "Source total15+4×15+15+18+12=120. Stable annual code/module mappings, including auditedL14.02354, remain unreviewed.",
+            "Advanced and Bachelor-thesis modules must use different historical periods. Methodology may be one6-credit or two3-credit units; information/bibliographic competence has separate evaluation.",
+            "Reading proficiency in at least two Swiss national languages plus English is required. Latin/Greek recommendations for later Master specialisation are not universal Bachelor duties.",
+            "Article3 excludes History, History of Modernity and Contemporary History as the secondary subject. Combination and individual recognition need review; assessment is not certified.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
-            "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: history120",
+            "Unreviewed requirement: history-introduction",
+            "Unreviewed requirement: history-base-ancient",
+            "Unreviewed requirement: history-ancient-lectures",
+            "Unreviewed requirement: history-ancient-proseminar",
+            "Unreviewed requirement: history-ancient-choice",
+            "Unreviewed requirement: history-base-medieval",
+            "Unreviewed requirement: history-medieval-lectures",
+            "Unreviewed requirement: history-medieval-proseminar",
+            "Unreviewed requirement: history-medieval-choice",
+            "Unreviewed requirement: history-base-modern",
+            "Unreviewed requirement: history-modern-lectures",
+            "Unreviewed requirement: history-modern-proseminar",
+            "Unreviewed requirement: history-modern-choice",
+            "Unreviewed requirement: history-base-contemporary",
+            "Unreviewed requirement: history-contemporary-lectures",
+            "Unreviewed requirement: history-contemporary-proseminar",
+            "Unreviewed requirement: history-contemporary-choice",
+            "Unreviewed requirement: history-advanced",
+            "Unreviewed requirement: history-advanced-lecture",
+            "Unreviewed requirement: history-advanced-seminar",
+            "Unreviewed requirement: history-advanced-choice",
+            "Unreviewed requirement: history-thesis-module",
+            "Unreviewed requirement: history-thesis-lecture",
+            "Unreviewed requirement: history-thesis-seminar",
+            "Unreviewed requirement: history-thesis",
+            "Unreviewed requirement: history-thesis-choice",
+            "Unreviewed requirement: history-softskills",
+            "Unreviewed requirement: history-period-validation",
+            "Unreviewed requirement: history-assessment-languages"
           ],
           "id": "major-120"
         },
@@ -2001,15 +2059,18 @@
         "M11 eligibility remains manual until explicit softskills labels are captured",
         "Grade/attempt and prerequisite state not executable in current pure credit engine",
         "M3 Neurobiology I+II combined6 in old plan, current table lists each3; whether pair compulsory as one choice needs clarification",
-        "French cross-language equivalents not fully mapped",
         "Some current elective rows differ from2019 illustrative list; annual department membership applies only2026/27",
+        "French/German compulsory alternatives and freely combinable M8 rows are reviewed for2026/27. M3 equivalence exclusions and combined Neurobiology choice remain unresolved; French Neurobiology rows are labelled2027/28 in the annual2026/27 page and are not imported as current eligibility.",
         "Programme review incomplete"
       ],
       "programmeId": "bachelor-pedpsy-psychology",
       "sourceIds": [
         "directory-bachelor-pedpsy-psychology",
         "psychology-180",
-        "psychology-courses"
+        "psychology-courses",
+        "psychology-fr-plan-review",
+        "psychology-fr-courses-2026-review",
+        "psychology-de-courses-2026-review"
       ],
       "title": "Psychology",
       "variants": [
@@ -2018,74 +2079,36 @@
             "M11 eligibility remains manual until explicit softskills labels are captured",
             "Grade/attempt and prerequisite state not executable in current pure credit engine",
             "M3 Neurobiology I+II combined6 in old plan, current table lists each3; whether pair compulsory as one choice needs clarification",
-            "French cross-language equivalents not fully mapped",
             "Some current elective rows differ from2019 illustrative list; annual department membership applies only2026/27",
+            "Annual French mappings apply only to2026/27; M3 equivalents and future-dated Neurobiology entries require review.",
             "M11 eligibility remains manual until explicit softskills labels are captured",
             "Grade/attempt and prerequisite state not executable in current pure credit engine",
             "M3 Neurobiology I+II combined6 in old plan, current table lists each3; whether pair compulsory as one choice needs clarification",
-            "French cross-language equivalents not fully mapped",
             "Some current elective rows differ from2019 illustrative list; annual department membership applies only2026/27",
+            "French/German compulsory alternatives and freely combinable M8 rows are reviewed for2026/27. M3 equivalence exclusions and combined Neurobiology choice remain unresolved; French Neurobiology rows are labelled2027/28 in the annual2026/27 page and are not imported as current eligibility.",
             "Component review incomplete",
             "Unreviewed requirement: psychology-bsc180",
             "Incomplete source citation: psychology-bsc180",
             "Unreviewed requirement: psy-m1",
             "Incomplete source citation: psy-m1",
-            "Unreviewed requirement: psy-m1-L25.00002",
-            "Incomplete source citation: psy-m1-L25.00002",
-            "Unreviewed requirement: psy-m1-L25.00007",
-            "Incomplete source citation: psy-m1-L25.00007",
-            "Unreviewed requirement: psy-m1-L25.01025",
-            "Incomplete source citation: psy-m1-L25.01025",
             "Unreviewed requirement: psy-m2",
             "Incomplete source citation: psy-m2",
-            "Unreviewed requirement: psy-m2-L25.00302",
-            "Incomplete source citation: psy-m2-L25.00302",
-            "Unreviewed requirement: psy-m2-L25.01022",
-            "Incomplete source citation: psy-m2-L25.01022",
             "Unreviewed requirement: psy-m3",
             "Incomplete source citation: psy-m3",
             "Unreviewed requirement: psy-m4",
             "Incomplete source citation: psy-m4",
-            "Unreviewed requirement: psy-m4-L25.01113",
-            "Incomplete source citation: psy-m4-L25.01113",
-            "Unreviewed requirement: psy-m4-L25.01084",
-            "Incomplete source citation: psy-m4-L25.01084",
             "Unreviewed requirement: psy-m5",
             "Incomplete source citation: psy-m5",
-            "Unreviewed requirement: psy-m5-L25.01021",
-            "Incomplete source citation: psy-m5-L25.01021",
-            "Unreviewed requirement: psy-m5-L25.01054",
-            "Incomplete source citation: psy-m5-L25.01054",
             "Unreviewed requirement: psy-m6",
             "Incomplete source citation: psy-m6",
-            "Unreviewed requirement: psy-m6-L25.01023",
-            "Incomplete source citation: psy-m6-L25.01023",
-            "Unreviewed requirement: psy-m6-L25.01204",
-            "Incomplete source citation: psy-m6-L25.01204",
             "Unreviewed requirement: psy-m7",
             "Incomplete source citation: psy-m7",
-            "Unreviewed requirement: psy-m7-L25.00042",
-            "Incomplete source citation: psy-m7-L25.00042",
-            "Unreviewed requirement: psy-m7-L25.01053",
-            "Incomplete source citation: psy-m7-L25.01053",
-            "Unreviewed requirement: psy-m7-L25.00669",
-            "Incomplete source citation: psy-m7-L25.00669",
-            "Unreviewed requirement: psy-m7-L25.01050",
-            "Incomplete source citation: psy-m7-L25.01050",
             "Unreviewed requirement: psy-m8",
             "Incomplete source citation: psy-m8",
             "Unreviewed requirement: psy-m9",
             "Incomplete source citation: psy-m9",
-            "Unreviewed requirement: psy-m9-L25.00652",
-            "Incomplete source citation: psy-m9-L25.00652",
-            "Unreviewed requirement: psy-m9-L25.01027",
-            "Incomplete source citation: psy-m9-L25.01027",
             "Unreviewed requirement: psy-m10",
             "Incomplete source citation: psy-m10",
-            "Unreviewed requirement: psy-m10-L25.00133",
-            "Incomplete source citation: psy-m10-L25.00133",
-            "Unreviewed requirement: psy-m10-L25.01028",
-            "Incomplete source citation: psy-m10-L25.01028",
             "Unreviewed requirement: psy-m11",
             "Incomplete source citation: psy-m11",
             "Unreviewed requirement: psy-experimental-hours",
@@ -2099,8 +2122,8 @@
             "M11 eligibility remains manual until explicit softskills labels are captured",
             "Grade/attempt and prerequisite state not executable in current pure credit engine",
             "M3 Neurobiology I+II combined6 in old plan, current table lists each3; whether pair compulsory as one choice needs clarification",
-            "French cross-language equivalents not fully mapped",
             "Some current elective rows differ from2019 illustrative list; annual department membership applies only2026/27",
+            "French/German compulsory alternatives and freely combinable M8 rows are reviewed for2026/27. M3 equivalence exclusions and combined Neurobiology choice remain unresolved; French Neurobiology rows are labelled2027/28 in the annual2026/27 page and are not imported as current eligibility.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -2113,8 +2136,8 @@
             "M11 eligibility remains manual until explicit softskills labels are captured",
             "Grade/attempt and prerequisite state not executable in current pure credit engine",
             "M3 Neurobiology I+II combined6 in old plan, current table lists each3; whether pair compulsory as one choice needs clarification",
-            "French cross-language equivalents not fully mapped",
             "Some current elective rows differ from2019 illustrative list; annual department membership applies only2026/27",
+            "French/German compulsory alternatives and freely combinable M8 rows are reviewed for2026/27. M3 equivalence exclusions and combined Neurobiology choice remain unresolved; French Neurobiology rows are labelled2027/28 in the annual2026/27 page and are not imported as current eligibility.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -2183,17 +2206,28 @@
       ],
       "programmeId": "bachelor-sci-biology",
       "sourceIds": [
-        "directory-bachelor-sci-biology"
+        "directory-bachelor-sci-biology",
+        "biology-major-2026-review"
       ],
       "title": "Biology",
       "variants": [
         {
           "gaps": [
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
+            "Four source validation packages36+24+37+23=120. Exact codes mapped for23 fixed units (72ECTS);48 propaedeutic credits need branch-specific code mapping.",
+            "Audited SBL.00069 is absent from the current compulsory table; no title or old-course equivalence is inferred.",
+            "Assessment annexes, two scientific-integrity library trainings (§1.6), transition applicability and CH60 replacement of already credited chemistry remain unresolved.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
-            "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: biology120",
+            "Unreviewed requirement: biology-general-propaedeutic",
+            "Unreviewed requirement: biology-prop-0",
+            "Unreviewed requirement: biology-prop-1",
+            "Unreviewed requirement: biology-prop-2",
+            "Unreviewed requirement: biology-domain-propaedeutic",
+            "Unreviewed requirement: biology-prop-variant1",
+            "Unreviewed requirement: biology-organisms-thesis",
+            "Unreviewed requirement: biology-molecules-practical",
+            "Unreviewed requirement: biology-assessment"
           ],
           "id": "major-120"
         },
@@ -2227,12 +2261,12 @@
       "faculty": "science-medicine",
       "gaps": [
         "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-        "Teaching-track minor must be a recognised teaching subject; the list and subject-specific entrance conditions remain unreviewed.",
         "Programme review incomplete"
       ],
       "programmeId": "bachelor-sci-chemistry",
       "sourceIds": [
-        "directory-bachelor-sci-chemistry"
+        "directory-bachelor-sci-chemistry",
+        "chemistry-minor-2026-review"
       ],
       "title": "Chemistry",
       "variants": [
@@ -2240,7 +2274,6 @@
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Teaching-track minor must be a recognised teaching subject; the list and subject-specific entrance conditions remain unreviewed.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -2250,8 +2283,8 @@
         {
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Teaching-track minor must be a recognised teaching subject; the list and subject-specific entrance conditions remain unreviewed.",
+            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -2260,12 +2293,14 @@
         },
         {
           "gaps": [
+            "CH60 ordinary minor is distinct from CHD60 teaching variant. Baseline obligatory rows total35;25 additional credits are selected with the adviser.",
+            "Previously credited propaedeutic/other-programme units marked* require replacement, not reuse. SCH.01031 and SCH.01024 exclude one another. Personal replacements and examination annex remain unresolved.",
+            "SCH.02235 is not automatically eligible without prior SCH.01031(orSCH.01024),SCH.01033 andSCH.01072. SCH.02350 requires priorSCH.02339. These conditionally eligible options remain excluded pending individual prerequisite evidence.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Teaching-track minor must be a recognised teaching subject; the list and subject-specific entrance conditions remain unreviewed.",
             "Component review incomplete",
-            "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: chem60",
+            "Unreviewed requirement: chem60-options",
+            "Unreviewed requirement: chem60-individual-validation"
           ],
           "id": "minor-60"
         },
@@ -2273,7 +2308,6 @@
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Teaching-track minor must be a recognised teaching subject; the list and subject-specific entrance conditions remain unreviewed.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -2419,7 +2453,8 @@
     {
       "curriculumUrls": [
         "https://studies.unifr.ch/go/mjkY5",
-        "https://studies.unifr.ch/go/0fTFn"
+        "https://studies.unifr.ch/go/0fTFn",
+        "https://cdn.unifr.ch/scimed/plans/current/Plan_BCo_MA_fr.pdf"
       ],
       "faculty": "science-medicine",
       "gaps": [
@@ -2428,7 +2463,8 @@
       ],
       "programmeId": "bachelor-sci-mathematics",
       "sourceIds": [
-        "directory-bachelor-sci-mathematics"
+        "directory-bachelor-sci-mathematics",
+        "math-minor-2026-review"
       ],
       "title": "Mathematics",
       "variants": [
@@ -2444,11 +2480,13 @@
         },
         {
           "gaps": [
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
+            "Fixed teaching-unit codes reviewed against 2026 MATH60 table. Adviser approval is required for the optional courses; SMA.038xx is a seminar family, not an eligible exact code.",
+            "Assessment annex, Article25 validation and earlier-plan transition annex remain unreviewed. The optional MATH+30 teaching qualification is not a duty of this Bachelor minor.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
-            "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: math60",
+            "Unreviewed requirement: math60-seminar",
+            "Unreviewed requirement: math60-options"
           ],
           "id": "minor-60"
         },
@@ -2648,17 +2686,30 @@
         "ses-minors",
         "ses-full",
         "bi-department",
-        "bi-60-web-extract"
+        "bi-60-web-extract",
+        "bi-major-summary-review"
       ],
       "title": "Business Informatics",
       "variants": [
         {
           "gaps": [
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
+            "Department summary lists first-year60, second-year60, third-year compulsory32.5, electives at least14 and thesis15: minimum181.5 versus advertised180. Do not reduce a rule to conceal this source conflict.",
+            "Summary uses legacy MAN/ECO codes and omits stable codes for most compulsory courses. Current SES regulation and annual code crosswalk remain unreviewed; no title guessing.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
             "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: bi180",
+            "Incomplete source citation: bi180",
+            "Unreviewed requirement: bi-year1",
+            "Incomplete source citation: bi-year1",
+            "Unreviewed requirement: bi-year2",
+            "Incomplete source citation: bi-year2",
+            "Unreviewed requirement: bi-year3-core",
+            "Incomplete source citation: bi-year3-core",
+            "Unreviewed requirement: bi-year3-options",
+            "Incomplete source citation: bi-year3-options",
+            "Unreviewed requirement: bi-thesis",
+            "Incomplete source citation: bi-thesis"
           ],
           "id": "major-180"
         },
@@ -3083,21 +3134,34 @@
       "faculty": "ses",
       "gaps": [
         "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-        "Programme review incomplete"
+        "Programme review incomplete",
+        "Programme source review incomplete"
       ],
       "programmeId": "master-eco-economics",
       "sourceIds": [
-        "directory-master-eco-economics"
+        "directory-master-eco-economics",
+        "economics-master-structure-review"
       ],
       "title": "Economics",
       "variants": [
         {
           "gaps": [
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
+            "Faculty summary: mandatory12 + elective58 + thesis20 =90. Mandatory units are Advanced Microeconomics and Econometric Methods and Applications; exact annual code/version mapping requires regulatory review.",
+            "Option27 is included inside the58 elective credits, never additional. Up to15 elective credits may come from other faculty courses; option membership and cap remain unresolved.",
+            "Official linked Calameo study plan returned HTTP403 on direct public retrieval24September2026. Faculty summary is archived; no inaccessible plan or guessed course title is treated as reviewed eligibility.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
             "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: economics90",
+            "Incomplete source citation: economics90",
+            "Unreviewed requirement: economics-mandatory",
+            "Incomplete source citation: economics-mandatory",
+            "Unreviewed requirement: economics-electives",
+            "Incomplete source citation: economics-electives",
+            "Unreviewed requirement: economics-thesis",
+            "Incomplete source citation: economics-thesis",
+            "Unreviewed requirement: economics-elective-conditions",
+            "Incomplete source citation: economics-elective-conditions"
           ],
           "id": "major-90"
         },
@@ -5206,7 +5270,6 @@
       "faculty": "science-medicine",
       "gaps": [
         "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-        "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
         "Programme review incomplete"
       ],
       "programmeId": "master-sci-chemistry",
@@ -5219,7 +5282,6 @@
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -5230,7 +5292,6 @@
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -5240,8 +5301,8 @@
         {
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
+            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -5388,7 +5449,6 @@
       "faculty": "science-medicine",
       "gaps": [
         "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-        "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
         "Programme review incomplete"
       ],
       "programmeId": "master-sci-mathematics",
@@ -5401,7 +5461,6 @@
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -5411,8 +5470,8 @@
         {
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
+            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
@@ -5628,31 +5687,39 @@
       "faculty": "science-medicine",
       "gaps": [
         "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-        "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
         "Programme review incomplete"
       ],
       "programmeId": "master-digitinf-informatics",
       "sourceIds": [
-        "directory-master-digitinf-informatics"
+        "directory-master-digitinf-informatics",
+        "msc-cs-study-plan-review",
+        "msc-cs-track-annex-review",
+        "msc-cs-exams-2026-review",
+        "msc-cs-teaching-rules-2026-review"
       ],
       "title": "Computer Science",
       "variants": [
         {
           "gaps": [
+            "Core90 = teaching units60 + thesis30. At least40 credits in lectures/exercises,10 in seminars/internships, and5 credits in each of at least3 tracks must be checked.",
+            "Annual JMCS course IDs use a different namespace from UniFr SIN codes; no title-only crosswalk is accepted. Bern/Neuchâtel achievements and thesis remain individual evidence.",
+            "Pass grade4.0, continuous evaluation and one-repeat limit are sourced but cannot be certified by the credit engine. Optional specialisation25 credits+same-track thesis and optional additional minor30 are not mandatory for the standalone90.",
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
             "Component review incomplete",
-            "Missing cohort applicability",
-            "Missing requirements"
+            "Unreviewed requirement: jmcs90",
+            "Unreviewed requirement: jmcs-teaching",
+            "Unreviewed requirement: jmcs-thesis",
+            "Unreviewed requirement: jmcs-teaching-types",
+            "Unreviewed requirement: jmcs-diversification",
+            "Unreviewed requirement: jmcs-assessment"
           ],
           "id": "major-90"
         },
         {
           "gaps": [
             "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
-            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "The listed Master-level minor is a teaching-diploma supplement; its eligibility outside that route is unconfirmed.",
+            "Detailed curriculum modules, assessment conditions and transition applicability require source review. Directory structure alone does not establish degree completion.",
             "Component review incomplete",
             "Missing cohort applicability",
             "Missing requirements"
