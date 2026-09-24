@@ -145,7 +145,7 @@ for (const language of ["de", "fr", "en"] as const)
     ).toBeVisible();
     await expect(page.getByLabel(t.cohort, { exact: true })).toBeDisabled();
     await page
-      .getByRole("button", { name: `${t.remove} · transfer`, exact: true })
+      .getByRole("button", { name: `${t.remove} · Transfer`, exact: true })
       .click();
     await expect(
       page.getByText("Personal advisor reference 42", { exact: true }),

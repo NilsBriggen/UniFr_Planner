@@ -24,6 +24,9 @@ import RecipeChooser from "./RecipeChooser";
 import { recipeMessages } from "./recipeMessages";
 import { studyLabel } from "./study-summary";
 import ReviewGaps from "./ReviewGaps";
+import { reconcileCredits } from "./reconciliation";
+import { reconciliationMessages } from "./reconciliationMessages";
+import { catchupMessages } from "../planner/catchup-messages";
 
 const editStudies = {
   en: "Edit studies",
@@ -48,8 +51,9 @@ function Progress({
           [t.earned, result.earned],
           [t.inProgress, result.inProgress],
           [t.planned, result.planned],
-          [t.remaining, result.remaining],
-          [t.toEarn, result.remainingToEarn],
+          ...(result.status === "needs_clarification"
+            ? []
+            : ([[t.remaining, result.remaining]] as const)),
         ] as const
       ).map(([label, amount]) => (
         <div key={label}>
@@ -60,33 +64,170 @@ function Progress({
     </dl>
   );
 }
+function CreditReconciliation({
+  plan,
+  result,
+  additional,
+  language,
+}: {
+  plan: Plan;
+  result: RequirementResult;
+  additional: RequirementResult | null;
+  language: Language;
+}) {
+  const t = reconciliationMessages[language];
+  const view = reconcileCredits(plan, result, additional, language);
+  const fmt = (n: number) =>
+    n.toLocaleString(language, { maximumFractionDigits: 6 });
+  const annual = activeScenario(plan).courses.some(
+    (course) =>
+      course.offering?.terms.some((term) => term.startsWith("AS")) &&
+      course.offering.terms.some((term) => term.startsWith("SS")),
+  );
+  return (
+    <section className="credit-reconciliation" aria-label={t.heading}>
+      <h2>{t.heading}</h2>
+      <p>
+        {t.recorded}: {fmt(view.recordedCompletedEcts)} ECTS
+        {!activeScenario(plan).courses.some(
+          (course) => course.status === "completed",
+        ) && ` · ${t.noHistory}`}
+      </p>
+      <p>
+        {t.selected}: {fmt(view.selectedEcts)} ECTS
+      </p>
+      <p>
+        {t.mapped}: {fmt(view.mappedEcts)} ECTS · {t.provisional}
+      </p>
+      <p>
+        {t.unallocated}: {fmt(view.unallocatedEcts)} ECTS
+      </p>
+      {view.unallocatedCompletedEcts > 0 && (
+        <p>
+          {t.unallocatedCompleted}: {fmt(view.unallocatedCompletedEcts)} ECTS
+        </p>
+      )}
+      {view.unknownEctsCount > 0 && (
+        <p>
+          {t.unknown}: {view.unknownEctsCount}
+        </p>
+      )}
+      <p>{t.unconfirmed}</p>
+      {annual && <p>{t.annual}</p>}
+      {(activeScenario(plan).priorStudy?.length ?? 0) > 0 && (
+        <div>
+          <h3>{t.prior}</h3>
+          <p>{t.priorHelp}</p>
+          <ul>
+            {activeScenario(plan).priorStudy?.map((record) => (
+              <li key={record.id}>
+                {record.institution} · {record.approximateEcts ?? "?"} ECTS ·{" "}
+                {record.period} ·{" "}
+                {record.status === "recognition_pending"
+                  ? catchupMessages[language].recognitionPending
+                  : catchupMessages[language].selfReported}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {view.rows.length > 0 && (
+        <div
+          className="reconciliation-scroll"
+          role="region"
+          aria-label={t.heading}
+          tabIndex={0}
+        >
+          <table>
+            <thead>
+              <tr>
+                <th>{requirementMessages[language].course}</th>
+                <th>{t.recordedCredits}</th>
+                <th>{t.requirement}</th>
+                <th>{t.contribution}</th>
+                <th>{t.balance}</th>
+                <th>{t.reason}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {view.rows.map((row) => (
+                <tr key={row.courseId}>
+                  <th scope="row">
+                    {row.title} · {row.code}
+                  </th>
+                  <td>{row.ects === null ? "?" : fmt(row.ects)} ECTS</td>
+                  <td>{row.requirement ?? "—"}</td>
+                  <td>{fmt(row.mappedEcts)} ECTS</td>
+                  <td>
+                    {row.unallocatedEcts === null
+                      ? "?"
+                      : fmt(row.unallocatedEcts)}{" "}
+                    ECTS
+                  </td>
+                  <td>
+                    {row.reason === "mapped"
+                      ? row.confidence === "model_verified"
+                        ? t.verified
+                        : t.provisional
+                      : row.reason === "additional"
+                        ? t.additional
+                        : row.reason === "unscheduled"
+                          ? t.unscheduled
+                          : row.reason === "unknown_ects"
+                            ? t.unknownEcts
+                            : row.reason === "evidence_pending"
+                              ? t.evidencePending
+                              : row.reason === "allocation_unresolved"
+                                ? t.allocationUnresolved
+                                : t.unmapped}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
 function ResultNode({
   result,
   language,
+  titles,
+  displayTitle,
   depth = 0,
 }: {
   result: RequirementResult;
   language: Language;
+  titles: Record<string, string>;
+  displayTitle?: string;
   depth?: number;
 }) {
   const t = requirementMessages[language],
     n = result.node;
+  const explanation = n.explanation[language] || n.explanation.en;
+  const extraExplanations = result.explanations.filter(
+    (entry) => (entry[language] || entry.en) !== explanation,
+  );
   return (
     <li className="requirement-node">
       <details open={depth === 0 && result.children.length > 0}>
         <summary className="requirement-title">
-          <strong>{n.title[language]}</strong>{" "}
+          <strong>{displayTitle ?? n.title[language] ?? n.title.en}</strong>{" "}
           <span className={`requirement-status ${result.status}`}>
             {t[result.status]}
           </span>
         </summary>
-        <p>{n.explanation[language]}</p>
-        {result.explanations.length > 0 && (
+        {(n.kind !== "all_of" ||
+          explanation !== (n.title[language] || n.title.en)) && (
+          <p>{explanation}</p>
+        )}
+        {extraExplanations.length > 0 && (
           <div>
             <strong>{recipeMessages[language].prerequisite}</strong>
             <ul>
-              {result.explanations.map((explanation, i) => (
-                <li key={i}>{explanation[language]}</li>
+              {extraExplanations.map((entry, i) => (
+                <li key={i}>{entry[language] || entry.en}</li>
               ))}
             </ul>
           </div>
@@ -97,11 +238,26 @@ function ResultNode({
             {t.courses}: {result.remainingCourses}
           </p>
         )}
+        {"codes" in n &&
+          (result.remainingCourses > 0 || result.remaining > 0) && (
+            <p>
+              {n.reviewStatus === "verified" && n.codes.length === 1 ? (
+                <Link
+                  to={`/catalogue?q=${encodeURIComponent(n.codes[0])}&focus=all`}
+                >
+                  {t.findCourses} · {n.codes[0]}
+                </Link>
+              ) : (
+                <Link to="/catalogue?focus=all">{t.browseRelated}</Link>
+              )}
+            </p>
+          )}
         {result.allocations.length > 0 && (
           <ul className="requirement-allocations">
             {result.allocations.map((a) => (
               <li key={a.courseId}>
-                {a.code} · {a.credits?.toLocaleString(language) ?? "?"} ECTS{" "}
+                {titles[a.courseId] ?? a.code} · {a.code} ·{" "}
+                {a.credits?.toLocaleString(language) ?? "?"} ECTS{" "}
                 {a.override && <strong>· {t.override}</strong>}
               </li>
             ))}
@@ -130,6 +286,7 @@ function ResultNode({
                 key={child.node.id}
                 result={child}
                 language={language}
+                titles={titles}
                 depth={depth + 1}
               />
             ))}
@@ -159,6 +316,14 @@ function PlanRequirements({
       !plan.requirements?.templates.some((ref) => ref.code === p.code),
   );
   const scenario = activeScenario(plan),
+    titles = Object.fromEntries(
+      scenario.courses.map((course) => [
+        course.id,
+        course.titles[language] ??
+          Object.values(course.titles)[0] ??
+          course.code,
+      ]),
+    ),
     evidence = scenario.requirementEvidence ?? {
       overrides: [],
       completedChecklist: [],
@@ -232,6 +397,14 @@ function PlanRequirements({
           </span>
           <Progress result={result} language={language} />
         </section>
+      )}
+      {result && (
+        <CreditReconciliation
+          plan={plan}
+          result={result}
+          additional={additional}
+          language={language}
+        />
       )}
       {plan.degreeSelection && !editingStudies ? (
         <section className="studies-summary" aria-label={editStudies[language]}>
@@ -338,13 +511,23 @@ function PlanRequirements({
       {result && (
         <>
           <ul className="requirement-tree" aria-label={t.title}>
-            <ResultNode result={result} language={language} />
+            <ResultNode
+              result={result}
+              language={language}
+              titles={titles}
+              displayTitle={studyLabel(plan, language)}
+            />
           </ul>
           {additional && (
             <section aria-label={recipeMessages[language].additional}>
               <h2>{recipeMessages[language].additional}</h2>
               <ul className="requirement-tree">
-                <ResultNode result={additional} language={language} />
+                <ResultNode
+                  result={additional}
+                  language={language}
+                  titles={titles}
+                  displayTitle={recipeMessages[language].additional}
+                />
               </ul>
             </section>
           )}
@@ -362,7 +545,7 @@ function PlanRequirements({
                 >
                   {scenario.courses.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.code}
+                      {titles[c.id]} · {c.code}
                     </option>
                   ))}
                 </select>
@@ -443,7 +626,13 @@ function PlanRequirements({
         <ul aria-label={t.override}>
           {evidence.overrides.map((o) => (
             <li key={o.courseId}>
-              <strong>{t.override}</strong> · {o.courseId} → {o.nodeId}
+              <strong>{t.override}</strong> · {titles[o.courseId] ?? o.courseId}{" "}
+              ·{" "}
+              {scenario.courses.find((course) => course.id === o.courseId)
+                ?.code ?? o.courseId}{" "}
+              →{" "}
+              {nodes.find((node) => node.id === o.nodeId)?.title[language] ??
+                o.nodeId}
               <p>{o.reason}</p>
               <Button
                 disabled={busy}
@@ -458,7 +647,7 @@ function PlanRequirements({
                   )
                 }
               >
-                {t.remove} · {o.courseId}
+                {t.remove} · {titles[o.courseId] ?? o.courseId}
               </Button>
             </li>
           ))}

@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
 import { Button } from "../components";
-import { catalogueMessages } from "../catalogue-i18n";
 import type { Language } from "../i18n";
 import { usePlans } from "./context";
 import {
@@ -45,6 +44,120 @@ export default function CompletedCourses({ language }: { language: Language }) {
     />
   );
 }
+function PriorStudy({ plan, language }: { plan: Plan; language: Language }) {
+  const { busy, save } = usePlans();
+  const [error, setError] = useState(false);
+  const t = catchupMessages[language];
+  const records = activeScenario(plan).priorStudy ?? [];
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const values = new FormData(form);
+    const amount = String(values.get("approximateEcts") ?? "");
+    const record = {
+      id: crypto.randomUUID(),
+      institution: String(values.get("institution") ?? "").trim(),
+      period: String(values.get("period") ?? "").trim(),
+      approximateEcts: amount === "" ? null : Number(amount),
+      status:
+        values.get("status") === "recognition_pending"
+          ? ("recognition_pending" as const)
+          : ("self_reported" as const),
+      notes: String(values.get("notes") ?? "").trim(),
+    };
+    try {
+      if (
+        await save(
+          updateScenario(plan, (scenario) => ({
+            ...scenario,
+            priorStudy: [...(scenario.priorStudy ?? []), record],
+          })),
+        )
+      ) {
+        form.reset();
+        setError(false);
+      } else setError(true);
+    } catch {
+      setError(true);
+    }
+  }
+  return (
+    <section className="catchup-prior" aria-label={t.priorTitle}>
+      <h2>{t.priorTitle}</h2>
+      <p>{t.priorHelp}</p>
+      {records.length > 0 && (
+        <ul>
+          {records.map((record) => (
+            <li key={record.id}>
+              <strong>
+                {record.institution} · {record.approximateEcts ?? "?"} ECTS
+              </strong>{" "}
+              · {record.period} ·{" "}
+              {record.status === "recognition_pending"
+                ? t.recognitionPending
+                : t.selfReported}
+              {record.notes && <p>{record.notes}</p>}
+              <Button
+                disabled={busy}
+                onClick={async () => {
+                  try {
+                    const next = updateScenario(plan, (scenario) => ({
+                      ...scenario,
+                      priorStudy: (scenario.priorStudy ?? []).filter(
+                        (item) => item.id !== record.id,
+                      ),
+                    }));
+                    setError(!(await save(next)));
+                  } catch {
+                    setError(true);
+                  }
+                }}
+              >
+                {t.removePrior} · {record.institution}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form className="planner-form" onSubmit={(event) => void submit(event)}>
+        <label>
+          {t.institution}
+          <input name="institution" required maxLength={200} disabled={busy} />
+        </label>
+        <label>
+          {t.period}
+          <input name="period" required maxLength={200} disabled={busy} />
+        </label>
+        <label>
+          {t.approximateEcts}
+          <input
+            name="approximateEcts"
+            type="number"
+            min="0"
+            max="600"
+            step="any"
+            disabled={busy}
+          />
+        </label>
+        <label>
+          {t.recognitionStatus}
+          <select name="status" disabled={busy}>
+            <option value="self_reported">{t.selfReported}</option>
+            <option value="recognition_pending">{t.recognitionPending}</option>
+          </select>
+        </label>
+        <label>
+          {t.contextNotes}
+          <input name="notes" maxLength={2000} disabled={busy} />
+        </label>
+        <Button type="submit" disabled={busy}>
+          {t.savePrior}
+        </Button>
+      </form>
+      {error && <p role="alert">{plannerMessages[language].actionError}</p>}
+    </section>
+  );
+}
 function Catchup({ plan, language }: { plan: Plan; language: Language }) {
   const { busy, save } = usePlans();
   const t = catchupMessages[language],
@@ -69,7 +182,8 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
       : "/plan";
   const [coverage, setCoverage] = useState<Coverage[] | null>(null);
   const [termsError, setTermsError] = useState(false);
-  const [retry, setRetry] = useState(0);
+  const [coverageRetry, setCoverageRetry] = useState(0);
+  const [courseRetry, setCourseRetry] = useState(0);
   const [q, setQ] = useState("");
   const [offset, setOffset] = useState(0);
   const [results, setResults] = useState<{
@@ -107,7 +221,7 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
         if (!controller.signal.aborted) setTermsError(true);
       });
     return () => controller.abort();
-  }, [retry]);
+  }, [coverageRetry]);
   useEffect(() => {
     if (publication?.status !== "available" || !publication.snapshot_id) return;
     const controller = new AbortController();
@@ -165,7 +279,7 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
     publication?.status,
     publication?.snapshot_id,
     queryKey,
-    retry,
+    courseRetry,
   ]);
   function chooseTerm(next: string) {
     const nextParams = new URLSearchParams(params);
@@ -207,6 +321,24 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
     termsError ||
     publication?.status === "failed" ||
     (available && results.key === queryKey && results.failed);
+  const readFailed = available && results.key === queryKey && results.failed;
+  const recheck = () => {
+    setCoverage(null);
+    setTermsError(false);
+    setCoverageRetry((value) => value + 1);
+  };
+  const coverageLabel = (item: Coverage | undefined) =>
+    !item
+      ? t.notPublished
+      : item.status === "available"
+        ? item.refresh_failed
+          ? t.retained
+          : t.available
+        : item.status === "failed"
+          ? t.retrievalFailed
+          : item.status === "pending" || item.status === "loading"
+            ? t.pending
+            : t.notPublished;
   const next = plan.semesters[plan.semesters.indexOf(term) + 1];
   return (
     <section className="page planner-page catchup-page">
@@ -229,6 +361,31 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
         </Link>
       </div>
       <section className="catchup-archive" aria-label={t.search}>
+        <div className="archive-coverage">
+          <h2>{t.coverageTitle}</h2>
+          {termsError && <p role="alert">{t.transportError}</p>}
+          <ul>
+            {plan.semesters.map((semester) => {
+              const item = coverage?.find(
+                (candidate) => candidate.term === semester,
+              );
+              return (
+                <li key={semester}>
+                  <span>
+                    {semester} · {coverage ? coverageLabel(item) : t.loading}
+                  </span>
+                  {item?.checked_at && (
+                    <small>
+                      {" "}
+                      · {t.checked}: {item.checked_at}
+                    </small>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <p>{t.recheckHelp}</p>
+        </div>
         <label>
           {p.semester}
           <select
@@ -270,10 +427,16 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
                       : `${results.total} ${p.courseCount}`}
             </p>
 
-            {!loading && (failed || !available) && (
-              <Button onClick={() => setRetry((value) => value + 1)}>
-                {catalogueMessages[language].retry}
+            {!loading && termsError && (
+              <Button onClick={recheck}>{t.retryLoading}</Button>
+            )}
+            {!loading && readFailed && (
+              <Button onClick={() => setCourseRetry((value) => value + 1)}>
+                {t.retryLoading}
               </Button>
+            )}
+            {!loading && !termsError && !readFailed && !available && (
+              <Button onClick={recheck}>{t.recheck}</Button>
             )}
             {available && !loading && !failed && (
               <ul className="catchup-checklist">
@@ -462,6 +625,7 @@ function Catchup({ plan, language }: { plan: Plan; language: Language }) {
         record={editRecord}
         onDone={() => setEditing(undefined)}
       />
+      <PriorStudy plan={plan} language={language} />
       <section aria-label={t.recorded}>
         <h2>{t.recorded}</h2>
         <p>

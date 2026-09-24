@@ -119,6 +119,150 @@ def test_listing_recheck_rejects_changed_archive(setup):
 
 
 @pytest.mark.parametrize(
+    ("delay", "expected_details"), [(timedelta(minutes=16), 2), (timedelta(days=2), 4)]
+)
+def test_changed_index_restarts_safely_and_reuses_only_matching_recent_details(
+    setup, delay, expected_details
+):
+    engine, repo, _ = setup
+
+    class ChangingSource(Source):
+        def semesters(self):
+            return {"AS-2024": "250"}
+
+        def listing(self, number, *, semester=""):
+            self.calls.append(("listing", semester, number))
+            original = parse_listing((FIXTURES / "listing.html").read_text(), 1).entries[1]
+            first = original.model_copy(update={"terms": ("AS-2024",)})
+            second = first.model_copy(
+                update={
+                    "source_id": "135193",
+                    "code": "UE-L17.01684",
+                    "title": "Second archived course",
+                    "fingerprint": "second-fingerprint",
+                }
+            )
+            entries = (
+                (first, second)
+                if len([call for call in self.calls if call[0] == "detail"]) < 2
+                else (second, first)
+            )
+            return parse_listing((FIXTURES / "listing.html").read_text(), 1).model_copy(
+                update={"reported_count": 2, "entries": entries}
+            )
+
+        def detail(self, entry):
+            self.calls.append(("detail", entry.source_id))
+            return (
+                (FIXTURES / "detail.html")
+                .read_text()
+                .replace("AS-2026", "AS-2024")
+                .replace("UE-L17.01683", entry.code)
+            )
+
+    source = ChangingSource()
+    drive(repo, source, steps=8)
+    row = archive.coverage(engine)[0]
+    assert row["status"] == "failed" and row["snapshot_id"] is None
+    assert len([call for call in source.calls if call[0] == "detail"]) == 2
+    drive(repo, source, now=NOW + delay, steps=8)
+    row = archive.coverage(engine)[0]
+    assert row["status"] == "published" and row["snapshot_id"]
+    assert len([call for call in source.calls if call[0] == "detail"]) == expected_details
+    assert len(archive.ArchiveRepository(repo, "AS-2024").current().offerings) == 2
+
+
+def test_count_change_between_pages_never_advances_to_details(setup):
+    engine, repo, source = setup
+    original = source.listing
+
+    def changed_count(number, *, semester):
+        page = original(number, semester=semester)
+        return page.model_copy(
+            update={"number": number, "reported_count": 2 if number == 1 else 3, "page_size": 1}
+        )
+
+    source.listing = changed_count
+    drive(repo, source, steps=6)
+    assert all(
+        row["status"] == "failed" and row["snapshot_id"] is None for row in archive.coverage(engine)
+    )
+    assert all("result count" in row["error"] for row in archive.coverage(engine))
+    assert not any(call[0] == "detail" for call in source.calls if isinstance(call, tuple))
+
+
+def test_duplicate_ids_are_rejected_but_a_corrected_complete_index_can_publish(setup):
+    engine, repo, _ = setup
+
+    class DuplicateSource(Source):
+        duplicate = True
+
+        def semesters(self):
+            return {"AS-2024": "250"}
+
+        def listing(self, number, *, semester=""):
+            self.calls.append(("listing", semester, number))
+            page = parse_listing((FIXTURES / "listing.html").read_text(), 1)
+            first = page.entries[1].model_copy(update={"terms": ("AS-2024",)})
+            second = first.model_copy(update={"source_id": "135193", "code": "UE-L17.01684"})
+            return page.model_copy(
+                update={
+                    "number": number,
+                    "reported_count": 2,
+                    "page_size": 1,
+                    "entries": (first if number == 1 or self.duplicate else second,),
+                }
+            )
+
+        def detail(self, entry):
+            self.calls.append(("detail", entry.source_id))
+            return (
+                (FIXTURES / "detail.html")
+                .read_text()
+                .replace("AS-2026", "AS-2024")
+                .replace("UE-L17.01683", entry.code)
+            )
+
+    source = DuplicateSource()
+    drive(repo, source, steps=8)
+    row = archive.coverage(engine)[0]
+    assert row["status"] == "failed" and row["snapshot_id"] is None
+    assert "duplicate source IDs" in row["error"]
+    assert not any(call[0] == "detail" for call in source.calls)
+
+    source.duplicate = False
+    drive(repo, source, now=NOW + timedelta(minutes=16), steps=8)
+    row = archive.coverage(engine)[0]
+    assert row["status"] == "published" and row["snapshot_id"]
+    assert len(archive.ArchiveRepository(repo, "AS-2024").current().offerings) == 2
+
+
+def test_changed_index_during_refresh_keeps_last_published_archive(setup):
+    engine, repo, source = setup
+    drive(repo, source)
+    previous = {row["term"]: row["snapshot_id"] for row in archive.coverage(engine)}
+    original = source.listing
+    calls = 0
+
+    def changed_on_recheck(number, *, semester):
+        nonlocal calls
+        calls += 1
+        page = original(number, semester=semester)
+        if calls % 2 == 0:
+            entry = page.entries[0].model_copy(update={"fingerprint": "changed-after-detail"})
+            return page.model_copy(update={"entries": (entry,)})
+        return page
+
+    source.listing = changed_on_recheck
+    drive(repo, source, NOW + timedelta(days=32))
+    rows = archive.coverage(engine)
+    assert all(
+        row["status"] == "failed" and row["snapshot_id"] == previous[row["term"]] for row in rows
+    )
+    assert all(archive.ArchiveRepository(repo, row["term"]).current() for row in rows)
+
+
+@pytest.mark.parametrize(
     ("date", "past"),
     [
         (datetime(2026, 1, 31, tzinfo=timezone.utc), ["AS-2024", "SS-2025"]),

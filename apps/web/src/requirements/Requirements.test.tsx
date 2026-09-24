@@ -155,6 +155,9 @@ for (const [
       await screen.findByText("Advisor reference 12", { exact: true }),
     ).toBeVisible();
     expect(
+      screen.getByText("Advisor reference 12").closest("li"),
+    ).toHaveTextContent(/Transfer course · TRANSFER →/);
+    expect(
       screen.getAllByText(override, { exact: true }).length,
     ).toBeGreaterThan(0);
     await userEvent.click(screen.getAllByText(sources, { exact: true })[0]);
@@ -446,4 +449,208 @@ it("groups source gaps by programme and keeps technical diagnostics collapsed", 
   );
   expect(issues.length).toBeGreaterThan(0);
   for (const issue of issues) expect(diagnostics).toContainElement(issue);
+});
+
+it("shows selected courses separately from provisional requirement contribution and leaves the remainder unconfirmed", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const plan = bindProgramme(
+    createPlan({
+      id: "reconcile",
+      scenarioId: "s",
+      name: "Credits",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    { code: "CS-120", version: "2026.1", cohort: 2026 },
+  );
+  plan.scenarios[0].courses.push(
+    {
+      id: "mapped",
+      code: "SIN.01023",
+      titles: { en: "Introduction to programming" },
+      ects: 16,
+      status: "planned",
+      semester: "AS-2026",
+      pinned: false,
+      offering: null,
+    },
+    {
+      id: "other",
+      code: "MATH.404",
+      titles: { en: "Linear Algebra II" },
+      ects: 14,
+      status: "planned",
+      semester: "AS-2026",
+      pinned: false,
+      offering: null,
+    },
+  );
+  await new PlanStore(indexedDB).save(plan, null);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const credits = (
+    await screen.findByRole("heading", {
+      name: "Credit reconciliation",
+    })
+  ).closest("section")!;
+  expect(
+    within(credits).getByText(/Selected course credits: 30 ECTS/),
+  ).toBeVisible();
+  expect(
+    within(credits).getByText(/Contribution to modelled requirements: 16 ECTS/),
+  ).toBeVisible();
+  expect(
+    within(credits).getByText(/Unallocated selected credits: 14 ECTS/),
+  ).toBeVisible();
+  expect(
+    within(credits).getByText(
+      /Remaining requirement total cannot yet be confirmed/,
+    ),
+  ).toBeVisible();
+  expect(within(credits).getByText(/Linear Algebra II/)).toBeVisible();
+  expect(screen.queryByText(/Still to earn/)).not.toBeInTheDocument();
+});
+
+it("explains source gaps in French while keeping original diagnostics collapsed", async () => {
+  localStorage.setItem("unifr.language", "fr");
+  const { bindDegreeSelection } = await import("./adapter");
+  const plan = bindDegreeSelection(
+    createPlan({
+      id: "fr-gaps",
+      scenarioId: "s",
+      name: "Droit",
+      programme: "Law",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    {
+      structureId: "ba-120-60",
+      components: [
+        {
+          slotId: "major",
+          programmeId: "bachelor-digitinf-informatics",
+          variantId: "major-120",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+        {
+          slotId: "minor",
+          programmeId: "bachelor-digitinf-businessinformatics",
+          variantId: "minor-60",
+          startSemester: "AS-2026",
+          recipeVersion: "2026-27.1",
+        },
+      ],
+    },
+  );
+  await new PlanStore(indexedDB).save(plan, null);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const review = await screen.findByRole("region", {
+    name: "Points à clarifier dans les sources",
+  });
+  expect(
+    screen.queryByText(/ba-120-60/, { selector: "strong" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(
+      screen.getByRole("list", { name: "Exigences du cursus" }),
+    ).queryByText(/bachelor: ba-120-60/),
+  ).not.toBeInTheDocument();
+  expect(
+    within(review).getByText(/Vous pouvez planifier des cours/),
+  ).toBeVisible();
+  const diagnostics = within(review)
+    .getByText("Détails techniques de la vérification")
+    .closest("details");
+  expect(diagnostics).not.toHaveAttribute("open");
+  expect(
+    within(review)
+      .getAllByText(/Unresolved requirement evidence:/)
+      .every((node) => diagnostics?.contains(node)),
+  ).toBe(true);
+  expect(
+    within(review).queryByText(/Unresolved requirement evidence:/, {
+      selector: "li:not(details li)",
+    }),
+  ).not.toBeInTheDocument();
+});
+
+it("links a known requirement code to course search without promising recognition", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const plan = bindProgramme(
+    createPlan({
+      id: "find",
+      scenarioId: "s",
+      name: "Find",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    { code: "CS-120", version: "2026.1", cohort: 2026 },
+  );
+  await new PlanStore(indexedDB).save(plan, null);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const search = await screen.findByRole("link", {
+    name: "Find matching courses · SIN.01023",
+  });
+  expect(search).toHaveAttribute("href", "/catalogue?q=SIN.01023&focus=all");
+});
+
+it("shows prior-study context without adding it to completed or mapped credits", async () => {
+  localStorage.setItem("unifr.language", "en");
+  const plan = bindProgramme(
+    createPlan({
+      id: "prior-context",
+      scenarioId: "s",
+      name: "Prior",
+      programme: "CS",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+    { code: "CS-120", version: "2026.1", cohort: 2026 },
+  );
+  plan.scenarios[0].priorStudy = [
+    {
+      id: "prior",
+      institution: "External University",
+      period: "2020–2023",
+      approximateEcts: 90,
+      status: "recognition_pending",
+      notes: "Transcript pending",
+    },
+  ];
+  await new PlanStore(indexedDB).save(plan, null);
+  render(
+    <MemoryRouter initialEntries={["/requirements"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const credits = await screen.findByRole("region", {
+    name: "Credit reconciliation",
+  });
+  expect(
+    within(credits).getByText(/External University.*90 ECTS/),
+  ).toBeVisible();
+  expect(
+    within(credits).getByText(/Recorded completed courses: 0 ECTS/),
+  ).toBeVisible();
+  expect(
+    within(credits).getByText(/Contribution to modelled requirements: 0 ECTS/),
+  ).toBeVisible();
 });

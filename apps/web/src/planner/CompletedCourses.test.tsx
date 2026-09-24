@@ -338,3 +338,226 @@ it("requires a deliberate archive checkbox to complete an existing selection and
     offering: { snapshot_id: "archive-2024" },
   });
 });
+
+it("shows term-specific archive availability, retains a failed-refresh archive, and explains recheck", async () => {
+  await seed();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request | string) => {
+      const url = typeof request === "string" ? request : request.url;
+      if (url.includes("/terms?scope=history"))
+        return new Response(
+          JSON.stringify({
+            coverage: [
+              {
+                term: "AS-2024",
+                status: "failed",
+                checked_at: "2026-09-20T10:00:00+00:00",
+                refresh_failed: false,
+              },
+              {
+                term: "SS-2025",
+                status: "available",
+                snapshot_id: "archive-2025",
+                checked_at: "2026-09-21T10:00:00+00:00",
+                refresh_failed: true,
+              },
+            ],
+          }),
+        );
+      if (url.includes("scope=history"))
+        return new Response(
+          JSON.stringify({
+            items: [
+              {
+                ...offering.course,
+                offerings: [
+                  {
+                    ...offering,
+                    terms: ["SS-2025"],
+                    snapshot_id: "archive-2025",
+                  },
+                ],
+              },
+            ],
+            total: 1,
+            offset: 0,
+            limit: 20,
+            status: { development_fixture: false, snapshot_id: "archive-2025" },
+          }),
+        );
+      return new Response("{}", { status: 503 });
+    }),
+  );
+  const user = userEvent.setup();
+  mount();
+  const archiveRegion = await screen.findByRole("region", {
+    name: "Search archived courses",
+  });
+  expect(
+    await within(archiveRegion).findByText(/AS-2024.*Retrieval failed/),
+  ).toBeVisible();
+  expect(
+    within(archiveRegion).getByText(
+      /SS-2025.*Published archive retained after refresh failed/,
+    ),
+  ).toBeVisible();
+  expect(
+    within(archiveRegion).getByRole("button", { name: "Recheck availability" }),
+  ).toBeVisible();
+  expect(
+    within(archiveRegion).getByText(
+      /Rechecking does not rerun the server archive import/,
+    ),
+  ).toBeVisible();
+  await user.selectOptions(
+    within(archiveRegion).getByLabelText("Semester"),
+    "SS-2025",
+  );
+  expect(
+    await within(archiveRegion).findByRole("checkbox", {
+      name: /Historical mathematics/,
+    }),
+  ).toBeEnabled();
+});
+
+it("saves approximate prior-study context without creating a completed course or earned credits", async () => {
+  await seed();
+  vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+  const user = userEvent.setup();
+  const app = mount();
+  await user.type(
+    await screen.findByLabelText("Prior institution"),
+    "University elsewhere",
+  );
+  await user.type(screen.getByLabelText("Study period"), "2021–2024");
+  await user.type(screen.getByLabelText("Approximate ECTS"), "90");
+  await user.selectOptions(
+    screen.getByLabelText("Recognition status"),
+    "recognition_pending",
+  );
+  await user.type(
+    screen.getByLabelText("Context notes"),
+    "Transcript requested",
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Save prior-study context" }),
+  );
+  expect(
+    await screen.findByText(/University elsewhere.*90 ECTS/),
+  ).toBeVisible();
+  const saved = (await new PlanStore(indexedDB).load()).plans[0];
+  expect(activeScenario(saved).courses).toHaveLength(0);
+  expect(activeScenario(saved).priorStudy).toMatchObject([
+    {
+      institution: "University elsewhere",
+      period: "2021–2024",
+      approximateEcts: 90,
+      status: "recognition_pending",
+      notes: "Transcript requested",
+    },
+  ]);
+  app.unmount();
+  mount();
+  expect(
+    await screen.findByText(/University elsewhere.*90 ECTS/),
+  ).toBeVisible();
+});
+
+it("retries a temporary archive read failure without clearing manual entry", async () => {
+  await seed();
+  let termsCalls = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request | string) => {
+      const url = typeof request === "string" ? request : request.url;
+      if (url.includes("/terms?scope=history")) {
+        termsCalls += 1;
+        if (termsCalls === 1) throw new Error("temporary network failure");
+        return new Response(
+          JSON.stringify({
+            coverage: [
+              {
+                term: "AS-2024",
+                status: "available",
+                snapshot_id: "archive-2024",
+                refresh_failed: false,
+              },
+            ],
+          }),
+        );
+      }
+      if (url.includes("scope=history"))
+        return new Response(
+          JSON.stringify({
+            items: [{ ...offering.course, offerings: [offering] }],
+            total: 1,
+            offset: 0,
+            limit: 20,
+            status: { development_fixture: false, snapshot_id: "archive-2024" },
+          }),
+        );
+      return new Response("{}", { status: 503 });
+    }),
+  );
+  const user = userEvent.setup();
+  mount();
+  await screen.findByRole("button", { name: "Retry loading" });
+  await user.type(screen.getByLabelText("Course title"), "Manual draft");
+  await user.click(screen.getByRole("button", { name: "Retry loading" }));
+  expect(
+    await screen.findByRole("checkbox", { name: /Historical mathematics/ }),
+  ).toBeEnabled();
+  expect(screen.getByLabelText("Course title")).toHaveValue("Manual draft");
+});
+
+it("retries only course loading when coverage is already published", async () => {
+  await seed();
+  let termsCalls = 0;
+  let courseCalls = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request | string) => {
+      const url = typeof request === "string" ? request : request.url;
+      if (url.includes("/terms?scope=history")) {
+        termsCalls += 1;
+        return new Response(
+          JSON.stringify({
+            coverage: [
+              {
+                term: "AS-2024",
+                status: "available",
+                snapshot_id: "archive-2024",
+                refresh_failed: false,
+              },
+            ],
+          }),
+        );
+      }
+      if (url.includes("scope=history")) {
+        courseCalls += 1;
+        if (courseCalls === 1) throw new Error("temporary read failure");
+        return new Response(
+          JSON.stringify({
+            items: [{ ...offering.course, offerings: [offering] }],
+            total: 1,
+            offset: 0,
+            limit: 20,
+            status: { development_fixture: false, snapshot_id: "archive-2024" },
+          }),
+        );
+      }
+      return new Response("{}", { status: 503 });
+    }),
+  );
+  const user = userEvent.setup();
+  mount();
+  await user.click(
+    await screen.findByRole("button", { name: "Retry loading" }),
+  );
+  expect(
+    await screen.findByRole("checkbox", { name: /Historical mathematics/ }),
+  ).toBeEnabled();
+  expect(termsCalls).toBe(1);
+  expect(courseCalls).toBe(2);
+});

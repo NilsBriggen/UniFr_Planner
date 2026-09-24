@@ -1,4 +1,4 @@
-import { recipeRegistry } from "../../../../packages/domain/src/registry";
+import { recipeRegistryForSelection } from "../../../../packages/domain/src/registry";
 import type { ResolvedDegree } from "../../../../packages/domain/src/recipes";
 import type { Language } from "../i18n";
 import { recipeMessages } from "./recipeMessages";
@@ -11,11 +11,31 @@ export default function ReviewGaps({
   language: Language;
 }) {
   const t = recipeMessages[language];
+  const registry = recipeRegistryForSelection(degree.selection);
+  const consequence = {
+    en: "You can schedule courses; degree credit matching for this component is not yet confirmed. Check the official programme source and ask the faculty about recognition before relying on this total.",
+    de: "Du kannst Kurse einplanen; die Anrechnung für diesen Teil des Abschlusses ist noch nicht bestätigt. Prüfe die offizielle Programmquelle und kläre die Anerkennung mit der Fakultät, bevor du dich auf diese Summe verlässt.",
+    fr: "Vous pouvez planifier des cours ; la prise en compte des crédits pour cette composante du diplôme n’est pas encore confirmée. Consultez la source officielle du programme et clarifiez la reconnaissance avec la faculté avant de vous fier à ce total.",
+  }[language];
   const consumed = new Set<string>();
   const technical =
     /^(Unresolved requirement evidence|Missing requirement children|Unresolved programme review|Unresolved combination rule|Missing applicability dates|Missing programme sources|Missing requirements|Composed requirement credit discrepancy):/;
+  const summary = (issue: string) => {
+    if (issue.startsWith("Missing applicability dates:"))
+      return t.applicabilityGap;
+    if (
+      issue.startsWith("Missing requirements:") ||
+      issue.startsWith("Missing requirement children:")
+    )
+      return t.curriculumGap;
+    if (issue.startsWith("Missing programme sources:")) return t.sourceGap;
+    if (issue.startsWith("Composed requirement credit discrepancy:"))
+      return t.creditGap;
+    if (issue.startsWith("Unknown combination permission:")) return t.unknown;
+    return t.reviewGap;
+  };
   const groups = degree.selection.components.flatMap((component) => {
-    const programme = recipeRegistry.programmes.find(
+    const programme = registry.programmes.find(
       (p) => p.id === component.programmeId,
     );
     if (!programme) return [];
@@ -23,20 +43,14 @@ export default function ReviewGaps({
     const messages = new Set<string>();
     for (const issue of degree.issues) {
       if (issue.startsWith(`${programme.id}: `)) {
-        messages.add(issue.slice(programme.id.length + 2));
+        messages.add(summary(issue.slice(programme.id.length + 2)));
         consumed.add(issue);
       } else if (issue.startsWith(`${prefix}: `)) {
-        messages.add(issue.slice(prefix.length + 2));
+        messages.add(summary(issue.slice(prefix.length + 2)));
         consumed.add(issue);
       } else if (issue.includes(prefix)) {
-        if (issue.startsWith("Missing applicability dates:"))
-          messages.add(t.applicabilityGap);
-        if (issue.startsWith("Missing requirements:"))
-          messages.add(t.curriculumGap);
-        if (issue.startsWith("Missing programme sources:"))
-          messages.add(t.sourceGap);
-        if (issue.startsWith("Composed requirement credit discrepancy:"))
-          messages.add(t.creditGap);
+        messages.add(summary(issue));
+        consumed.add(issue);
       }
     }
     return messages.size
@@ -49,25 +63,17 @@ export default function ReviewGaps({
         ]
       : [];
   });
-  const humanize = (issue: string) => {
-    let text = issue.replace(
-      "Unknown combination permission: ",
-      `${t.unknown}: `,
-    );
-    for (const p of recipeRegistry.programmes)
-      text = text.replaceAll(p.id, p.titles?.[language] ?? p.title);
-    return text;
-  };
   const other = [
     ...new Set(
       degree.issues
         .filter((i) => !consumed.has(i) && !technical.test(i))
-        .map(humanize),
+        .map(summary),
     ),
   ];
   return (
     <section aria-label={t.gaps}>
       <h4>{t.gaps}</h4>
+      <p>{consequence}</p>
       {groups.map((group) => (
         <div key={group.key}>
           <h5>{group.title}</h5>

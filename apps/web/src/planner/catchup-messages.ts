@@ -15,6 +15,31 @@ const en = {
   unavailable:
     "No published archive for this semester. You can still enter completed courses manually.",
   failed: "The archive could not be loaded. Manual entry remains available.",
+  retrievalFailed: "Retrieval failed",
+  retained: "Published archive retained after refresh failed",
+  available: "Available",
+  pending: "Preparation pending",
+  notPublished: "Not published",
+  coverageTitle: "Archive availability by semester",
+  checked: "Last checked",
+  recheck: "Recheck availability",
+  retryLoading: "Retry loading",
+  recheckHelp:
+    "Rechecking does not rerun the server archive import. Keep your semester selected or choose an available archive; manual entry remains available.",
+  transportError:
+    "Availability could not be checked. Retry loading when the connection returns.",
+  priorTitle: "Prior study / recognition pending",
+  priorHelp:
+    "Record an approximate total for context only. It does not mark courses passed, meet prerequisites, or grant recognised degree credits. Enter transcript courses individually when available.",
+  institution: "Prior institution",
+  period: "Study period",
+  approximateEcts: "Approximate ECTS",
+  recognitionStatus: "Recognition status",
+  selfReported: "Self-reported; no recognition decision",
+  recognitionPending: "Recognition pending",
+  contextNotes: "Context notes",
+  savePrior: "Save prior-study context",
+  removePrior: "Remove prior-study context",
   importing:
     "This semester’s archive is being prepared. Manual entry remains available.",
   empty: "No matching archived courses.",
@@ -64,6 +89,32 @@ const de: Copy = {
     "Für dieses Semester ist kein Archiv veröffentlicht. Du kannst bestandene Kurse manuell erfassen.",
   failed:
     "Das Archiv konnte nicht geladen werden. Die manuelle Erfassung bleibt verfügbar.",
+  retrievalFailed: "Abruf fehlgeschlagen",
+  retained:
+    "Veröffentlichtes Archiv nach fehlgeschlagener Aktualisierung erhalten",
+  available: "Verfügbar",
+  pending: "Vorbereitung läuft",
+  notPublished: "Nicht veröffentlicht",
+  coverageTitle: "Archivverfügbarkeit nach Semester",
+  checked: "Zuletzt geprüft",
+  recheck: "Verfügbarkeit erneut prüfen",
+  retryLoading: "Laden erneut versuchen",
+  recheckHelp:
+    "Die erneute Prüfung startet den Serverimport nicht. Das gewählte Semester bleibt erhalten; ein verfügbares Archiv kann gewählt werden. Die manuelle Erfassung bleibt möglich.",
+  transportError:
+    "Die Verfügbarkeit konnte nicht geprüft werden. Versuche das Laden erneut, sobald die Verbindung wiederhergestellt ist.",
+  priorTitle: "Frühere Studien / Anerkennung ausstehend",
+  priorHelp:
+    "Erfasse eine ungefähre Summe nur als Kontext. Dadurch gelten keine Kurse als bestanden, Voraussetzungen als erfüllt oder ECTS als anerkannt. Trage später einzelne Kurse aus dem Leistungsnachweis ein.",
+  institution: "Frühere Hochschule",
+  period: "Studienzeitraum",
+  approximateEcts: "Ungefähre ECTS",
+  recognitionStatus: "Anerkennungsstatus",
+  selfReported: "Selbst angegeben; keine Anerkennungsentscheidung",
+  recognitionPending: "Anerkennung ausstehend",
+  contextNotes: "Kontextnotizen",
+  savePrior: "Früheres Studium speichern",
+  removePrior: "Früheres Studium entfernen",
   importing:
     "Das Semesterarchiv wird vorbereitet. Die manuelle Erfassung bleibt verfügbar.",
   empty: "Keine passenden archivierten Kurse.",
@@ -112,6 +163,31 @@ const fr: Copy = {
     "Aucune archive publiée pour ce semestre. Vous pouvez saisir les cours réussis manuellement.",
   failed:
     "Impossible de charger les archives. La saisie manuelle reste disponible.",
+  retrievalFailed: "Récupération échouée",
+  retained: "Archive publiée conservée après un échec d’actualisation",
+  available: "Disponible",
+  pending: "Préparation en cours",
+  notPublished: "Non publiée",
+  coverageTitle: "Disponibilité des archives par semestre",
+  checked: "Dernière vérification",
+  recheck: "Revérifier la disponibilité",
+  retryLoading: "Réessayer le chargement",
+  recheckHelp:
+    "La nouvelle vérification ne relance pas l’importation sur le serveur. Gardez le semestre choisi ou sélectionnez une archive disponible ; la saisie manuelle reste possible.",
+  transportError:
+    "La disponibilité n’a pas pu être vérifiée. Réessayez quand la connexion sera rétablie.",
+  priorTitle: "Études antérieures / reconnaissance en attente",
+  priorHelp:
+    "Indiquez un total approximatif comme contexte seulement. Aucun cours n’est considéré réussi, aucun prérequis rempli et aucun crédit reconnu. Saisissez les cours du relevé individuellement lorsqu’ils seront disponibles.",
+  institution: "Établissement antérieur",
+  period: "Période d’études",
+  approximateEcts: "ECTS approximatifs",
+  recognitionStatus: "Statut de reconnaissance",
+  selfReported: "Déclaré par vous ; aucune décision de reconnaissance",
+  recognitionPending: "Reconnaissance en attente",
+  contextNotes: "Notes de contexte",
+  savePrior: "Enregistrer les études antérieures",
+  removePrior: "Supprimer les études antérieures",
   importing:
     "Les archives de ce semestre sont en préparation. La saisie manuelle reste disponible.",
   empty: "Aucun cours archivé correspondant.",

@@ -6,6 +6,30 @@
 .requirement-tree {
   padding-inline-start: 0;
 }
+.credit-reconciliation {
+  margin-block: 1rem 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: white;
+}
+.reconciliation-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.reconciliation-scroll table {
+  width: 100%;
+  min-width: 42rem;
+  border-collapse: collapse;
+  text-align: start;
+}
+.reconciliation-scroll th,
+.reconciliation-scroll td {
+  padding: 0.6rem;
+  border-bottom: 1px solid var(--color-line);
+  text-align: start;
+  vertical-align: top;
+}
 .studies-summary {
   display: flex;
   flex-wrap: wrap;

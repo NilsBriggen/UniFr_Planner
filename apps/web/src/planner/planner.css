@@ -495,6 +495,40 @@
 .catchup-archive {
   margin-block: 1.5rem;
 }
+.archive-coverage,
+.catchup-prior {
+  margin-block: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+  background: white;
+}
+.archive-coverage h2,
+.catchup-prior h2 {
+  margin-block-start: 0;
+}
+.archive-coverage ul {
+  columns: 2;
+  padding-inline-start: 1.2rem;
+}
+.archive-coverage li {
+  break-inside: avoid;
+  margin-block: 0.35rem;
+}
+.catchup-prior .planner-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+}
+.catchup-prior .planner-form label {
+  display: grid;
+  gap: 0.4rem;
+}
+@media (max-width: 600px) {
+  .archive-coverage ul {
+    columns: 1;
+  }
+}
 .catchup-archive > label,
 .catchup-review label {
   display: grid;

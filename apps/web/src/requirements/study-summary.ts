@@ -1,4 +1,4 @@
-import { recipeRegistry } from "../../../../packages/domain/src/registry";
+import { recipeRegistryForSelection } from "../../../../packages/domain/src/registry";
 import { programmeTemplates } from "../../../../packages/domain/src/programmes";
 import type {
   DegreeSelection,
@@ -8,9 +8,10 @@ import type { Language } from "../i18n";
 import type { Plan } from "../planner/domain";
 
 function selectionLabel(selection: DegreeSelection, language: Language) {
+  const registry = recipeRegistryForSelection(selection);
   return selection.components
     .map((component) => {
-      const programme = recipeRegistry.programmes.find(
+      const programme = registry.programmes.find(
         (entry) => entry.id === component.programmeId,
       );
       return (

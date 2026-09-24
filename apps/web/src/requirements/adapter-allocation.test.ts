@@ -10,7 +10,21 @@ vi.mock("../../../../packages/domain/src/registry", async (importOriginal) => {
     await importOriginal<
       typeof import("../../../../packages/domain/src/registry")
     >();
-  const recipeRegistry = structuredClone(original.recipeRegistry);
+  const oldSelection = {
+    structureId: "ba-180-extra-60",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-ius-law",
+        variantId: "major-180",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  };
+  const recipeRegistry = structuredClone(
+    original.recipeRegistryForSelection(oldSelection),
+  );
   const law = recipeRegistry.programmes.find(
     (p) => p.id === "bachelor-ius-law",
   )!;
@@ -21,7 +35,13 @@ vi.mock("../../../../packages/domain/src/registry", async (importOriginal) => {
     if ("children" in node) node.children.forEach(visit);
   };
   visit(root);
-  return { recipeRegistry };
+  return {
+    ...original,
+    recipeRegistryForSelection: (selection: typeof oldSelection) =>
+      selection.components[0]?.recipeVersion === "2026-27.1"
+        ? recipeRegistry
+        : original.recipeRegistryForSelection(selection),
+  };
 });
 import {
   bindDegreeSelection,

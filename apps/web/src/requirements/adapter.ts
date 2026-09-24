@@ -3,7 +3,7 @@ import {
   type DegreeSelection,
   type ResolvedDegree,
 } from "../../../../packages/domain/src/recipes";
-import { recipeRegistry } from "../../../../packages/domain/src/registry";
+import { recipeRegistryForSelection } from "../../../../packages/domain/src/registry";
 import {
   evaluateRecipeRequirements,
   resolveRecipeEligibility,
@@ -86,14 +86,20 @@ export function requirementTree(plan: Plan): RequirementNode | null {
 }
 export function resolvedPlanDegree(plan: Plan): ResolvedDegree | null {
   return plan.degreeSelection
-    ? composeDegree(recipeRegistry, plan.degreeSelection)
+    ? composeDegree(
+        recipeRegistryForSelection(plan.degreeSelection),
+        plan.degreeSelection,
+      )
     : null;
 }
 export function bindDegreeSelection(
   plan: Plan,
   selection: DegreeSelection,
 ): Plan {
-  const degree = composeDegree(recipeRegistry, selection);
+  const degree = composeDegree(
+    recipeRegistryForSelection(selection),
+    selection,
+  );
   if (degree.status === "prohibited") throw new Error(degree.issues.join("; "));
   if (
     JSON.stringify(plan.degreeSelection) !== JSON.stringify(selection) &&

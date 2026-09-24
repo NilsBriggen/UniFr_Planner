@@ -210,7 +210,11 @@ def _records(repository: SqlCatalogueRepository, term: str, kind: str) -> list[d
 
 
 def _step(
-    repository: SqlCatalogueRepository, source: ArchiveSource, row: dict[str, Any], now: datetime
+    repository: SqlCatalogueRepository,
+    source: ArchiveSource,
+    row: dict[str, Any],
+    now: datetime,
+    reusable_details: dict[str, dict[str, Offering]],
 ) -> None:
     term = row["term"]
     progress = dict(row["progress"]) or {"stage": "listing", "cursor": 1, "count": 0}
@@ -223,8 +227,10 @@ def _step(
             raise ValueError("Listing escaped requested semester")
         if cursor > 1 and page.page_size != progress["page_size"]:
             raise ValueError("Pagination changed during archive crawl")
+        if cursor > 1 and page.reported_count != progress["count"]:
+            raise ValueError("Pagination changed during archive crawl (result count)")
         progress.update(
-            count=max(progress["count"], page.reported_count),
+            count=page.reported_count,
             page_size=page.page_size,
             cursor=cursor + 1,
         )
@@ -237,7 +243,28 @@ def _step(
     if len(entries) != progress["count"] or len({e.source_id for e in entries}) != len(entries):
         raise ValueError("Incomplete listing or duplicate source IDs")
     if stage == "details" and cursor < len(entries):
-        offering = parse_detail(source.detail(entries[cursor]), entries[cursor]).model_copy(
+        entry = entries[cursor]
+        if term not in reusable_details:
+            reusable_details[term] = {
+                value.source_id: value
+                for value in (
+                    Offering.model_validate(data) for data in _records(repository, term, "reuse")
+                )
+            }
+        candidate = reusable_details[term].get(entry.source_id)
+        reusable = (
+            candidate
+            if (
+                candidate is not None
+                and candidate.course.code == entry.code
+                and candidate.listing_fingerprint == entry.fingerprint
+                and term in candidate.terms
+                and candidate.detail_checked_at is not None
+                and timedelta(0) <= now - candidate.detail_checked_at < timedelta(days=1)
+            )
+            else None
+        )
+        offering = reusable or parse_detail(source.detail(entry), entry).model_copy(
             update={"detail_checked_at": now}
         )
         if term not in offering.terms:
@@ -322,6 +349,7 @@ def run_slice(
         return {"outcome": "yielded", "steps": 0}
     started = time.monotonic()
     steps = 0
+    reusable_details: dict[str, dict[str, Offering]] = {}
     with repository.lock():
         # Discovery timestamp uses the durable source cache so restarts also obey it.
         from unifr_ingest.http import CachedResponse
@@ -358,13 +386,48 @@ def run_slice(
                 break
             row = max(candidates, key=lambda item: term_key(item["term"]))
             try:
-                _step(repository, source, row, now)
+                _step(repository, source, row, now, reusable_details)
             except (ValueError, OSError, KeyError) as error:
                 failures = min(row["failures"] + 1, 8)
                 with repository.engine.begin() as connection:
-                    # Transport failures retain valid progress; validation failures restart.
+                    # Transport failures resume. A changed listing restarts its index,
+                    # but recent details may be reused only by exact identity and
+                    # listing fingerprint. All other validation failures discard work.
+                    changed_index = isinstance(error, ValueError) and str(error).startswith(
+                        (
+                            "Pagination changed during archive crawl",
+                            "Incomplete listing or duplicate source IDs",
+                        )
+                    )
                     progress = row["progress"] if isinstance(error, OSError) else {}
-                    if not progress:
+                    if changed_index:
+                        old_details = list(
+                            connection.execute(
+                                select(checkpoints.c.ordinal, checkpoints.c.data).where(
+                                    checkpoints.c.term == row["term"],
+                                    checkpoints.c.kind == "detail",
+                                )
+                            )
+                        )
+                        for ordinal, data in old_details:
+                            connection.execute(
+                                delete(checkpoints).where(
+                                    checkpoints.c.term == row["term"],
+                                    checkpoints.c.kind == "reuse",
+                                    checkpoints.c.ordinal == ordinal,
+                                )
+                            )
+                            connection.execute(
+                                insert(checkpoints).values(
+                                    term=row["term"], kind="reuse", ordinal=ordinal, data=data
+                                )
+                            )
+                        connection.execute(
+                            delete(checkpoints).where(
+                                checkpoints.c.term == row["term"], checkpoints.c.kind != "reuse"
+                            )
+                        )
+                    elif not progress:
                         connection.execute(
                             delete(checkpoints).where(checkpoints.c.term == row["term"])
                         )
