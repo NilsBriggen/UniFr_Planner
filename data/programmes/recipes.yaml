@@ -10430,12 +10430,15 @@ programmes:
                 en: Fortgeschrittene Veranstaltungen
               kind: credit_pool
               explanation:
-                de: AnnexIII permits free combination of French/German M8 units. Exact codes from both2026/27 annual
-                  M8 tables; no title-based eligibility.
-                fr: AnnexIII permits free combination of French/German M8 units. Exact codes from both2026/27 annual
-                  M8 tables; no title-based eligibility.
-                en: AnnexIII permits free combination of French/German M8 units. Exact codes from both2026/27 annual
-                  M8 tables; no title-based eligibility.
+                de: Anhang III erlaubt die Kombination französischer und deutscher M8-Einheiten. Die Methodenkurse
+                  L25.01115 und L25.01116 bleiben ausgeschlossen, bis die Betreuung eine Bachelorarbeit mit intensiver Datenerhebung
+                  oder komplexer Datenanalyse genehmigt; eine Literaturarbeit genügt nicht (französischer Studienplan S. 12).
+                fr: L’annexe III permet de combiner les unités M8 françaises et allemandes. Les cours de méthodes
+                  L25.01115 et L25.01116 restent exclus sans accord du responsable pour un travail exigeant une récolte intensive de données
+                  ou des analyses complexes ; un travail de littérature ne suffit pas (plan français p. 12).
+                en: Annex III permits combining French and German M8 units. Methods courses L25.01115 and
+                  L25.01116 remain excluded without supervisor approval for a thesis requiring intensive data collection or complex analysis;
+                  a literature thesis does not qualify (French study plan p. 12).
               reviewStatus: needs_clarification
               citations:
                 - url: https://www.unifr.ch/psycho/assets/public/bachelor/plans/PLE_Psycho_BA180_De_rat29012019_v03.pdf
@@ -10471,7 +10474,6 @@ programmes:
                 - L25.00086
                 - L25.00481
                 - L25.00516
-                - L25.01116
                 - L25.01351
                 - L25.00108
                 - F23.00007

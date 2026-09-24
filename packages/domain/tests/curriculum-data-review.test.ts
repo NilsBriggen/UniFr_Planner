@@ -126,6 +126,11 @@ describe("2026 public-source curriculum review", () => {
     const m3 = find(root, "psy-m3");
     expect(m3.reviewStatus).toBe("needs_clarification");
     expect("codes" in m3 && m3.codes.includes("SPY.01011")).toBe(false);
+    // French plan p.12: advanced research methods require an approved
+    // intensive empirical thesis; a literature thesis does not qualify.
+    const m8 = find(root, "psy-m8");
+    expect(evaluateRequirements(m8, [record("L25.01116", 3)]).earned).toBe(0);
+    expect(evaluateRequirements(m8, [record("L25.01115", 3)]).earned).toBe(0);
   });
   it("admits Law IUR I only for the exact course, full-time curriculum version and module", () => {
     const degree = composeDegree(registry, {

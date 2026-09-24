@@ -157,6 +157,11 @@ it("revalidates shared-cookie identity and aborts stale actions before showing t
   );
   const user = userEvent.setup();
   await screen.findByRole("heading", { name: "alice cloud" });
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Sync current plan" }),
+    ).toBeEnabled(),
+  );
   identity = { username: "bob", accountId: "account-b" };
   await user.click(screen.getByRole("button", { name: "Sync current plan" }));
   expect(mutations).toEqual([]);
