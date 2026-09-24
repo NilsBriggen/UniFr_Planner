@@ -10,6 +10,7 @@ const locales = [
     filter: "Filter",
     term: "Semester",
     preview: catalogueMessages.de.preview,
+    unresolvedBody: catalogueMessages.de.unresolvedBody,
     close: "Schliessen",
     stale: "Entwicklungsbeispiele · kein aktueller UniFr-Katalog",
     unresolved: "Termine ungeklärt",
@@ -26,6 +27,7 @@ const locales = [
     filter: "Filtres",
     term: "Semestre",
     preview: catalogueMessages.fr.preview,
+    unresolvedBody: catalogueMessages.fr.unresolvedBody,
     close: "Fermer",
     stale: "Exemples de développement · pas de catalogue UniFr actuel",
     unresolved: "Horaires non résolus",
@@ -42,6 +44,7 @@ const locales = [
     filter: "Filters",
     term: "Semester",
     preview: catalogueMessages.en.preview,
+    unresolvedBody: catalogueMessages.en.unresolvedBody,
     close: "Close",
     stale: "Development examples · not a current UniFr catalogue",
     unresolved: "Meeting times unresolved",
@@ -61,6 +64,7 @@ const exceptions = [
     override: "Ersetzter Termin laut Quelle",
     note: "Quellenausnahmen · Wiederholungen werden nicht aufgelöst.",
     preview: catalogueMessages.de.preview,
+    unresolvedBody: catalogueMessages.de.unresolvedBody,
     unresolved: "Termine ungeklärt",
   },
   {
@@ -70,6 +74,7 @@ const exceptions = [
     override: "Occurrence remplacée selon la source",
     note: "Exceptions de la source · les récurrences ne sont pas développées.",
     preview: catalogueMessages.fr.preview,
+    unresolvedBody: catalogueMessages.fr.unresolvedBody,
     unresolved: "Horaires non résolus",
   },
   {
@@ -79,6 +84,7 @@ const exceptions = [
     override: "Replaced occurrence from source",
     note: "Source exceptions · recurrences are not expanded.",
     preview: catalogueMessages.en.preview,
+    unresolvedBody: catalogueMessages.en.unresolvedBody,
     unresolved: "Meeting times unresolved",
   },
 ];
@@ -211,7 +217,10 @@ for (const locale of locales) {
     ).toBeVisible();
     await page.getByRole("button", { name: locale.preview }).click();
     await expect(
-      page.getByRole("dialog").getByText(locale.unresolved, { exact: true }),
+      page
+        .getByRole("dialog")
+        .locator(".schedule-warning")
+        .getByText(locale.unresolvedBody, { exact: true }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
     expect(

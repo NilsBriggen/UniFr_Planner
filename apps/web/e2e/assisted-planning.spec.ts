@@ -68,7 +68,9 @@ test("semester discovery explains lesson times and updates its overview as cours
     .getByRole("button", { name: "Add to semester", exact: true })
     .click();
   await expect(overview).toContainText("15 ECTS");
-  await expect(overview).toContainText("Time conflict");
+  await expect(overview).toContainText(
+    "1 affected course pairs · 1 dated collisions",
+  );
   await expect(
     overview.getByRole("link", { name: "Improve this schedule", exact: true }),
   ).toHaveAttribute("href", "/suggestions");

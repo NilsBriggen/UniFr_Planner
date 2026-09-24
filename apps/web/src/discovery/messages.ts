@@ -6,8 +6,10 @@ const en = {
   recommended: "Recommended for your degree",
   knownRequirements: "Matches known open requirements",
   listedProgramme: "Listed for your programmes",
-  allBrowseHelp: "Browsing the course catalogue. Academic contribution has not been established.",
-  noAssignment: "No matching published programme assignment was found in this selection. Your programme may use another source version; browse all courses and check details.",
+  allBrowseHelp:
+    "Browsing the course catalogue. Academic contribution has not been established.",
+  noAssignment:
+    "No matching published programme assignment was found in this selection. Your programme may use another source version; browse all courses and check details.",
   all: "All courses",
   fitsOnly: "Only courses that fit",
   hideAdded: "Hide added courses",
@@ -16,8 +18,10 @@ const en = {
   unknown: "Timing needs checking",
   related: "Related subject",
   sourceListed: "Listed for your programme in the published study plan",
-  sourceNotRecognition: "Programme listing only; credit recognition and prerequisites still need checking.",
-  sourceCohortUnconfirmed: "This published assignment names a later starting cohort than your recorded programme start. Applicability needs confirmation.",
+  sourceNotRecognition:
+    "Programme listing only; credit recognition and prerequisites still need checking.",
+  sourceCohortUnconfirmed:
+    "This published assignment names a later starting cohort than your recorded programme start. Applicability needs confirmation.",
   requirement: "In programme requirements",
   prerequisite: "Check prerequisites",
   matchesHelp:
@@ -63,8 +67,10 @@ const de: typeof en = {
   recommended: "Empfohlen für dein Studium",
   knownRequirements: "Passt zu bekannten offenen Anforderungen",
   listedProgramme: "Für deine Studiengänge aufgeführt",
-  allBrowseHelp: "Du durchsuchst den Kurskatalog. Die Anrechnung ist nicht geklärt.",
-  noAssignment: "Für diese Auswahl wurde keine passende veröffentlichte Studiengangszuordnung gefunden. Prüfe andere Versionen und die Kursdetails.",
+  allBrowseHelp:
+    "Du durchsuchst den Kurskatalog. Die Anrechnung ist nicht geklärt.",
+  noAssignment:
+    "Für diese Auswahl wurde keine passende veröffentlichte Studiengangszuordnung gefunden. Prüfe andere Versionen und die Kursdetails.",
   all: "Alle Kurse",
   fitsOnly: "Nur zeitlich passende Kurse",
   hideAdded: "Hinzugefügte Kurse ausblenden",
@@ -72,9 +78,12 @@ const de: typeof en = {
   conflict: "Überschneidung mit",
   unknown: "Termine prüfen",
   related: "Verwandtes Fach",
-  sourceListed: "Im veröffentlichten Studienplan deines Studiengangs aufgeführt",
-  sourceNotRecognition: "Die Zuordnung bestätigt weder Anrechnung noch Voraussetzungen.",
-  sourceCohortUnconfirmed: "Diese veröffentlichte Zuordnung nennt einen späteren Studienbeginn als deinen eingetragenen. Die Geltung muss geprüft werden.",
+  sourceListed:
+    "Im veröffentlichten Studienplan deines Studiengangs aufgeführt",
+  sourceNotRecognition:
+    "Die Zuordnung bestätigt weder Anrechnung noch Voraussetzungen.",
+  sourceCohortUnconfirmed:
+    "Diese veröffentlichte Zuordnung nennt einen späteren Studienbeginn als deinen eingetragenen. Die Geltung muss geprüft werden.",
   requirement: "In den Studienanforderungen",
   prerequisite: "Voraussetzungen prüfen",
   matchesHelp:
@@ -122,8 +131,10 @@ const fr: typeof en = {
   recommended: "Recommandés pour votre cursus",
   knownRequirements: "Correspond aux exigences ouvertes connues",
   listedProgramme: "Mentionnés pour vos cursus",
-  allBrowseHelp: "Vous parcourez le catalogue. La contribution au cursus n’est pas établie.",
-  noAssignment: "Aucune attribution publiée à votre cursus n’a été trouvée dans cette sélection. Vérifiez les autres versions et les détails.",
+  allBrowseHelp:
+    "Vous parcourez le catalogue. La contribution au cursus n’est pas établie.",
+  noAssignment:
+    "Aucune attribution publiée à votre cursus n’a été trouvée dans cette sélection. Vérifiez les autres versions et les détails.",
   all: "Tous les cours",
   fitsOnly: "Uniquement les cours compatibles",
   hideAdded: "Masquer les cours ajoutés",
@@ -132,8 +143,10 @@ const fr: typeof en = {
   unknown: "Horaires à vérifier",
   related: "Matière apparentée",
   sourceListed: "Mentionné dans le plan d’études publié de votre cursus",
-  sourceNotRecognition: "Cette mention ne confirme ni la reconnaissance des crédits ni les prérequis.",
-  sourceCohortUnconfirmed: "Cette attribution publiée indique une cohorte plus récente que votre début de cursus saisi. Son applicabilité doit être vérifiée.",
+  sourceNotRecognition:
+    "Cette mention ne confirme ni la reconnaissance des crédits ni les prérequis.",
+  sourceCohortUnconfirmed:
+    "Cette attribution publiée indique une cohorte plus récente que votre début de cursus saisi. Son applicabilité doit être vérifiée.",
   requirement: "Dans les exigences du cursus",
   prerequisite: "Vérifier les prérequis",
   matchesHelp:

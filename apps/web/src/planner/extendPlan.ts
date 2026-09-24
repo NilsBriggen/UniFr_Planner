@@ -4,7 +4,8 @@ import { planSchema, semesterIndex, type Plan } from "./domain";
 export function extendPlanToTerm(plan: Plan, targetTerm: string): Plan {
   const last = plan.semesters.at(-1)!;
   if (plan.semesters.includes(targetTerm)) return plan;
-  if (!/^(AS|SS)-\d{4}$/.test(targetTerm)) throw new RangeError("Invalid semester");
+  if (!/^(AS|SS)-\d{4}$/.test(targetTerm))
+    throw new RangeError("Invalid semester");
   const end = semesterIndex(targetTerm);
   const start = semesterIndex(last);
   if (end <= start) throw new RangeError("Cannot extend backward");

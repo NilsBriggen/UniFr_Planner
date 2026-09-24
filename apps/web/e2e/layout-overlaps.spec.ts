@@ -2,6 +2,43 @@ import { expect, test } from "@playwright/test";
 import { configuredStudyPlan, importStudyPlan } from "./studies-helpers";
 
 for (const language of ["de", "fr", "en"] as const) {
+  test(`programme scope labels keep their own touch targets in ${language}`, async ({
+    page,
+  }) => {
+    await page.addInitScript(
+      (lang) => localStorage.setItem("unifr.language", lang),
+      language,
+    );
+    await importStudyPlan(page, configuredStudyPlan(), language);
+    await page.goto("/catalogue?term=AS-2026");
+    const scopes = page.locator(".discovery-controls > .button");
+    await expect(scopes).toHaveCount(3);
+    for (const width of [320, 390, 680]) {
+      await page.setViewportSize({ width, height: 844 });
+      for (const button of await scopes.all()) {
+        await button.scrollIntoViewIfNeeded();
+        const box = await button.evaluate((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            width: rect.width,
+            textFits: element.scrollWidth <= element.clientWidth,
+            ownsCenter:
+              document
+                .elementFromPoint(
+                  rect.x + rect.width / 2,
+                  rect.y + rect.height / 2,
+                )
+                ?.closest("button") === element,
+          };
+        });
+        expect(box.width).toBeGreaterThan(200);
+        expect(box.textFits).toBe(true);
+        expect(box.ownsCenter).toBe(true);
+        await button.click();
+        await expect(button).toHaveAttribute("aria-pressed", "true");
+      }
+    }
+  });
   test(`semester summary never covers its next control in ${language}`, async ({
     page,
   }) => {
