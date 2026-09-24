@@ -83,22 +83,46 @@ it("retains a configured 2024 start when switching to manual setup", async () =>
   fireEvent.change(screen.getByLabelText("Major · Starting semester · Year"), {
     target: { value: "2024" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "My programme or combination is missing" }));
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
   expect(screen.getByLabelText("Study start · Year")).toHaveValue(2024);
-  fireEvent.click(screen.getByRole("button", { name: "Choose a listed degree" }));
-  expect(screen.getByLabelText("Major · Starting semester · Year")).toHaveValue(2024);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Choose a listed degree" }),
+  );
+  expect(screen.getByLabelText("Major · Starting semester · Year")).toHaveValue(
+    2024,
+  );
 });
 
 it("lets a new student plan a later term without opening completed-course history", async () => {
   await setup();
-  fireEvent.click(screen.getByRole("button", { name: "My programme or combination is missing" }));
-  fireEvent.change(screen.getByLabelText("Study start · Season"), { target: { value: "AS" } });
-  fireEvent.change(screen.getByLabelText("Study start · Year"), { target: { value: "2026" } });
-  fireEvent.change(screen.getByLabelText("Planning semester · Season"), { target: { value: "SS" } });
-  fireEvent.change(screen.getByLabelText("Planning semester · Year"), { target: { value: "2027" } });
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
+  fireEvent.change(screen.getByLabelText("Study start · Season"), {
+    target: { value: "AS" },
+  });
+  fireEvent.change(screen.getByLabelText("Study start · Year"), {
+    target: { value: "2026" },
+  });
+  fireEvent.change(screen.getByLabelText("Planning semester · Season"), {
+    target: { value: "SS" },
+  });
+  fireEvent.change(screen.getByLabelText("Planning semester · Year"), {
+    target: { value: "2027" },
+  });
   fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
-  expect(await screen.findByRole("heading", { name: "Course catalogue" })).toBeVisible();
-  expect(screen.queryByRole("heading", { name: /Completed courses/i })).not.toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: "Course catalogue" }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("heading", { name: /Completed courses/i }),
+  ).not.toBeInTheDocument();
 });
 
 it("keeps setup usable while invalid values are being typed", async () => {
@@ -225,3 +249,31 @@ it.each([
     });
   },
 );
+
+it("preserves an edited plan name and part-time horizon through Back and Review and persistence", async () => {
+  await setup();
+  fireEvent.change(screen.getByLabelText("Main programme"), {
+    target: { value: "bachelor-ius-law" },
+  });
+  fireEvent.change(screen.getByLabelText("Degree structure"), {
+    target: { value: "ba-180" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Review and start" }));
+  fireEvent.change(screen.getByLabelText("Plan name"), {
+    target: { value: "My part-time law" },
+  });
+  fireEvent.change(screen.getByLabelText("Number of semesters"), {
+    target: { value: "12" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Back" }));
+  fireEvent.click(screen.getByRole("button", { name: "Review and start" }));
+  expect(screen.getByLabelText("Plan name")).toHaveValue("My part-time law");
+  expect(screen.getByLabelText("Number of semesters")).toHaveValue(12);
+  fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
+  await waitFor(async () =>
+    expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(1),
+  );
+  const saved = (await new PlanStore(indexedDB).load()).plans[0];
+  expect(saved.name).toBe("My part-time law");
+  expect(saved.semesters).toHaveLength(12);
+});

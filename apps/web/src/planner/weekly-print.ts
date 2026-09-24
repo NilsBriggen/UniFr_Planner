@@ -1,3 +1,4 @@
+import { printSourceNote } from "./print-source";
 import { layoutWeek, courseColour } from "./week-layout";
 import { shareMessages } from "../sharing/messages";
 import { timetableMessages } from "./timetable-messages";
@@ -63,7 +64,13 @@ export function weeklyPrintHtml(input: WeeklyExport) {
           ),
         )
         .join("");
-      return `<section class="calendar-sheet"><h1>${e(input.name)}</h1><p class="subtitle">${e(x.week)} · ${input.monday} – ${week.days[6].date} · ${e(input.term)} · Europe/Zurich</p><p class="warning">${e(summary)}${input.unresolved ? ` · ${e(t.missingDates)}` : ""}</p><div class="page-layout ${days.length === 1 ? "single-day" : ""}"><div class="week" style="grid-template-columns:40px repeat(${days.length},minmax(0,1fr))"><div class="ruler">${hours}</div>${grid}</div><div class="week-key"><h2>${e(x.key)}</h2><ol>${key}</ol></div></div><footer>UniFr Planner · ${e(x.generated)} ${new Date().toISOString().slice(0, 10)} · ${e(input.term)} · ${e(x.unpublished)}</footer></section>`;
+      return `<section class="calendar-sheet"><h1>${e(input.name)}</h1><p class="subtitle">${e(x.week)} · ${input.monday} – ${week.days[6].date} · ${e(input.term)} · Europe/Zurich</p><p class="warning">${e(summary)}${input.unresolved ? ` · ${e(t.missingDates)}` : ""}</p><div class="page-layout ${days.length === 1 ? "single-day" : ""}"><div class="week" style="grid-template-columns:40px repeat(${days.length},minmax(0,1fr))"><div class="ruler">${hours}</div>${grid}</div><div class="week-key"><h2>${e(x.key)}</h2><ol>${key}</ol></div></div><footer>UniFr Planner · ${e(x.generated)} ${new Date().toISOString().slice(0, 10)} · ${e(input.term)} · ${e(
+        printSourceNote(
+          manifest.map((m) => m.course),
+          input.language,
+          input.sourceStatus,
+        ),
+      )}</footer></section>`;
     })
     .join("");
   const rows = week.days
@@ -80,7 +87,7 @@ export function weeklyPrintHtml(input: WeeklyExport) {
     : "";
   return `<!doctype html><html lang="${input.language}"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>${e(input.name)} · ${e(x.week)} · ${input.term} · ${input.monday}</title><style>
  @page{size:A4 landscape;margin:10mm;@bottom-right{content:counter(page) " / " counter(pages);font:9px Arial;color:#536271}}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#172b3a;margin:24px;background:#f5f7f8}h1{font-size:20px;margin:0 0 5px}h2{font-size:13px;margin:7px 0}p{font-size:11px;line-height:1.35;margin:5px 0}button{font:inherit;padding:12px 18px}.tools{display:flex;gap:16px;margin-bottom:20px}.sheet{max-width:1100px;margin:auto;background:white;padding:24px}.subtitle{color:#364652}.week{display:grid;border:1px solid #778896}.day{border-left:1px solid #a5afb6;min-width:0}.day h2{font-size:10px;height:32px;margin:0;padding:6px;background:#f1f4f6}.events,.ruler{position:relative;height:280px}.events{background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(${(280 * 60) / total}px - 1px),#dce2e8 calc(${(280 * 60) / total}px - 1px),#dce2e8 ${(280 * 60) / total}px)}.ruler{margin-top:32px}.ruler span{position:absolute;font-size:9px;transform:translateY(-50%)}.ruler span:first-child{transform:none}.ruler span:last-child{transform:translateY(-100%)}article{position:absolute;border:1px solid #667b88;padding:1px;font-size:11px;line-height:1;font-weight:bold;print-color-adjust:exact}.week-key ol{list-style:none;padding:0;margin:0;columns:2;column-gap:20px}.week-key li{font-size:10px;line-height:1.3;padding:3px 0;break-inside:avoid;overflow-wrap:anywhere}.single-day{display:grid;grid-template-columns:1fr 2fr;gap:20px}.single-day .week-key ol{columns:1}.single-day .week-key li{font-size:12px;padding:5px 0}.warning{font-weight:bold}.lesson-list{margin-top:24px}table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}td,th{text-align:left;padding:7px;border-bottom:1px solid #b6c0c8;overflow-wrap:anywhere}tr{break-inside:avoid}thead{display:table-header-group}footer{font-size:9px;margin-top:10px}.calendar-sheet{margin-bottom:28px}@media print{body{background:white;margin:0}.tools{display:none}.sheet{padding:0;max-width:none}.calendar-sheet{break-after:page;break-inside:avoid;margin:0}.lesson-list{margin:0}}
- </style></head><body><div class="tools"><button id="print">${e(t.print)}</button><span>A4 landscape · Letter landscape · ${e(t.printHelp)}</span></div><main class="sheet">${pages}<section class="lesson-list"><h1>${e(input.name)} · ${e(input.term)} · ${input.monday}</h1><h2>${e(t.lessons)}</h2>${rows ? `<table><thead><tr><th colspan="4">${e(input.name)} · ${e(input.term)} · ${input.monday} · Europe/Zurich</th></tr><tr><th>${e(t.date)}</th><th>${e(t.time)}</th><th>${e(t.course)}</th><th>${e(t.room)}</th></tr></thead><tbody>${rows}</tbody></table>` : `<p>${e(t.noEvents)}</p>`}${coverage}</section></main></body></html>`;
+ </style></head><body><div class="tools"><button id="print">${e(t.print)}</button><span>A4 ${e(x.landscape)} · Letter ${e(x.landscape)} · ${e(t.printHelp)}</span></div><main class="sheet">${pages}<section class="lesson-list"><h1>${e(input.name)} · ${e(input.term)} · ${input.monday}</h1><h2>${e(t.lessons)}</h2>${rows ? `<table><thead><tr><th colspan="4">${e(input.name)} · ${e(input.term)} · ${input.monday} · Europe/Zurich</th></tr><tr><th>${e(t.date)}</th><th>${e(t.time)}</th><th>${e(t.course)}</th><th>${e(t.room)}</th></tr></thead><tbody>${rows}</tbody></table>` : `<p>${e(t.noEvents)}</p>`}${coverage}</section></main></body></html>`;
 }
 export function openPrintHtml(html: string) {
   const preview = window.open("", "_blank");

@@ -1,5 +1,7 @@
 export const timetableMessages = {
   en: {
+    landscape: "landscape",
+    portrait: "portrait",
     matchingDates: "matching published dates",
     roomUnknown: "Room not published",
     internal:
@@ -41,6 +43,8 @@ export const timetableMessages = {
     unpublished: "Publication date not provided; saved catalogue snapshot",
   },
   de: {
+    landscape: "Querformat",
+    portrait: "Hochformat",
     matchingDates: "übereinstimmende veröffentlichte Termine",
     roomUnknown: "Raum nicht veröffentlicht",
     internal:
@@ -83,6 +87,8 @@ export const timetableMessages = {
       "Veröffentlichungsdatum nicht angegeben; gespeicherter Katalogstand",
   },
   fr: {
+    landscape: "paysage",
+    portrait: "portrait",
     matchingDates: "dates publiées correspondantes",
     roomUnknown: "Salle non publiée",
     internal:

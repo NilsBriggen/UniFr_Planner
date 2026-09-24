@@ -1,3 +1,5 @@
+import { timetableMessages } from "../planner/timetable-messages";
+import { plannerMessages } from "../planner/messages";
 import { useMemo } from "react";
 import type { Language } from "../i18n";
 import type { CalendarResult } from "../planner/calendar";
@@ -67,20 +69,31 @@ export function OfferingAdvice({
         <p className="match-note">
           {a.recommended && a.recommendationKind
             ? r[a.recommendationKind]
-            : a.match === "subject" ? t.sourceListed : t.requirement}
+            : a.match === "subject"
+              ? t.sourceListed
+              : t.requirement}
           {a.requirementTitles.length > 0 &&
             ` · ${a.requirementTitles.join(" / ")}`}
         </p>
       )}
       {a.sourceAssignments.map((assignment, index) => (
-        <p className="source-assignment" key={`${assignment.programme}:${assignment.version}:${index}`}>
+        <p
+          className="source-assignment"
+          key={`${assignment.programme}:${assignment.version}:${index}`}
+        >
           <strong>{assignment.programme}</strong> · {assignment.version}
           {sourceStage(assignment) && <> · {sourceStage(assignment)}</>}
           {assignment.paths[0] && <small>{assignment.paths[0]}</small>}
         </p>
       ))}
-      {a.match === "subject" && <p className="discovery-help">{t.sourceNotRecognition}</p>}
-      {a.sourceApplicabilityUnconfirmed && <p className="discovery-help" role="note">{t.sourceCohortUnconfirmed}</p>}
+      {a.match === "subject" && (
+        <p className="discovery-help">{t.sourceNotRecognition}</p>
+      )}
+      {a.sourceApplicabilityUnconfirmed && (
+        <p className="discovery-help" role="note">
+          {t.sourceCohortUnconfirmed}
+        </p>
+      )}
       {a.recommended && a.contributionEcts !== 0 && (
         <p className="recommendation-contribution">
           {a.contributionEcts === null
@@ -98,6 +111,34 @@ export function OfferingAdvice({
           <p className="discovery-help">{r.covered}</p>
         )}
       <LessonPreview calendar={a.calendar} language={language} />
+      {a.attendanceStale && (
+        <p className="fit-note unknown" role="alert">
+          {timetableMessages[language].stale}
+        </p>
+      )}
+      {a.conflictCounts.internal > 0 && (
+        <p className="fit-note unknown">
+          {timetableMessages[language].internal} · {a.conflictCounts.internal}{" "}
+          {timetableMessages[language].internalCount}
+        </p>
+      )}
+      {a.conflictCounts.hard > 0 && (
+        <p className="fit-note conflict">
+          {a.conflictCounts.pairs} {timetableMessages[language].pairs} ·{" "}
+          {a.conflictCounts.hard} {timetableMessages[language].collisions}
+        </p>
+      )}
+      {a.conflictCounts.travel > 0 && (
+        <p className="fit-note conflict">
+          {plannerMessages[language].travel} · {a.conflictCounts.travel}
+        </p>
+      )}
+      {a.conflictCounts.unavailable > 0 && (
+        <p className="fit-note conflict">
+          {plannerMessages[language].unavailable} ·{" "}
+          {a.conflictCounts.unavailable}
+        </p>
+      )}
       {(a.fit !== "unknown" || !a.calendar.unresolved.length) && (
         <p className={`fit-note ${a.fit}`}>
           {a.fit === "conflict"

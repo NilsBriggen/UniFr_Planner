@@ -29,6 +29,7 @@ export function Setup({ language }: { language: Language }) {
   const [query] = useSearchParams();
   const current = currentSemester();
   const [manual, setManual] = useState(false);
+  const [edited, setEdited] = useState({ name: false, count: false });
   const [degree, setDegree] = useState<ResolvedDegree | null>(null);
   const [step, setStep] = useState<"studies" | "settings">("studies");
   const [error, setError] = useState(false);
@@ -94,9 +95,11 @@ export function Setup({ language }: { language: Language }) {
         return;
       }
       const next = destination(settings.planning, !!selection);
-      navigate(recordCompleted
-        ? `/plan/completed?returnTo=${encodeURIComponent(next)}`
-        : next);
+      navigate(
+        recordCompleted
+          ? `/plan/completed?returnTo=${encodeURIComponent(next)}`
+          : next,
+      );
     } catch {
       setError(true);
     }
@@ -124,11 +127,13 @@ export function Setup({ language }: { language: Language }) {
             setDegree(resolved);
             setSettings((old) => ({
               ...old,
-              name,
-              count: Math.min(
-                24,
-                Math.max(1, Math.ceil(resolved.targetEcts / 30)),
-              ),
+              name: edited.name ? old.name : name,
+              count: edited.count
+                ? old.count
+                : Math.min(
+                    24,
+                    Math.max(1, Math.ceil(resolved.targetEcts / 30)),
+                  ),
             }));
             setStep("settings");
             return true;
@@ -200,11 +205,37 @@ export function Setup({ language }: { language: Language }) {
               language={language}
               onChange={(planning) => setSettings({ ...settings, planning })}
             />
-            <label className="setup-history-choice" style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: ".6rem" }}>
-              <input type="checkbox" checked={recordCompleted} onChange={(event) => setRecordCompleted(event.target.checked)} />
-              {{ en: "I have completed courses to record now", de: "Ich möchte bereits abgeschlossene Kurse jetzt erfassen", fr: "Je souhaite saisir maintenant des cours déjà terminés" }[language]}
+            <label
+              className="setup-history-choice"
+              style={{
+                gridColumn: "1 / -1",
+                display: "flex",
+                alignItems: "center",
+                gap: ".6rem",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={recordCompleted}
+                onChange={(event) => setRecordCompleted(event.target.checked)}
+              />
+              {
+                {
+                  en: "I have completed courses to record now",
+                  de: "Ich möchte bereits abgeschlossene Kurse jetzt erfassen",
+                  fr: "Je souhaite saisir maintenant des cours déjà terminés",
+                }[language]
+              }
             </label>
-            <p className="discovery-help" style={{ gridColumn: "1 / -1" }}>{{ en: "You can add prior study or transfer credits later. No courses are presumed completed.", de: "Frühere Studienleistungen oder Transferkredite kannst du später ergänzen. Es werden keine abgeschlossenen Kurse angenommen.", fr: "Vous pourrez ajouter des études antérieures ou des crédits transférés plus tard. Aucun cours n’est présumé réussi." }[language]}</p>
+            <p className="discovery-help" style={{ gridColumn: "1 / -1" }}>
+              {
+                {
+                  en: "You can add prior study or transfer credits later. No courses are presumed completed.",
+                  de: "Frühere Studienleistungen oder Transferkredite kannst du später ergänzen. Es werden keine abgeschlossenen Kurse angenommen.",
+                  fr: "Vous pourrez ajouter des études antérieures ou des crédits transférés plus tard. Aucun cours n’est présumé réussi.",
+                }[language]
+              }
+            </p>
             <details className="setup-options">
               <summary>{setup.optional}</summary>
               <div className="planner-fields">
@@ -215,9 +246,10 @@ export function Setup({ language }: { language: Language }) {
                     required
                     maxLength={200}
                     value={settings.name}
-                    onChange={(event) =>
-                      setSettings({ ...settings, name: event.target.value })
-                    }
+                    onChange={(event) => {
+                      setEdited((old) => ({ ...old, name: true }));
+                      setSettings({ ...settings, name: event.target.value });
+                    }}
                   />
                 </label>
                 <label>
@@ -228,12 +260,13 @@ export function Setup({ language }: { language: Language }) {
                     max="24"
                     required
                     value={settings.count}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      setEdited((old) => ({ ...old, count: true }));
                       setSettings({
                         ...settings,
                         count: Number(event.target.value),
-                      })
-                    }
+                      });
+                    }}
                   />
                 </label>
                 {manual && (
@@ -292,9 +325,29 @@ export function Setup({ language }: { language: Language }) {
       <SaveStatus language={language} />
       {rangeError && <p role="alert">{c.rangeError}</p>}
       {error && <p role="alert">{t.actionError}</p>}
-      <nav className="setup-secondary-links" style={{ display: "flex", flexWrap: "wrap", columnGap: "1.5rem", rowGap: ".75rem", marginTop: "1rem" }} aria-label={{ en: "Other setup options", de: "Weitere Optionen", fr: "Autres options" }[language]}>
-        <Link className="text-link" to="/catalogue">{setup.setLater}</Link>
-        <Link className="text-link" to="/plan">{t.import}</Link>
+      <nav
+        className="setup-secondary-links"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          columnGap: "1.5rem",
+          rowGap: ".75rem",
+          marginTop: "1rem",
+        }}
+        aria-label={
+          {
+            en: "Other setup options",
+            de: "Weitere Optionen",
+            fr: "Autres options",
+          }[language]
+        }
+      >
+        <Link className="text-link" to="/catalogue">
+          {setup.setLater}
+        </Link>
+        <Link className="text-link" to="/plan">
+          {t.import}
+        </Link>
       </nav>
     </section>
   );

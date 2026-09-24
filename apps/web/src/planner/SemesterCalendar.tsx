@@ -79,7 +79,7 @@ export default function SemesterCalendar({ language }: { language: Language }) {
   ) : null;
 }
 function Calendar({ language }: { language: Language }) {
-  const { plan, busy, save } = usePlans();
+  const { plan, busy, save, published } = usePlans();
   const navigate = useNavigate();
   const {
     term: parameter = plan ? planningSemester(plan) : currentSemester(),
@@ -190,6 +190,7 @@ function Calendar({ language }: { language: Language }) {
   const tx = timetableMessages[language];
   const exportInput = {
     name: plan.name,
+    sourceStatus: published.catalogue?.status,
     term,
     monday: monday.toString(),
     events: all,
@@ -242,18 +243,18 @@ function Calendar({ language }: { language: Language }) {
         <h2>{tx.preview}</h2>
         <p>
           {tx.week} · {monday.toString()} – {monday.add({ days: 6 }).toString()}{" "}
-          · A4 landscape
+          · A4 {tx.landscape}
         </p>
         <WeeklyDownloads input={exportInput} />
         <Button
           onClick={() => openPrintHtml(scopedPrintHtml(exportInput, "agenda"))}
         >
-          {tx.agenda} · A4 portrait
+          {tx.agenda} · A4 {tx.portrait}
         </Button>
         <Button
           onClick={() => openPrintHtml(scopedPrintHtml(exportInput, "roster"))}
         >
-          {tx.roster} · {term} · A4 portrait
+          {tx.roster} · {term} · A4 {tx.portrait}
         </Button>
       </section>
       <div className="semester-overview-stats">

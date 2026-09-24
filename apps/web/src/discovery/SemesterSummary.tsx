@@ -1,10 +1,15 @@
+import { timetableMessages } from "../planner/timetable-messages";
 import { semesterLabel } from "../planner/SemesterField";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components";
 import type { Language } from "../i18n";
 import { activeScenario, allocateCourse } from "../planner/domain";
-import { calendarFor, detectConflicts } from "../planner/calendar";
+import {
+  calendarFor,
+  detectConflicts,
+  conflictCounts,
+} from "../planner/calendar";
 import { usePlans } from "../planner/context";
 import { plannerMessages } from "../planner/messages";
 import { discoveryMessages } from "./messages";
@@ -41,9 +46,8 @@ export default function SemesterSummary({
     scenario.unavailable,
     scenario.travelMinutes,
   );
-  const pairs = new Set(
-    conflicts.map((c) => [c.first, c.second].sort().join(":")),
-  );
+  const counts = conflictCounts(conflicts);
+  const x = timetableMessages[language];
   const unresolved = new Set(calendar.unresolved.map((id) => id.split(":")[0]))
     .size;
   return (
@@ -59,7 +63,11 @@ export default function SemesterSummary({
           </span>
           <span>
             {unknownCredits > 0 && `${unknownCredits} ${p.unknown} · `}
-            {pairs.size} {t.conflictCount}
+            {counts.pairs} {x.pairs} · {counts.hard} {x.collisions}
+            {counts.internal > 0 && ` · ${counts.internal} ${x.internalCount}`}
+            {counts.travel > 0 && ` · ${counts.travel} ${p.travel}`}
+            {counts.unavailable > 0 &&
+              ` · ${counts.unavailable} ${p.unavailable}`}
             {unresolved > 0 && ` · ${unresolved} ${t.unknownCount}`}
           </span>
         </summary>

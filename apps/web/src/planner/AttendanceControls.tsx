@@ -23,7 +23,7 @@ export default function AttendanceControls({
   const x = timetableMessages[language],
     result = selectedMeetings(course),
     meetings = course.offering?.meetings ?? [];
-  if (!meetings.length) return null;
+  if (!meetings.length && !result.stale) return null;
   const series = attendanceSeries(course);
   const excluded = result.stale
     ? []
@@ -33,103 +33,114 @@ export default function AttendanceControls({
           : [],
       );
   return (
-    <details
-      className="attendance-controls no-print"
-      onToggle={(event) => setOpen(event.currentTarget.open)}
-    >
-      <summary>{x.attendance}</summary>
-      {open && (
-        <>
-          <p>{x.attendanceHelp}</p>
-          {result.stale && <p role="alert">{x.stale}</p>}
-          {course.attendance && (
-            <p className="schedule-warning">{x.provisional}</p>
-          )}
-          <fieldset disabled={disabled}>
-            <legend>{course.titles[language] ?? course.code}</legend>
-            {series
-              .filter((s) => s.indices.length > 1)
-              .map((group) => (
-                <label key={group.indices[0]}>
+    <>
+      {result.stale && (
+        <p className="schedule-warning" role="alert">
+          {course.titles[language] ?? course.titles.en ?? course.code}:{" "}
+          {x.stale}
+        </p>
+      )}
+      <details
+        className="attendance-controls no-print"
+        onToggle={(event) => setOpen(event.currentTarget.open)}
+      >
+        <summary>{x.attendance}</summary>
+        {open && (
+          <>
+            <p>{x.attendanceHelp}</p>
+            {course.attendance && !result.stale && (
+              <p className="schedule-warning">{x.provisional}</p>
+            )}
+            <fieldset disabled={disabled}>
+              <legend>{course.titles[language] ?? course.code}</legend>
+              {series
+                .filter((s) => s.indices.length > 1)
+                .map((group) => (
+                  <label key={group.indices[0]}>
+                    <input
+                      type="checkbox"
+                      checked={group.indices.every(
+                        (i) => !excluded.includes(i),
+                      )}
+                      onChange={(event) =>
+                        onChange(
+                          attendanceChoice(
+                            course,
+                            event.target.checked
+                              ? excluded.filter(
+                                  (i) => !group.indices.includes(i),
+                                )
+                              : [...excluded, ...group.indices],
+                          ),
+                        )
+                      }
+                    />
+                    <span>
+                      {group.meeting.note || x.session} ·{" "}
+                      {group.meeting.starts_at &&
+                        new Intl.DateTimeFormat(language, {
+                          timeZone: "Europe/Zurich",
+                          weekday: "long",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }).format(new Date(group.meeting.starts_at))}{" "}
+                      · {group.meeting.location || x.roomUnknown} ·{" "}
+                      {group.indices.length} {x.matchingDates}
+                    </span>
+                  </label>
+                ))}
+              {meetings.map((meeting, i) => (
+                <label key={meetingKey(meeting, i)}>
                   <input
                     type="checkbox"
-                    checked={group.indices.every((i) => !excluded.includes(i))}
+                    checked={!excluded.includes(i)}
                     onChange={(event) =>
                       onChange(
                         attendanceChoice(
                           course,
                           event.target.checked
-                            ? excluded.filter((i) => !group.indices.includes(i))
-                            : [...excluded, ...group.indices],
+                            ? excluded.filter((n) => n !== i)
+                            : [...excluded, i],
                         ),
                       )
                     }
                   />
                   <span>
-                    {group.meeting.note || x.session} ·{" "}
-                    {group.meeting.starts_at &&
-                      new Intl.DateTimeFormat(language, {
-                        timeZone: "Europe/Zurich",
-                        weekday: "long",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }).format(new Date(group.meeting.starts_at))}{" "}
-                    · {group.meeting.location || x.roomUnknown} ·{" "}
-                    {group.indices.length} {x.matchingDates}
+                    {meeting.note || x.session} ·{" "}
+                    {meeting.starts_at
+                      ? new Intl.DateTimeFormat(language, {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                          timeZone: "Europe/Zurich",
+                        }).format(new Date(meeting.starts_at))
+                      : x.unknown}{" "}
+                    · {meeting.location || x.roomUnknown}
+                    {meeting.recurrence && ` · ${meeting.recurrence}`}
                   </span>
                 </label>
               ))}
-            {meetings.map((meeting, i) => (
-              <label key={meetingKey(meeting, i)}>
-                <input
-                  type="checkbox"
-                  checked={!excluded.includes(i)}
-                  onChange={(event) =>
-                    onChange(
-                      attendanceChoice(
-                        course,
-                        event.target.checked
-                          ? excluded.filter((n) => n !== i)
-                          : [...excluded, i],
-                      ),
-                    )
-                  }
-                />
-                <span>
-                  {meeting.note || x.session} ·{" "}
-                  {meeting.starts_at
-                    ? new Intl.DateTimeFormat(language, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                        timeZone: "Europe/Zurich",
-                      }).format(new Date(meeting.starts_at))
-                    : x.unknown}{" "}
-                  · {meeting.location || x.roomUnknown}
-                  {meeting.recurrence && ` · ${meeting.recurrence}`}
-                </span>
-              </label>
-            ))}
-          </fieldset>
-          <button
-            className="button"
-            disabled={disabled || !course.attendance}
-            onClick={() => onChange(undefined)}
-          >
-            {x.restore}
-          </button>
-          {course.offering?.source_url && (
-            <p>
-              <a
-                href={course.offering.source_url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {x.source}
-              </a>
-            </p>
-          )}
-        </>
-      )}
-    </details>
+            </fieldset>
+            <button
+              className="button"
+              disabled={disabled || !course.attendance}
+              onClick={() => onChange(undefined)}
+            >
+              {x.restore}
+            </button>
+            {course.offering?.source_url && (
+              <p>
+                <a
+                  href={course.offering.source_url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {x.source}
+                </a>
+              </p>
+            )}
+          </>
+        )}
+      </details>
+    </>
   );
 }

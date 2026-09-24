@@ -1,3 +1,4 @@
+import { printSourceNote, type PrintSourceStatus } from "./print-source";
 import { Temporal } from "@js-temporal/polyfill";
 import type { Language } from "../i18n";
 import {
@@ -23,6 +24,7 @@ export type WeeklyExport = {
   language: Language;
   unresolved: boolean;
   conflicts?: Conflict[];
+  sourceStatus?: PrintSourceStatus;
 };
 export function exportManifest(input: WeeklyExport) {
   const weekOwners = new Set(
@@ -33,17 +35,35 @@ export function exportManifest(input: WeeklyExport) {
   const t = timetableMessages[input.language];
   return input.courses
     .filter((c) => c.semester === input.term && c.status !== "completed")
-    .map((course) => ({
-      course,
-      title: course.titles[input.language] ?? course.titles.en ?? course.code,
-      reason: selectedMeetings(course).unresolved
-        ? t.provisional
-        : calendarFor([course], input.term, input.language).unresolved.length
-          ? t.unknown
-          : weekOwners.has(course.id)
-            ? t.inWeek
-            : t.otherWeek,
-    }));
+    .map((course) => {
+      const attendance = selectedMeetings(course);
+      const reasonKind:
+        | "stale-attendance"
+        | "provisional-attendance"
+        | "unknown-dates"
+        | "in-week"
+        | "other-week" = attendance.stale
+        ? "stale-attendance"
+        : attendance.unresolved
+          ? "provisional-attendance"
+          : calendarFor([course], input.term, input.language).unresolved.length
+            ? "unknown-dates"
+            : weekOwners.has(course.id)
+              ? "in-week"
+              : "other-week";
+      return {
+        course,
+        title: course.titles[input.language] ?? course.titles.en ?? course.code,
+        reasonKind,
+        reason: {
+          "stale-attendance": t.stale,
+          "provisional-attendance": t.provisional,
+          "unknown-dates": t.unknown,
+          "in-week": t.inWeek,
+          "other-week": t.otherWeek,
+        }[reasonKind],
+      };
+    });
 }
 export const weekColours = ["E1EEF5", "E7F1E5", "FAF0DA", "F1E8ED", "E1EFEE"];
 export const minuteText = (minute: number) =>
@@ -85,7 +105,13 @@ export async function weeklyWorkbook(input: WeeklyExport) {
       localDate(c.start) >= input.monday &&
       localDate(c.start) <= week.days[6].date,
   );
-  const warning = `${input.unresolved ? t.missingDates : t.notesHelp} · ${scopedConflicts.filter((c) => c.kind !== "internal").length} ${tx.collisions} · ${scopedConflicts.filter((c) => c.kind === "internal").length} ${tx.internalCount}`;
+  const warning = `${printSourceNote(
+    input.courses.filter(
+      (c) => c.semester === input.term && c.status !== "completed",
+    ),
+    input.language,
+    input.sourceStatus,
+  )} · ${input.unresolved ? t.missingDates : t.notesHelp} · ${scopedConflicts.filter((c) => c.kind !== "internal").length} ${tx.collisions} · ${scopedConflicts.filter((c) => c.kind === "internal").length} ${tx.internalCount}`;
   const sheet = workbook.addWorksheet(t.weekly, {
     views: [{ state: "frozen", xSplit: 1, ySplit: 5, showGridLines: false }],
   });

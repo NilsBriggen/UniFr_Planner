@@ -1,3 +1,4 @@
+import { printSourceNote } from "./print-source";
 import { exportManifest, type WeeklyExport } from "./weekly-export";
 import { escapeHtml as e, openPrintHtml } from "./weekly-print";
 import { timetableMessages } from "./timetable-messages";
@@ -12,10 +13,11 @@ function documentHtml(
   scope: string,
   language: Language,
   body: string,
+  sourceNote?: string,
 ) {
   const x = timetableMessages[language];
   const heading = `${name} · ${scope}`;
-  return `<!doctype html><html lang="${language}"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>${e(heading)}</title><style>@page{size:A4 portrait;margin:15mm;@bottom-right{content:counter(page) " / " counter(pages);font:9px Arial;color:#536271}}body{font:12px/1.4 Arial,sans-serif;color:#172b3a;max-width:900px;margin:24px auto}h1{font-size:22px}h2{font-size:16px}table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{padding:7px;text-align:left;border-bottom:1px solid #adb8c0;overflow-wrap:anywhere;vertical-align:top}tr{break-inside:avoid}thead{display:table-header-group}.context{font-size:10px;color:#364652}.evidence{break-before:page}button{padding:10px;font:inherit}.warning{font-weight:bold}@media print{body{margin:0;max-width:none}.tools{display:none}h2{break-after:avoid}}</style></head><body><div class="tools"><button id="print">${e(shareMessages[language].print)}</button> A4 portrait · Letter portrait</div><h1>${e(heading)}</h1><p class="context">Europe/Zurich · ${e(x.generated)} ${new Date().toISOString().slice(0, 10)} · ${e(x.unpublished)}</p>${body}</body></html>`;
+  return `<!doctype html><html lang="${language}"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><title>${e(heading)}</title><style>@page{size:A4 portrait;margin:15mm;@bottom-right{content:counter(page) " / " counter(pages);font:9px Arial;color:#536271}}body{font:12px/1.4 Arial,sans-serif;color:#172b3a;max-width:900px;margin:24px auto}h1{font-size:22px}h2{font-size:16px}table{width:100%;border-collapse:collapse;table-layout:fixed}td,th{padding:7px;text-align:left;border-bottom:1px solid #adb8c0;overflow-wrap:anywhere;vertical-align:top}tr{break-inside:avoid}thead{display:table-header-group}.context{font-size:10px;color:#364652}.evidence{break-before:page}button{padding:10px;font:inherit}.warning{font-weight:bold}@media print{body{margin:0;max-width:none}.tools{display:none}h2{break-after:avoid}}</style></head><body><div class="tools"><button id="print">${e(shareMessages[language].print)}</button> A4 ${e(x.portrait)} · Letter ${e(x.portrait)}</div><h1>${e(heading)}</h1><p class="context">Europe/Zurich · ${e(x.generated)} ${new Date().toISOString().slice(0, 10)} · ${e(sourceNote ?? x.unpublished)}</p>${body}</body></html>`;
 }
 export function scopedPrintHtml(
   input: WeeklyExport & { cancelled?: CalendarEvent[] },
@@ -37,8 +39,10 @@ export function scopedPrintHtml(
       .map((c) => [c.first, c.second].sort().join("|")),
   ).size;
   const summary = `<p class="warning">${pairs} ${e(x.pairs)} · ${conflicts.filter((c) => c.kind !== "internal").length} ${e(x.collisions)} · ${conflicts.filter((c) => c.kind === "internal").length} ${e(x.internalCount)}</p>`;
-  const missing = manifest.filter(
-    (m) => m.reason === x.unknown || m.reason === x.provisional,
+  const missing = manifest.filter((m) =>
+    ["unknown-dates", "provisional-attendance", "stale-attendance"].includes(
+      m.reasonKind,
+    ),
   );
   const unknown = missing.length
     ? `<h2>${e(x.manifest)}</h2><ul>${missing.map((m) => `<li>${e(m.title)} · ${e(m.course.code)} · ${m.course.ects ?? "?"} ECTS · ${e(m.reason)}</li>`).join("")}</ul>`
@@ -67,7 +71,12 @@ export function scopedPrintHtml(
     input.language,
     scope === "agenda"
       ? `${summary}${unknown}<table>${head}<tbody>${rows(input.events)}</tbody></table>${input.cancelled?.length ? `<h2>${e(plannerMessages[input.language].cancelled)}</h2><table>${head}<tbody>${rows(input.cancelled)}</tbody></table>` : ""}${evidence}`
-      : roster,
+      : `${unknown}${roster}`,
+    printSourceNote(
+      manifest.map((m) => m.course),
+      input.language,
+      input.sourceStatus,
+    ),
   );
 }
 export function printRoster(

@@ -1,3 +1,9 @@
+import { attendanceChoice } from "../planner/attendance";
+import { calendarFor } from "../planner/calendar";
+import { renderToStaticMarkup } from "react-dom/server";
+import { createElement } from "react";
+import { OfferingAdvice } from "./LessonPreview";
+import { timetableMessages } from "../planner/timetable-messages";
 import { expect, it } from "vitest";
 import {
   discoverCourses,
@@ -164,8 +170,21 @@ it("does not call unknown dates or an incomplete existing timetable a fit", () =
 });
 
 it("shows published dates for an out-of-horizon offering without claiming target fit", () => {
-  const p = createPlan({ id: "p", scenarioId: "s", name: "Short", programme: "Study", startTerm: "AS-2026", semesterCount: 1, targetEcts: 180 });
-  const spring = course("FUTURE", "Big Data", "2027-03-01T08:00:00Z", "2027-03-01T10:00:00Z");
+  const p = createPlan({
+    id: "p",
+    scenarioId: "s",
+    name: "Short",
+    programme: "Study",
+    startTerm: "AS-2026",
+    semesterCount: 1,
+    targetEcts: 180,
+  });
+  const spring = course(
+    "FUTURE",
+    "Big Data",
+    "2027-03-01T08:00:00Z",
+    "2027-03-01T10:00:00Z",
+  );
   spring.offerings[0].terms = ["SS-2027"];
   const result = discoverCourses(p, [spring], "SS-2027", "en");
   const assessment = result.assessments.get(offeringKey(spring.offerings[0]))!;
@@ -325,27 +344,221 @@ it("uses the composed CS plus BI exception rather than the standalone BI table",
 
 it("shows published programme assignments separately from reviewed requirement gains", async () => {
   const { bindDegreeSelection } = await import("../requirements/adapter");
-  const p = bindDegreeSelection(plan(), { structureId: "ba-120-60", components: [
-    { slotId: "major", programmeId: "bachelor-digitinf-informatics", variantId: "major-120", startSemester: "AS-2026", recipeVersion: "2026-27.1" },
-    { slotId: "minor", programmeId: "bachelor-sci-mathematics", variantId: "minor-60", startSemester: "AS-2026", recipeVersion: "2026-27.1" },
-  ] });
+  const p = bindDegreeSelection(plan(), {
+    structureId: "ba-120-60",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-digitinf-informatics",
+        variantId: "major-120",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+      {
+        slotId: "minor",
+        programmeId: "bachelor-sci-mathematics",
+        variantId: "minor-60",
+        startSemester: "AS-2026",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  });
   const math = course("UE-SMA.01104", "Analysis II");
-  math.offerings[0].assignments = [{ programme: "Mathematics 60 (MATH 60)", version: "2026_1/V_01", paths: ["Mathematics (MATH 60), minor 60 > Mathematics, minor MATH60, compulsory courses (from AS2026 on)"] }];
-  const assessment = discoverCourses(p, [math], "SS-2027", "en").assessments.get(offeringKey(math.offerings[0]))!;
+  math.offerings[0].assignments = [
+    {
+      programme: "Mathematics 60 (MATH 60)",
+      version: "2026_1/V_01",
+      paths: [
+        "Mathematics (MATH 60), minor 60 > Mathematics, minor MATH60, compulsory courses (from AS2026 on)",
+      ],
+    },
+  ];
+  const assessment = discoverCourses(
+    p,
+    [math],
+    "SS-2027",
+    "en",
+  ).assessments.get(offeringKey(math.offerings[0]))!;
   expect(assessment.match).toBe("subject");
   expect(assessment.recommended).toBe(false);
   expect(assessment.sourceAssignments).toHaveLength(1);
-  expect(filterDiscovery(discoverCourses(p, [math], "SS-2027", "en"), { programme: true, fits: false, hideAdded: false })).toHaveLength(1);
+  expect(
+    filterDiscovery(discoverCourses(p, [math], "SS-2027", "en"), {
+      programme: true,
+      fits: false,
+      hideAdded: false,
+    }),
+  ).toHaveLength(1);
 });
 
 it("keeps newer Biology source assignments visible to an older transfer with an uncertainty flag", () => {
   const p = plan();
-  p.degreeSelection = { structureId: "ba-120-60", components: [{ slotId: "major", programmeId: "bachelor-sci-biology", variantId: "major-120", startSemester: "AS-2024", recipeVersion: "2026-27.1" }] };
+  p.degreeSelection = {
+    structureId: "ba-120-60",
+    components: [
+      {
+        slotId: "major",
+        programmeId: "bachelor-sci-biology",
+        variantId: "major-120",
+        startSemester: "AS-2024",
+        recipeVersion: "2026-27.1",
+      },
+    ],
+  };
   const biology = course("UE-SBL.00015", "Biology field course");
-  biology.offerings[0].assignments = [{ programme: "Biology 120", version: "2025_1/V_01", paths: ["BSc in Biology, Major, 2nd-3rd year (from AS2025 on)"] }];
+  biology.offerings[0].assignments = [
+    {
+      programme: "Biology 120",
+      version: "2025_1/V_01",
+      paths: ["BSc in Biology, Major, 2nd-3rd year (from AS2025 on)"],
+    },
+  ];
   const result = discoverCourses(p, [biology], "AS-2026", "en");
   const assessment = result.assessments.get(offeringKey(biology.offerings[0]))!;
   expect(assessment.match).toBe("subject");
   expect(assessment.sourceApplicabilityUnconfirmed).toBe(true);
   expect(assessment.recommended).toBe(false);
+});
+
+it.each(["planned", "unscheduled"] as const)(
+  "retains %s attendance for the same offering and rejects changed sources",
+  (status) => {
+    const p = plan(),
+      c = course("C", "Programming"),
+      o = c.offerings[0];
+    o.meetings.push({ ...o.meetings[0], location: "Other room" });
+    const saved = fromOffering(o, "saved", "real-snapshot", false);
+    saved.status = status;
+    saved.semester = status === "planned" ? "AS-2026" : null;
+    saved.attendance = attendanceChoice(saved, [1]);
+    p.scenarios[0].courses = [saved];
+    const before = JSON.stringify(saved);
+    const assess = () =>
+      discoverCourses(p, [c], "AS-2026", "en").assessments.get(offeringKey(o))!;
+    const a = assess();
+    expect(a.calendar).toEqual(
+      calendarFor(
+        [{ ...saved, status: "planned", semester: "AS-2026" }],
+        "AS-2026",
+        "en",
+      ),
+    );
+    expect(a.calendar.events).toHaveLength(1);
+    expect(a.calendar.unresolved).toContain("saved:attendance");
+    expect(a.fit).toBe("unknown");
+    o.meetings[1].location = "Changed room";
+    const changed = assess();
+    expect(changed.calendar.events).toHaveLength(2);
+    expect(changed.attendanceStale).toBe(true);
+    expect(
+      renderToStaticMarkup(
+        createElement(OfferingAdvice, { assessment: changed, language: "en" }),
+      ),
+    ).toContain(timetableMessages.en.stale);
+    o.source_id = "different-offering";
+    const alternate = assess();
+    expect(alternate.calendar.events).toHaveLength(2);
+    expect(alternate.calendar.unresolved).toEqual([]);
+    expect(alternate.attendanceStale).toBe(false);
+    expect(JSON.stringify(saved)).toBe(before);
+  },
+);
+it("reports internal ambiguity separately from external course pairs and dated collisions", () => {
+  const p = plan(),
+    c = course("C", "Programming");
+  c.offerings[0].meetings.push({
+    ...c.offerings[0].meetings[0],
+    location: "Other",
+  });
+  const assess = () =>
+    discoverCourses(p, [c], "AS-2026", "en").assessments.get(
+      offeringKey(c.offerings[0]),
+    )!;
+  expect(assess()).toMatchObject({
+    fit: "unknown",
+    conflicts: [],
+    conflictCounts: {
+      internal: 1,
+      pairs: 0,
+      hard: 0,
+      travel: 0,
+      unavailable: 0,
+    },
+  });
+  const html = renderToStaticMarkup(
+    createElement(OfferingAdvice, { assessment: assess(), language: "en" }),
+  );
+  expect(html).toContain(timetableMessages.en.internal);
+  expect(html).not.toContain("Time conflict:");
+  p.scenarios[0].courses = [
+    {
+      ...fromOffering(
+        course("D", "Other course").offerings[0],
+        "other",
+        "test",
+        false,
+      ),
+      status: "planned",
+      semester: "AS-2026",
+    },
+  ];
+  expect(assess()).toMatchObject({
+    fit: "conflict",
+    conflicts: ["Other course"],
+    conflictCounts: { internal: 1, pairs: 1, hard: 2 },
+  });
+});
+
+it("uses the same provisional attendance for discovery, print and suggestion baseline comparison", async () => {
+  const { generateSuggestions } = await import("../suggestions/engine");
+  const { weeklyPrintHtml } = await import("../planner/weekly-print");
+  const p = plan(),
+    c = course("C", "Programming"),
+    o = c.offerings[0];
+  o.meetings.push({ ...o.meetings[0], location: "Excluded room" });
+  const saved = fromOffering(o, "saved", "snapshot", false);
+  saved.semester = "AS-2026";
+  saved.status = "planned";
+  saved.attendance = attendanceChoice(saved, [1]);
+  p.scenarios[0].courses = [saved];
+  const calendar = calendarFor([saved], "AS-2026", "en");
+  const discovery = discoverCourses(p, [c], "AS-2026", "en").assessments.get(
+    offeringKey(o),
+  )!;
+  const later = fromOffering(
+    course("C", "Programming", "2026-09-21T10:00:00Z", "2026-09-21T11:00:00Z")
+      .offerings[0],
+    "alternate",
+    "snapshot",
+    false,
+  );
+  later.offering!.source_id = "alternative";
+  const result = generateSuggestions({
+    plan: p,
+    catalogue: [
+      {
+        course: later,
+        languages: ["en"],
+        prerequisites: [],
+        equivalentTo: [],
+        evidence: "Published alternative",
+      },
+    ],
+    requirements: null,
+  });
+  expect(result.suggestions.length).toBeGreaterThan(0);
+  expect(result.suggestions[0].conflictsBefore).toEqual([]);
+  expect(result.suggestions[0].uncertainty).toContain("calendar");
+  expect(discovery.calendar).toEqual(calendar);
+  const print = weeklyPrintHtml({
+    name: "Plan",
+    term: "AS-2026",
+    monday: "2026-09-21",
+    courses: [saved],
+    events: calendar.events,
+    language: "en",
+    unresolved: true,
+  });
+  expect(print).not.toContain("Excluded room");
+  expect(print).toContain(timetableMessages.en.provisional);
 });

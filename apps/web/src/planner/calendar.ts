@@ -345,6 +345,17 @@ export function detectConflicts(
   }
   return found;
 }
+/** Count external course pairs independently from source ambiguity and personal constraints. */
+export function conflictCounts(conflicts: Conflict[]) {
+  const hard = conflicts.filter((c) => c.kind === "hard");
+  return {
+    pairs: new Set(hard.map((c) => [c.first, c.second].sort().join(":"))).size,
+    hard: hard.length,
+    internal: conflicts.filter((c) => c.kind === "internal").length,
+    travel: conflicts.filter((c) => c.kind === "travel").length,
+    unavailable: conflicts.filter((c) => c.kind === "unavailable").length,
+  };
+}
 export const canonicalTerm = (value: string) =>
   value.replace(/^HS-/, "AS-").replace(/^FS-/, "SS-");
 export function termRange(value: string): DateRange {

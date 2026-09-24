@@ -1,3 +1,4 @@
+import { selectedMeetings } from "../planner/attendance";
 import type { Course } from "../api/client";
 import {
   activeScenario,
@@ -7,6 +8,7 @@ import {
 } from "../planner/domain";
 import {
   calendarFor,
+  conflictCounts,
   detectConflicts,
   type CalendarResult,
 } from "../planner/calendar";
@@ -21,7 +23,10 @@ import {
   selectedChoices,
 } from "../requirements/planning";
 import { resolveRecipeEligibility } from "../../../../packages/domain/src/eligibility";
-import { sourceAssignmentApplicability, sourceAssignmentMatches } from "./sourceAssignments";
+import {
+  sourceAssignmentApplicability,
+  sourceAssignmentMatches,
+} from "./sourceAssignments";
 import type { Offering } from "../api/client";
 
 export type Assessment = {
@@ -36,6 +41,8 @@ export type Assessment = {
   selectedStatus: Selection["status"] | null;
   fit: "fits" | "conflict" | "unknown";
   conflicts: string[];
+  conflictCounts: ReturnType<typeof conflictCounts>;
+  attendanceStale: boolean;
   calendar: CalendarResult;
   selected: boolean;
   prerequisitesUnknown: boolean;
@@ -93,15 +100,23 @@ export function discoverCourses(
   const assessments = new Map<string, Assessment>();
   for (const course of courses)
     for (const offering of course.offerings) {
-      const sourceAssignments = sourceAssignmentMatches(plan, offering.assignments);
-      const candidate = fromOffering(
-        offering,
-        "discovery-candidate",
-        "discovery-preview",
-        false,
+      const sourceAssignments = sourceAssignmentMatches(
+        plan,
+        offering.assignments,
       );
       const existing = known.get(canonicalCourseCode(course.code));
-      if (existing?.status === "unscheduled") candidate.id = existing.id;
+      const sameOffering = existing?.offering?.source_id === offering.source_id;
+      const candidate = fromOffering(
+        offering,
+        sameOffering || existing?.status === "unscheduled"
+          ? existing!.id
+          : "discovery-candidate",
+        sameOffering ? existing!.offering!.snapshot_id : "discovery-preview",
+        sameOffering ? existing!.offering!.development_fixture : false,
+      );
+      // Retain the saved snapshot marker so previewing unchanged source data does
+      // not invalidate attendance. Changed source fields still fail closed.
+      if (sameOffering) candidate.attendance = existing!.attendance;
       candidate.semester = term;
       candidate.status = "planned";
       const calendar = calendarFor([candidate], term, language);
@@ -114,6 +129,7 @@ export function discoverCourses(
         scenario.unavailable,
         scenario.travelMinutes,
       ).filter((c) => c.first === candidate.id || c.second === candidate.id);
+      const counts = conflictCounts(conflicts);
       const tree = degree
         ? resolveRecipeEligibility(degree, [...scenario.courses, candidate])
         : root;
@@ -305,9 +321,16 @@ export function discoverCourses(
         }
       }
       assessments.set(offeringKey(offering), {
-        match: matches.length ? "requirements" : sourceAssignments.length ? "subject" : null,
+        match: matches.length
+          ? "requirements"
+          : sourceAssignments.length
+            ? "subject"
+            : null,
         sourceAssignments,
-        sourceApplicabilityUnconfirmed: sourceAssignments.some((assignment) => sourceAssignmentApplicability(plan, assignment) === "unconfirmed"),
+        sourceApplicabilityUnconfirmed: sourceAssignments.some(
+          (assignment) =>
+            sourceAssignmentApplicability(plan, assignment) === "unconfirmed",
+        ),
         requirementTitles: matches.map(
           (node) => node.title[language as "en" | "de" | "fr"],
         ),
@@ -320,21 +343,27 @@ export function discoverCourses(
         selectedStatus: existing?.status ?? null,
         fit: !plan.semesters.includes(term)
           ? "unknown"
-          : conflicts.length
-          ? "conflict"
-          : calendar.unresolved.length || base.unresolved.length
-            ? "unknown"
-            : "fits",
+          : counts.hard + counts.travel + counts.unavailable
+            ? "conflict"
+            : counts.internal ||
+                calendar.unresolved.length ||
+                base.unresolved.length
+              ? "unknown"
+              : "fits",
         conflicts: [
           ...new Set(
-            conflicts.map(
-              (c) =>
-                names.get(c.first === candidate.id ? c.second : c.first) ??
-                offering.course.titles[language] ??
-                course.code,
-            ),
+            conflicts
+              .filter((c) => c.kind !== "internal")
+              .map(
+                (c) =>
+                  names.get(c.first === candidate.id ? c.second : c.first) ??
+                  offering.course.titles[language] ??
+                  course.code,
+              ),
           ),
         ],
+        conflictCounts: counts,
+        attendanceStale: selectedMeetings(candidate).stale,
         calendar,
         selected: !!existing && existing.status !== "unscheduled",
         prerequisitesUnknown: prerequisiteState === "unknown",

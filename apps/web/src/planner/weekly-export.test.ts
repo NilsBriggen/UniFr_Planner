@@ -118,3 +118,35 @@ it("names undated selections with credits and gives every short parallel event a
   expect(JSON.stringify(workbook.model)).toContain("Bachelor thesis");
   expect(JSON.stringify(workbook.model)).toContain("Colloquium");
 });
+
+it("uses matched publication metadata and translated paper labels in week, agenda and workbook", async () => {
+  const { publishedPlan } = await import("./published-fixture");
+  const { scopedPrintHtml } = await import("./scoped-print");
+  const courses = [publishedPlan().scenarios[0].courses[0]];
+  const scoped = {
+    ...input,
+    courses,
+    language: "de" as const,
+    sourceStatus: {
+      snapshot_id: courses[0].offering!.snapshot_id,
+      published_at: "2026-09-22T08:00:00Z",
+    },
+  };
+  const week = weeklyPrintHtml(scoped),
+    agenda = scopedPrintHtml(scoped, "agenda");
+  expect(week).toContain("Katalog veröffentlicht");
+  expect(agenda).toContain("Katalog veröffentlicht");
+  expect(week).toContain("A4 Querformat");
+  expect(agenda).toContain("A4 Hochformat");
+  expect(
+    String((await weeklyWorkbook(scoped)).worksheets[0].getCell("A3").value),
+  ).toContain("Katalog veröffentlicht");
+  const mixed = {
+    ...scoped,
+    sourceStatus: { ...scoped.sourceStatus, snapshot_id: "unrelated" },
+  };
+  expect(weeklyPrintHtml(mixed)).not.toContain("Katalog veröffentlicht");
+  expect(scopedPrintHtml(mixed, "agenda")).not.toContain(
+    "Katalog veröffentlicht",
+  );
+});

@@ -1,3 +1,4 @@
+import { calendarFor, canonicalTerm } from "./planner/calendar";
 import { semesterLabel } from "./planner/SemesterField";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -29,6 +30,7 @@ import CoursePlanner from "./planner/CoursePlanner";
 import { extendPlanToTerm } from "./planner/extendPlan";
 import { usePlans } from "./planner/context";
 import {
+  fromOffering,
   planningSemester,
   currentSemester,
   semesterIndex,
@@ -37,8 +39,15 @@ import { catchupMessages } from "./planner/catchup-messages";
 import { useDiscovery, useDiscoveryIndex } from "./discovery/useDiscovery";
 import { filterDiscovery, offeringKey } from "./discovery/presentation";
 import { discoveryMessages } from "./discovery/messages";
-import { rememberCatalogueContext } from "./discovery/catalogueContext";
-import { sourceAssignmentApplicability, sourceAssignmentMatches, stagePriority } from "./discovery/sourceAssignments";
+import {
+  catalogueLinkFor,
+  rememberCatalogueContext,
+} from "./discovery/catalogueContext";
+import {
+  sourceAssignmentApplicability,
+  sourceAssignmentMatches,
+  stagePriority,
+} from "./discovery/sourceAssignments";
 import { OfferingAdvice } from "./discovery/LessonPreview";
 import SemesterSummary from "./discovery/SemesterSummary";
 import "./discovery/discovery.css";
@@ -169,7 +178,7 @@ function Provenance({
   );
 }
 
-function MeetingList({
+function SourceMeetingList({
   offering,
   language,
 }: {
@@ -258,14 +267,95 @@ function MeetingList({
   );
 }
 
+function MeetingList({
+  offering,
+  language,
+  requestedTerm,
+}: {
+  offering: Offering;
+  language: Language;
+  requestedTerm: string | null;
+}) {
+  const t = catalogueMessages[language];
+  if (!requestedTerm || !/^(AS|SS)-20\d{2}$/.test(canonicalTerm(requestedTerm)))
+    return <SourceMeetingList offering={offering} language={language} />;
+  const term = canonicalTerm(requestedTerm);
+  const selection = fromOffering(
+    offering,
+    "published-dates",
+    "published-preview",
+    false,
+  );
+  const dates = (value: string) => {
+    const calendar = calendarFor(
+      [{ ...selection, semester: value, status: "planned" }],
+      value,
+      language,
+    );
+    const events = [...calendar.events, ...calendar.cancelled].sort(
+      (a, b) => Date.parse(a.start) - Date.parse(b.start),
+    );
+    const stamp = (value: string) =>
+      new Intl.DateTimeFormat(language, {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Europe/Zurich",
+      }).format(new Date(value));
+    return (
+      <section key={value}>
+        <h4>{semesterLabel(value, language)}</h4>
+        {calendar.unresolved.length > 0 && (
+          <p className="schedule-warning">{t.unresolvedBody}</p>
+        )}
+        <ul className="meeting-list">
+          {events.map((event) => (
+            <li key={event.id}>
+              {calendar.cancelled.includes(event) && (
+                <strong>{t.cancelled} · </strong>
+              )}
+              <time dateTime={event.start}>{stamp(event.start)}</time> –{" "}
+              <time dateTime={event.end}>{stamp(event.end)}</time>
+              {event.location && (
+                <span className="meeting-location">{event.location}</span>
+              )}
+              {event.sessionType && <p>{event.sessionType}</p>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  };
+  const others = [...new Set(offering.terms.map(canonicalTerm))].filter(
+    (value) => value !== term && /^(AS|SS)-20\d{2}$/.test(value),
+  );
+  return (
+    <>
+      <p className="timezone">Europe/Zurich</p>
+      {dates(term)}
+      {others.length > 0 && (
+        <details>
+          <summary>{t.otherTerms}</summary>
+          {others.map(dates)}
+        </details>
+      )}
+      <details>
+        <summary>{t.sourceRecords}</summary>
+        <SourceMeetingList offering={offering} language={language} />
+      </details>
+    </>
+  );
+}
+
 function SchedulePreview({
   offering,
   title,
   language,
+  requestedTerm,
 }: {
   offering: Offering;
   title: string;
   language: Language;
+  requestedTerm: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -297,11 +387,25 @@ function SchedulePreview({
           aria-labelledby={`preview-${offering.source_id}`}
           className="schedule-dialog"
           onKeyDown={(event) => {
-            // This read-only preview has one interactive control. Keep Tab inside it
-            // rather than allowing the browser's chrome to receive focus.
-            if (event.key === "Tab") {
+            if (event.key !== "Tab") return;
+            const controls = [
+              ...event.currentTarget.querySelectorAll<HTMLElement>(
+                "button, summary, a[href]",
+              ),
+            ].filter(
+              (element) =>
+                !element.closest("details:not([open])") ||
+                (element.parentElement?.tagName === "DETAILS" &&
+                  element.tagName === "SUMMARY"),
+            );
+            const first = controls[0],
+              last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) {
               event.preventDefault();
-              close.current?.focus();
+              last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first?.focus();
             }
           }}
           onCancel={(event) => {
@@ -321,14 +425,23 @@ function SchedulePreview({
               {t.close}
             </button>
           </div>
-          <MeetingList offering={offering} language={language} />
+          <MeetingList
+            offering={offering}
+            language={language}
+            requestedTerm={requestedTerm}
+          />
         </dialog>
       )}
     </>
   );
 }
 
-function PlanOfferingAction({ offering, status, language, browseTerm }: {
+function PlanOfferingAction({
+  offering,
+  status,
+  language,
+  browseTerm,
+}: {
   offering: Offering;
   status: CatalogueStatus;
   language: Language;
@@ -337,49 +450,159 @@ function PlanOfferingAction({ offering, status, language, browseTerm }: {
   const { plan, busy, save } = usePlans();
   const [provisional, setProvisional] = useState(false);
   const [error, setError] = useState(false);
-  const publishedTerm = browseTerm && offering.terms.includes(browseTerm)
-    ? browseTerm : offering.terms[0] ?? null;
-  if (!plan || !publishedTerm || plan.semesters.includes(publishedTerm) || provisional)
-    return <div>
-      {provisional && plan && publishedTerm && !plan.semesters.includes(publishedTerm) && <p className="discovery-help">{{
-        en: `No matching offering in ${semesterLabel(planningSemester(plan), language)}. Dates for ${semesterLabel(publishedTerm, language)} cannot be used for that target; this is provisional.`,
-        de: `Kein passendes Angebot in ${semesterLabel(planningSemester(plan), language)}. Termine aus ${semesterLabel(publishedTerm, language)} gelten dort nicht; diese Planung ist vorläufig.`,
-        fr: `Aucune offre correspondante en ${semesterLabel(planningSemester(plan), language)}. Les dates de ${semesterLabel(publishedTerm, language)} ne s’y appliquent pas; cette planification est provisoire.`,
-      }[language]}</p>}
-      <CoursePlanner offering={offering} status={status} language={language} preferredTerm={provisional && plan ? planningSemester(plan) : publishedTerm} />
-    </div>;
-  const canExtend = plan.semesters.length < 24 && semesterIndex(publishedTerm) > semesterIndex(plan.semesters.at(-1)!);
-  return <div className="course-planner">
-    <p className="discovery-help">{{
-      en: `Published for ${semesterLabel(publishedTerm, language)}; this term is outside your plan.`,
-      de: `Für ${semesterLabel(publishedTerm, language)} veröffentlicht; dieses Semester fehlt in deinem Plan.`,
-      fr: `Publié pour ${semesterLabel(publishedTerm, language)} ; ce semestre ne figure pas dans votre plan.`,
-    }[language]}</p>
-    {canExtend && <Button className="primary" disabled={busy} onClick={async () => {
-      try { setError(!(await save(extendPlanToTerm(plan, publishedTerm)))); }
-      catch { setError(true); }
-    }}>{{ en: `Add ${semesterLabel(publishedTerm, language)} to this plan`, de: `${semesterLabel(publishedTerm, language)} zum Plan hinzufügen`, fr: `Ajouter ${semesterLabel(publishedTerm, language)} au plan` }[language]}</Button>}
-    {!canExtend && <p className="discovery-help">{{ en: "This plan cannot be extended to that term within its 24-semester limit.", de: "Dieser Plan kann innerhalb der Grenze von 24 Semestern nicht bis dahin verlängert werden.", fr: "Ce plan ne peut pas être prolongé jusque-là dans la limite de 24 semestres." }[language]}</p>}
-    <Button onClick={() => setProvisional(true)}>{{ en: "Choose another target provisionally", de: "Anderes Zielsemester vorläufig wählen", fr: "Choisir provisoirement un autre semestre" }[language]}</Button>
-    {error && <p role="alert">{{ en: "Could not extend the plan. Please try again.", de: "Der Plan konnte nicht verlängert werden. Bitte versuche es erneut.", fr: "Impossible de prolonger le plan. Veuillez réessayer." }[language]}</p>}
-  </div>;
+  const publishedTerm =
+    browseTerm && offering.terms.includes(browseTerm)
+      ? browseTerm
+      : (offering.terms[0] ?? null);
+  if (
+    !plan ||
+    !publishedTerm ||
+    plan.semesters.includes(publishedTerm) ||
+    provisional
+  )
+    return (
+      <div>
+        {provisional &&
+          plan &&
+          publishedTerm &&
+          !plan.semesters.includes(publishedTerm) && (
+            <p className="discovery-help">
+              {
+                {
+                  en: `No matching offering in ${semesterLabel(planningSemester(plan), language)}. Dates for ${semesterLabel(publishedTerm, language)} cannot be used for that target; this is provisional.`,
+                  de: `Kein passendes Angebot in ${semesterLabel(planningSemester(plan), language)}. Termine aus ${semesterLabel(publishedTerm, language)} gelten dort nicht; diese Planung ist vorläufig.`,
+                  fr: `Aucune offre correspondante en ${semesterLabel(planningSemester(plan), language)}. Les dates de ${semesterLabel(publishedTerm, language)} ne s’y appliquent pas; cette planification est provisoire.`,
+                }[language]
+              }
+            </p>
+          )}
+        <CoursePlanner
+          offering={offering}
+          status={status}
+          language={language}
+          preferredTerm={
+            provisional && plan ? planningSemester(plan) : publishedTerm
+          }
+        />
+      </div>
+    );
+  const canExtend =
+    plan.semesters.length < 24 &&
+    semesterIndex(publishedTerm) > semesterIndex(plan.semesters.at(-1)!);
+  return (
+    <div className="course-planner">
+      <p className="discovery-help">
+        {
+          {
+            en: `Published for ${semesterLabel(publishedTerm, language)}; this term is outside your plan.`,
+            de: `Für ${semesterLabel(publishedTerm, language)} veröffentlicht; dieses Semester fehlt in deinem Plan.`,
+            fr: `Publié pour ${semesterLabel(publishedTerm, language)} ; ce semestre ne figure pas dans votre plan.`,
+          }[language]
+        }
+      </p>
+      {canExtend && (
+        <Button
+          className="primary"
+          disabled={busy}
+          onClick={async () => {
+            try {
+              setError(!(await save(extendPlanToTerm(plan, publishedTerm))));
+            } catch {
+              setError(true);
+            }
+          }}
+        >
+          {
+            {
+              en: `Add ${semesterLabel(publishedTerm, language)} to this plan`,
+              de: `${semesterLabel(publishedTerm, language)} zum Plan hinzufügen`,
+              fr: `Ajouter ${semesterLabel(publishedTerm, language)} au plan`,
+            }[language]
+          }
+        </Button>
+      )}
+      {!canExtend && (
+        <p className="discovery-help">
+          {
+            {
+              en: "This plan cannot be extended to that term within its 24-semester limit.",
+              de: "Dieser Plan kann innerhalb der Grenze von 24 Semestern nicht bis dahin verlängert werden.",
+              fr: "Ce plan ne peut pas être prolongé jusque-là dans la limite de 24 semestres.",
+            }[language]
+          }
+        </p>
+      )}
+      <Button onClick={() => setProvisional(true)}>
+        {
+          {
+            en: "Choose another target provisionally",
+            de: "Anderes Zielsemester vorläufig wählen",
+            fr: "Choisir provisoirement un autre semestre",
+          }[language]
+        }
+      </Button>
+      {error && (
+        <p role="alert">
+          {
+            {
+              en: "Could not extend the plan. Please try again.",
+              de: "Der Plan konnte nicht verlängert werden. Bitte versuche es erneut.",
+              fr: "Impossible de prolonger le plan. Veuillez réessayer.",
+            }[language]
+          }
+        </p>
+      )}
+    </div>
+  );
 }
 
-function AssignmentContext({ offering, language }: { offering: Offering; language: Language }) {
+function AssignmentContext({
+  offering,
+  language,
+}: {
+  offering: Offering;
+  language: Language;
+}) {
   const { plan } = usePlans();
-  const matches = plan ? sourceAssignmentMatches(plan, offering.assignments) : [];
-  const ordered = [...matches, ...offering.assignments.filter((assignment) => !matches.includes(assignment))];
+  const matches = plan
+    ? sourceAssignmentMatches(plan, offering.assignments)
+    : [];
+  const ordered = [
+    ...matches,
+    ...offering.assignments.filter(
+      (assignment) => !matches.includes(assignment),
+    ),
+  ];
   if (!ordered.length) return null;
-  return <section className="assignment-context">
-    <h3>{catalogueMessages[language].assignments}</h3>
-    {matches.length > 0 && <p className="discovery-help">{discoveryMessages[language].sourceNotRecognition}</p>}
-    <ul>{ordered.map((assignment, index) => <li key={`${assignment.programme}:${assignment.version}:${index}`}>
-      <strong>{assignment.programme}</strong> · {assignment.version}
-      {matches.includes(assignment) && <p><strong>{discoveryMessages[language].sourceListed}</strong></p>}
-      {plan && matches.includes(assignment) && sourceAssignmentApplicability(plan, assignment) === "unconfirmed" && <p>{discoveryMessages[language].sourceCohortUnconfirmed}</p>}
-      <p>{assignment.paths.join(" · ")}</p>
-    </li>)}</ul>
-  </section>;
+  return (
+    <section className="assignment-context">
+      <h3>{catalogueMessages[language].assignments}</h3>
+      {matches.length > 0 && (
+        <p className="discovery-help">
+          {discoveryMessages[language].sourceNotRecognition}
+        </p>
+      )}
+      <ul>
+        {ordered.map((assignment, index) => (
+          <li key={`${assignment.programme}:${assignment.version}:${index}`}>
+            <strong>{assignment.programme}</strong> · {assignment.version}
+            {matches.includes(assignment) && (
+              <p>
+                <strong>{discoveryMessages[language].sourceListed}</strong>
+              </p>
+            )}
+            {plan &&
+              matches.includes(assignment) &&
+              sourceAssignmentApplicability(plan, assignment) ===
+                "unconfirmed" && (
+                <p>{discoveryMessages[language].sourceCohortUnconfirmed}</p>
+              )}
+            <p>{assignment.paths.join(" · ")}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 function Detail({
@@ -396,6 +619,17 @@ function Detail({
   const t = catalogueMessages[language];
   const location = useLocation();
   const title = localizedTitle(course, language);
+  const requestedTerm = new URLSearchParams(query).get("term");
+  const inTerm = (offering: Offering) =>
+    Boolean(
+      requestedTerm &&
+        offering.terms.some(
+          (term) => canonicalTerm(term) === canonicalTerm(requestedTerm),
+        ),
+    );
+  const offerings = [...course.offerings].sort(
+    (a, b) => Number(inTerm(b)) - Number(inTerm(a)),
+  );
   return (
     <>
       <Link
@@ -405,8 +639,9 @@ function Detail({
       >
         {t.back}
       </Link>
-      {course.offerings.map((offering) => (
+      {offerings.map((offering) => (
         <article className="course-detail" key={offering.source_id}>
+          {requestedTerm && !inTerm(offering) && <p>{t.otherTerms}</p>}
           <h2>{offering.terms.join(" · ")}</h2>
           <AssignmentContext offering={offering} language={language} />
           <section>
@@ -450,6 +685,7 @@ function Detail({
               offering={offering}
               title={title}
               language={language}
+              requestedTerm={requestedTerm}
             />
           </div>
           <h3 className="schedule-heading">{t.schedule}</h3>
@@ -459,7 +695,11 @@ function Detail({
           {offering.recurrence_summary && (
             <p className="source-text">{offering.recurrence_summary}</p>
           )}
-          <MeetingList offering={offering} language={language} />
+          <MeetingList
+            offering={offering}
+            language={language}
+            requestedTerm={requestedTerm}
+          />
           {(
             [
               [t.assessment, offering.assessment],
@@ -513,14 +753,33 @@ function Search({
   const assessed = useDiscovery(plan, index.catalogue, term, language);
   const discovery = assessed.discovery;
   const findingMatches = index.loading || assessed.loading;
-  const hasMatches = discovery && [...discovery.assessments.values()].some((a) => a.recommended || a.sourceAssignments.length > 0);
-  const subjectFacets = [...new Set((plan?.degreeSelection?.components ?? []).flatMap((component) => {
-    const title = recipeRegistry.programmes.find((programme) => programme.id === component.programmeId)?.title;
-    return title ? terms.faculties.filter((faculty) => faculty.split(", ").at(-1)?.toLocaleLowerCase() === title.toLocaleLowerCase()) : [];
-  }))];
-  const mode = !plan || !hasStudyConfiguration(plan) || query.get("focus") === "all"
-    ? "all"
-    : query.get("focus") === "requirements" ? "requirements" : "programme";
+  const hasMatches =
+    discovery &&
+    [...discovery.assessments.values()].some(
+      (a) => a.recommended || a.sourceAssignments.length > 0,
+    );
+  const subjectFacets = [
+    ...new Set(
+      (plan?.degreeSelection?.components ?? []).flatMap((component) => {
+        const title = recipeRegistry.programmes.find(
+          (programme) => programme.id === component.programmeId,
+        )?.title;
+        return title
+          ? terms.faculties.filter(
+              (faculty) =>
+                faculty.split(", ").at(-1)?.toLocaleLowerCase() ===
+                title.toLocaleLowerCase(),
+            )
+          : [];
+      }),
+    ),
+  ];
+  const mode =
+    !plan || !hasStudyConfiguration(plan) || query.get("focus") === "all"
+      ? "all"
+      : query.get("focus") === "requirements"
+        ? "requirements"
+        : "programme";
   const programme = mode !== "all";
   const fits = query.get("fits") === "1",
     hideAdded = query.get("hide_added") === "1";
@@ -528,31 +787,41 @@ function Search({
     ? filterDiscovery(discovery, { mode, fits, hideAdded })
     : null;
   const preferredStage = query.get("stage") ?? "";
-  const ordered = filtered && discovery && preferredStage
-    ? [...filtered].sort((a, b) => {
-        const priority = (course: Course) => Math.max(0, ...course.offerings.map((offering) =>
-          stagePriority(discovery.assessments.get(offeringKey(offering))?.sourceAssignments ?? [], preferredStage),
-        ));
-        return priority(b) - priority(a);
-      })
-    : filtered;
+  const ordered =
+    filtered && discovery && preferredStage
+      ? [...filtered].sort((a, b) => {
+          const priority = (course: Course) =>
+            Math.max(
+              0,
+              ...course.offerings.map((offering) =>
+                stagePriority(
+                  discovery.assessments.get(offeringKey(offering))
+                    ?.sourceAssignments ?? [],
+                  preferredStage,
+                ),
+              ),
+            );
+          return priority(b) - priority(a);
+        })
+      : filtered;
   const offset = filtered
     ? Math.min(
         Math.max(0, Number(query.get("offset")) || 0),
         Math.max(0, Math.floor((filtered.length - 1) / 20) * 20),
       )
     : 0;
-  const page = loading || findingMatches
-    ? undefined
-    : filtered && index.catalogue
-      ? {
-          status: index.catalogue.status,
-          items: ordered!.slice(offset, offset + 20),
-          offset,
-          limit: 20,
-          total: filtered.length,
-        }
-      : serverPage;
+  const page =
+    loading || findingMatches
+      ? undefined
+      : filtered && index.catalogue
+        ? {
+            status: index.catalogue.status,
+            items: ordered!.slice(offset, offset + 20),
+            offset,
+            limit: 20,
+            total: filtered.length,
+          }
+        : serverPage;
   const hasPage = !!page;
   useEffect(() => {
     if (loading || findingMatches || !hasPage) return;
@@ -583,15 +852,25 @@ function Search({
   };
   const [clientIssue, setClientIssue] = useState<FilterIssue>();
   const [draft, setDraft] = useState(() => new URLSearchParams(query));
-  const appliedFilterKey = filterKeys.map((key) => `${key}=${query.get(key) ?? ""}`).join("&");
-  useEffect(() => setDraft(new URLSearchParams(query)), [appliedFilterKey]);
-  const setDraftField = (key: string, value: string) => setDraft((previous) => {
-    const next = new URLSearchParams(previous);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    return next;
-  });
-  const pending = filterKeys.some((key) => (draft.get(key) ?? "") !== (query.get(key) ?? ""));
+  const appliedFilterKey = new URLSearchParams(
+    [...query].filter(([key]) =>
+      filterKeys.includes(key as (typeof filterKeys)[number]),
+    ),
+  ).toString();
+  useEffect(
+    () => setDraft(new URLSearchParams(appliedFilterKey)),
+    [appliedFilterKey],
+  );
+  const setDraftField = (key: string, value: string) =>
+    setDraft((previous) => {
+      const next = new URLSearchParams(previous);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      return next;
+    });
+  const pending = filterKeys.some(
+    (key) => (draft.get(key) ?? "") !== (query.get(key) ?? ""),
+  );
   const formRef = useRef<HTMLFormElement>(null);
   const pendingFocus = useRef<FilterField | undefined>(undefined);
   const [expanded, setExpanded] = useState(invalid);
@@ -625,13 +904,20 @@ function Search({
   ) => (
     <label key={key}>
       {labels[key]}
-      <select name={key} aria-label={labels[key]} value={draft.get(key) ?? ""} onChange={(event) => setDraftField(key, event.target.value)}>
+      <select
+        name={key}
+        aria-label={labels[key]}
+        value={draft.get(key) ?? ""}
+        onChange={(event) => setDraftField(key, event.target.value)}
+      >
         <option value="">{t.all}</option>
         {[
           ...new Set([...values, ...(draft.has(key) ? [draft.get(key)!] : [])]),
         ].map((value) => (
           <option key={value} value={value}>
-            {key === "faculty" && value.includes(", ") ? `${value.split(", ").at(-1)} · ${value.split(", ").slice(0, -1).join(", ")}` : value}
+            {key === "faculty" && value.includes(", ")
+              ? `${value.split(", ").at(-1)} · ${value.split(", ").slice(0, -1).join(", ")}`
+              : value}
           </option>
         ))}
       </select>
@@ -669,7 +955,12 @@ function Search({
                 value={term}
                 onChange={(e) => updateChoice("term", e.target.value)}
               >
-                {[...new Set([...plan.semesters, ...(plan.semesters.includes(term) ? [] : [term])])].map((value) => (
+                {[
+                  ...new Set([
+                    ...plan.semesters,
+                    ...(plan.semesters.includes(term) ? [] : [term]),
+                  ]),
+                ].map((value) => (
                   <option key={value} value={value}>
                     {semesterLabel(value, language)}
                   </option>
@@ -679,7 +970,11 @@ function Search({
             <p className="discovery-help">
               <strong>{studyLabel(plan, language)}</strong>
               <br />
-              {mode === "all" ? d.allBrowseHelp : plan.semesters.includes(term) ? d.manualSemester : d.allTerms}
+              {mode === "all"
+                ? d.allBrowseHelp
+                : plan.semesters.includes(term)
+                  ? d.manualSemester
+                  : d.allTerms}
               {semesterIndex(term) < semesterIndex(currentSemester()) && (
                 <>
                   <br />
@@ -777,7 +1072,9 @@ function Search({
                   max="180"
                   step="0.5"
                   value={draft.get("ects_min") ?? ""}
-                  onChange={(event) => setDraftField("ects_min", event.target.value)}
+                  onChange={(event) =>
+                    setDraftField("ects_min", event.target.value)
+                  }
                   {...errorAttributes("ects_min")}
                 />
               </label>
@@ -790,7 +1087,9 @@ function Search({
                   max="180"
                   step="0.5"
                   value={draft.get("ects_max") ?? ""}
-                  onChange={(event) => setDraftField("ects_max", event.target.value)}
+                  onChange={(event) =>
+                    setDraftField("ects_max", event.target.value)
+                  }
                   {...errorAttributes("ects_max")}
                 />
               </label>
@@ -804,7 +1103,9 @@ function Search({
                   <select
                     name="available_day"
                     value={draft.get("available_day") ?? ""}
-                    onChange={(event) => setDraftField("available_day", event.target.value)}
+                    onChange={(event) =>
+                      setDraftField("available_day", event.target.value)
+                    }
                     {...errorAttributes("available_day")}
                   >
                     <option value="">{t.all}</option>
@@ -821,7 +1122,9 @@ function Search({
                     name="available_from"
                     type="time"
                     value={draft.get("available_from") ?? ""}
-                    onChange={(event) => setDraftField("available_from", event.target.value)}
+                    onChange={(event) =>
+                      setDraftField("available_from", event.target.value)
+                    }
                     {...errorAttributes("available_from")}
                   />
                 </label>
@@ -831,24 +1134,55 @@ function Search({
                     name="available_until"
                     type="time"
                     value={draft.get("available_until") ?? ""}
-                    onChange={(event) => setDraftField("available_until", event.target.value)}
+                    onChange={(event) =>
+                      setDraftField("available_until", event.target.value)
+                    }
                     {...errorAttributes("available_until")}
                   />
                 </label>
               </div>
             </fieldset>
-            <Button className="primary" type="submit">{{ en: "Apply filters", de: "Filter anwenden", fr: "Appliquer les filtres" }[language]}</Button>
-            <Button type="button" onClick={() => {
-              const next = new URLSearchParams(query);
-              filterKeys.forEach((key) => next.delete(key));
-              next.delete("offset");
-              setDraft(new URLSearchParams(next));
-              setClientIssue(undefined);
-              change(next);
-            }}>{{ en: "Clear filters", de: "Filter löschen", fr: "Effacer les filtres" }[language]}</Button>
+            <Button className="primary" type="submit">
+              {
+                {
+                  en: "Apply filters",
+                  de: "Filter anwenden",
+                  fr: "Appliquer les filtres",
+                }[language]
+              }
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                const next = new URLSearchParams(query);
+                filterKeys.forEach((key) => next.delete(key));
+                next.delete("offset");
+                setDraft(new URLSearchParams(next));
+                setClientIssue(undefined);
+                change(next);
+              }}
+            >
+              {
+                {
+                  en: "Clear filters",
+                  de: "Filter löschen",
+                  fr: "Effacer les filtres",
+                }[language]
+              }
+            </Button>
           </div>
         </form>
-        {pending && <p role="status">{{ en: "Filters not applied", de: "Filter noch nicht angewendet", fr: "Filtres non appliqués" }[language]}</p>}
+        {pending && (
+          <p role="status">
+            {
+              {
+                en: "Filters not applied",
+                de: "Filter noch nicht angewendet",
+                fr: "Filtres non appliqués",
+              }[language]
+            }
+          </p>
+        )}
         <div className="filter-chips" role="group" aria-label={t.selection}>
           {filterKeys
             .filter((key) => query.has(key))
@@ -894,7 +1228,10 @@ function Search({
           <>
             <div className="discovery-controls" aria-label={d.heading}>
               {discovery.hasProgramme && (
-                <Button aria-pressed={mode === "requirements"} onClick={() => updateChoice("focus", "requirements")}>
+                <Button
+                  aria-pressed={mode === "requirements"}
+                  onClick={() => updateChoice("focus", "requirements")}
+                >
                   {d.knownRequirements}
                 </Button>
               )}
@@ -913,13 +1250,44 @@ function Search({
                 {d.all}
               </Button>
               <label>
-                {{ en: "Prefer curriculum stage", de: "Studienphase bevorzugen", fr: "Privilégier l’étape du cursus" }[language]}
-                <select value={preferredStage} onChange={(event) => updateChoice("stage", event.target.value)}>
-                  <option value="">{{ en: "Show all stages", de: "Alle Studienphasen", fr: "Toutes les étapes" }[language]}</option>
-                  {[1, 2, 3, 4].map((year) => <option value={year} key={year}>{year}</option>)}
+                {
+                  {
+                    en: "Prefer curriculum stage",
+                    de: "Studienphase bevorzugen",
+                    fr: "Privilégier l’étape du cursus",
+                  }[language]
+                }
+                <select
+                  value={preferredStage}
+                  onChange={(event) =>
+                    updateChoice("stage", event.target.value)
+                  }
+                >
+                  <option value="">
+                    {
+                      {
+                        en: "Show all stages",
+                        de: "Alle Studienphasen",
+                        fr: "Toutes les étapes",
+                      }[language]
+                    }
+                  </option>
+                  {[1, 2, 3, 4].map((year) => (
+                    <option value={year} key={year}>
+                      {year}
+                    </option>
+                  ))}
                 </select>
               </label>
-              <small>{{ en: "This changes order only; all stages stay available.", de: "Nur die Reihenfolge ändert sich; alle Studienphasen bleiben verfügbar.", fr: "Seul l’ordre change ; toutes les étapes restent disponibles." }[language]}</small>
+              <small>
+                {
+                  {
+                    en: "This changes order only; all stages stay available.",
+                    de: "Nur die Reihenfolge ändert sich; alle Studienphasen bleiben verfügbar.",
+                    fr: "Seul l’ordre change ; toutes les étapes restent disponibles.",
+                  }[language]
+                }
+              </small>
               <div className="discovery-toggles">
                 <label>
                   <input
@@ -965,7 +1333,13 @@ function Search({
               <StatusNotice>
                 <h2>{t.none}</h2>
                 <p>
-                  {discovery ? mode === "requirements" ? d.noMatches : programme ? d.noAssignment : d.empty : t.noneBody}
+                  {discovery
+                    ? mode === "requirements"
+                      ? d.noMatches
+                      : programme
+                        ? d.noAssignment
+                        : d.empty
+                    : t.noneBody}
                 </p>
                 {programme && (
                   <p>
@@ -974,14 +1348,28 @@ function Search({
                     </Link>
                   </p>
                 )}
-                {programme && subjectFacets.map((faculty) => <Button key={faculty} onClick={() => {
-                  const next = new URLSearchParams(query);
-                  next.set("faculty", faculty);
-                  next.set("focus", "all");
-                  next.delete("offset");
-                  setDraft(new URLSearchParams(next));
-                  change(next);
-                }}>{{ en: `Browse ${faculty.split(", ").at(-1)} subject courses`, de: `Kurse im Fach ${faculty.split(", ").at(-1)} ansehen`, fr: `Parcourir les cours de ${faculty.split(", ").at(-1)}` }[language]}</Button>)}
+                {programme &&
+                  subjectFacets.map((faculty) => (
+                    <Button
+                      key={faculty}
+                      onClick={() => {
+                        const next = new URLSearchParams(query);
+                        next.set("faculty", faculty);
+                        next.set("focus", "all");
+                        next.delete("offset");
+                        setDraft(new URLSearchParams(next));
+                        change(next);
+                      }}
+                    >
+                      {
+                        {
+                          en: `Browse ${faculty.split(", ").at(-1)} subject courses`,
+                          de: `Kurse im Fach ${faculty.split(", ").at(-1)} ansehen`,
+                          fr: `Parcourir les cours de ${faculty.split(", ").at(-1)}`,
+                        }[language]
+                      }
+                    </Button>
+                  ))}
                 {discovery && (
                   <Button
                     onClick={() => {
@@ -1099,7 +1487,9 @@ function Search({
           </>
         )}
       </div>
-      {plan && plan.semesters.includes(term) && <SemesterSummary term={term} language={language} />}
+      {plan && plan.semesters.includes(term) && (
+        <SemesterSummary term={term} language={language} />
+      )}
     </div>
   );
 }
@@ -1109,23 +1499,35 @@ export default function Catalogue({ language }: { language: Language }) {
   const [query, setQuery] = useSearchParams();
   const queryString = query.toString();
   const { plan, ready } = usePlans();
+  const location = useLocation();
+  const context = useRef<{ identity: string; locationKey: string } | null>(
+    null,
+  );
   useEffect(() => {
-    if (ready && plan && !course_code && queryString)
-      rememberCatalogueContext(plan.id, plan.activeScenarioId, query);
-  }, [ready, plan, course_code, queryString]);
-  useEffect(() => {
-    if (
-      !course_code &&
-      ready &&
-      plan &&
-      !query.has("term") &&
-      !query.has("scope")
-    ) {
-      const next = new URLSearchParams(query);
+    if (!ready) return;
+    const identity = plan ? `${plan.id}:${plan.activeScenarioId}` : "guest";
+    const previous = context.current;
+    context.current = { identity, locationKey: location.key };
+    if (course_code || !plan) return;
+    // A header/scenario switch leaves the previous route in place. Restore the
+    // destination before persisting; a new navigation key is an explicit link.
+    const switching =
+      previous &&
+      previous.identity !== identity &&
+      previous.locationKey === location.key;
+    const next = switching
+      ? new URLSearchParams(
+          catalogueLinkFor(plan.id, plan.activeScenarioId).split("?")[1] ?? "",
+        )
+      : new URLSearchParams(queryString);
+    if (!next.has("term") && !next.has("scope"))
       next.set("term", planningSemester(plan));
+    if (next.toString() !== queryString) {
       setQuery(next, { replace: true });
+      return;
     }
-  }, [course_code, ready, plan, query, setQuery]);
+    rememberCatalogueContext(plan.id, plan.activeScenarioId, next);
+  }, [ready, plan, course_code, queryString, location.key, setQuery]);
   const apiQueryString = [...query]
     .filter(([key]) => [...filterKeys, "offset", "limit"].includes(key))
     .map(
