@@ -1,6 +1,6 @@
 # Edit recipes here; run npm run recipes:build after review.
 schemaVersion: 1
-edition: 2026-27.1
+edition: 2026-27.2
 defaults:
   reviewStatus: draft
   courseCreditReuse: false

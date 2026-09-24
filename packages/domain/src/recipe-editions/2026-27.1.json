@@ -1988,7 +1988,7 @@
     "reviewStatus": "draft",
     "unknownCombination": "needs_clarification"
   },
-  "edition": "2026-27.2",
+  "edition": "2026-27.1",
   "maintenance": {
     "courseRefresh": "existing_catalogue_schedule",
     "curriculumReview": "before_each_semester",
