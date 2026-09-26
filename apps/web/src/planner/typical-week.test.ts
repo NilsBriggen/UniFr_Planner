@@ -492,6 +492,7 @@ it("counts irregular published dates and lists short series as other dates", () 
         dates: [
           {
             date: "2026-12-04",
+            endDate: "2026-12-04",
             weekday: 5,
             startMinute: 915,
             endMinute: 1020,
@@ -499,6 +500,7 @@ it("counts irregular published dates and lists short series as other dates", () 
           },
           {
             date: "2026-12-11",
+            endDate: "2026-12-11",
             weekday: 5,
             startMinute: 795,
             endMinute: 1020,
@@ -541,6 +543,38 @@ it("counts irregular published dates and lists short series as other dates", () 
   expect(typical.otherDates.map((group) => group.owner)).toEqual([
     "block",
     "twice",
+  ]);
+});
+
+it("keeps the last date of a course event longer than a day", () => {
+  const typical = build(
+    [
+      ...fullSchedule(spring),
+      {
+        ...session("block", "2027-03-05", "09:00", "17:00"),
+        end: localInstant("2027-03-06T17:00"),
+      },
+      // The same hours on the next day stay a separate entry.
+      session("block", "2027-03-07", "09:00", "17:00"),
+      session("block", "2027-03-12", "09:00", "17:00"),
+      session("block", "2027-03-13", "09:00", "17:00"),
+      // A night session keeps one date: its hours show the crossing.
+      session("block", "2027-03-19", "22:00", "02:00"),
+    ],
+    "SS-2027",
+    ["block"],
+  );
+  const [block] = typical.otherDates;
+  expect(block.dates[0]).toMatchObject({
+    date: "2027-03-05",
+    endDate: "2027-03-06",
+    timeLabel: "09:00–17:00",
+  });
+  expect(block.runs).toEqual([
+    { from: "2027-03-05", to: "2027-03-06", timeLabel: "09:00–17:00" },
+    { from: "2027-03-07", to: "2027-03-07", timeLabel: "09:00–17:00" },
+    { from: "2027-03-12", to: "2027-03-13", timeLabel: "09:00–17:00" },
+    { from: "2027-03-19", to: "2027-03-19", timeLabel: "22:00–02:00" },
   ]);
 });
 

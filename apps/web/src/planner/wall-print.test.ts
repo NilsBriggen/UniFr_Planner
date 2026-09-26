@@ -329,6 +329,27 @@ it("adds weekend columns only for slots drawn on the grid", () => {
   );
 });
 
+it.each<[Language, string]>([
+  ["en", "Other dates: block Fri 09.10.–Sat 10.10. 09:00–17:00"],
+  ["de", "Weitere Termine: block Fr 09.10.–Sa 10.10. 09:00–17:00"],
+  ["fr", "Autres dates: block ven. 09.10.–sam. 10.10. 09:00–17:00"],
+])(
+  "lists a course event longer than a day to its last date in %s",
+  (language, text) => {
+    const { doc } = sheet({
+      language,
+      events: [
+        ...series("maths", autumn, 1, "10:15", "12:00"),
+        {
+          ...session("block", "2026-10-09", "09:00", "17:00"),
+          end: localInstant("2026-10-10T17:00"),
+        },
+      ],
+    });
+    expect(doc.querySelector(".wall-notes")!.textContent).toContain(text);
+  },
+);
+
 it("fits the hour window tightly to the typical week", () => {
   const ruler = (events: CalendarEvent[]) =>
     [...sheet({ events }).doc.querySelectorAll(".wall-ruler span")].map(

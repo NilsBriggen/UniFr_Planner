@@ -65,6 +65,9 @@ export type TypicalSpan = {
 };
 export type TypicalDate = {
   date: string;
+  /** Later than date only for an event longer than a day, whose hours alone
+   * would hide the days after the first. */
+  endDate: string;
   weekday: number;
   startMinute: number;
   endMinute: number;
@@ -617,8 +620,14 @@ export function buildTypicalWeek(
             item.startMinute,
           ),
           endMinute = Math.max(known?.endMinute ?? 0, item.endMinute);
+        // A session crossing midnight keeps one date; its hours show that.
+        const days =
+          endMinute - startMinute > 1440
+            ? Math.floor((endMinute - 1) / 1440)
+            : 0;
         byDate.set(item.date, {
           date: item.date,
+          endDate: addDays(item.date, days),
           weekday: item.weekday,
           startMinute,
           endMinute,
@@ -627,16 +636,24 @@ export function buildTypicalWeek(
       }
       const dates = [...byDate.values()].sort((a, b) => order(a.date, b.date));
       const runs: TypicalOtherDates["runs"] = [];
-      for (const day of dates) {
+      // Only single-day dates join a run; a longer event keeps its own range.
+      const single = (day: TypicalDate) => day.endDate === day.date;
+      for (const [i, day] of dates.entries()) {
         const run = runs.at(-1);
         if (
           run &&
+          single(dates[i - 1]) &&
+          single(day) &&
           run.timeLabel === day.timeLabel &&
           addDays(run.to, 1) === day.date
         )
           run.to = day.date;
         else
-          runs.push({ from: day.date, to: day.date, timeLabel: day.timeLabel });
+          runs.push({
+            from: day.date,
+            to: day.endDate,
+            timeLabel: day.timeLabel,
+          });
       }
       return {
         owner: items[0].event.owner,
