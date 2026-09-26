@@ -32,7 +32,14 @@ export function Download({
   );
 }
 
-export function SaveStatus({ language }: { language: Language }) {
+export function SaveStatus({
+  language,
+  idle,
+}: {
+  language: Language;
+  /** Replaces the settled "saved" or first-run text, e.g. while creating a plan. */
+  idle?: ReactNode;
+}) {
   const { ready, busy, error, plan, unreadableIds } = usePlans();
   const t = plannerMessages[language];
   return (
@@ -52,9 +59,7 @@ export function SaveStatus({ language }: { language: Language }) {
             ? t.loading
             : busy
               ? t.saving
-              : plan
-                ? t.saved
-                : t.localHelp}
+              : (idle ?? (plan ? t.saved : t.localHelp))}
       </p>
     </>
   );

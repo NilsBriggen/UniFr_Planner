@@ -14,7 +14,12 @@ import {
 } from "../requirements/study-summary";
 import { catchupMessages } from "./catchup-messages";
 import { usePlans } from "./context";
-import { createPlan, currentSemester, semesterIndex } from "./domain";
+import {
+  createPlan,
+  currentSemester,
+  semesterIndex,
+  uniquePlanName,
+} from "./domain";
 import { plannerMessages } from "./messages";
 import { SaveStatus } from "./PlanControls";
 import { SemesterField, semesterLabel } from "./SemesterField";
@@ -24,7 +29,7 @@ export function Setup({ language }: { language: Language }) {
   const t = plannerMessages[language];
   const c = catchupMessages[language];
   const setup = setupMessages[language];
-  const { ready, busy, save } = usePlans();
+  const { ready, busy, save, plans } = usePlans();
   const navigate = useNavigate();
   const [query] = useSearchParams();
   const current = currentSemester();
@@ -54,6 +59,11 @@ export function Setup({ language }: { language: Language }) {
       targetEcts: 180,
     }),
   );
+  // Settings keep the base name; the suffix is derived once so the field shows
+  // exactly what is saved and a typed name is never changed.
+  const planName = edited.name
+    ? settings.name
+    : uniquePlanName(settings.name, plans);
 
   function destination(planning: string, configured: boolean) {
     const returnTo = query.get("returnTo");
@@ -82,7 +92,7 @@ export function Setup({ language }: { language: Language }) {
       let plan = createPlan({
         id: crypto.randomUUID(),
         scenarioId: crypto.randomUUID(),
-        name: settings.name.trim(),
+        name: planName.trim(),
         programme,
         startTerm: start,
         planningSemester: settings.planning,
@@ -110,6 +120,9 @@ export function Setup({ language }: { language: Language }) {
       <p className="eyebrow">UniFr Planner</p>
       <h1>{messages[language].setup}</h1>
       <p className="setup-intro">{t.programmeHelp}</p>
+      {plans.length > 0 && (
+        <p className="setup-intro">{setup.additionalPlan}</p>
+      )}
       <div hidden={manual || step !== "studies"}>
         <h2>{setup.studies}</h2>
         <DegreeSelectionForm
@@ -237,7 +250,7 @@ export function Setup({ language }: { language: Language }) {
                     name="name"
                     required
                     maxLength={200}
-                    value={settings.name}
+                    value={planName}
                     onChange={(event) => {
                       setEdited((old) => ({ ...old, name: true }));
                       setSettings({ ...settings, name: event.target.value });
@@ -314,7 +327,7 @@ export function Setup({ language }: { language: Language }) {
           {manual ? setup.configuredFallback : setup.manualFallback}
         </Button>
       )}
-      <SaveStatus language={language} />
+      <SaveStatus language={language} idle={t.localHelp} />
       {rangeError && <p role="alert">{c.rangeError}</p>}
       {error && <p role="alert">{t.actionError}</p>}
       <nav

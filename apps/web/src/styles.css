@@ -152,6 +152,11 @@ p {
   padding: 10px;
   flex-shrink: 0;
 }
+.button.header-new-plan {
+  padding: 10px 14px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 .study-navigation {
   display: flex;
   gap: 8px;
@@ -605,7 +610,8 @@ input {
   .header-tools {
     gap: 16px;
   }
-  .guest-status {
+  .guest-status,
+  .header-new-plan {
     display: none;
   }
 }

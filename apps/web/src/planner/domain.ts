@@ -281,6 +281,21 @@ export function updateScenario(
 }
 export const importAsNew = (plan: Plan, newId: string, name: string): Plan =>
   planSchema.parse({ ...plan, id: newId, name });
+// Local plans cannot be renamed later, so a default name that repeats an
+// existing plan gets the first free " (n)" suffix within the 200-character limit.
+export function uniquePlanName(
+  base: string,
+  plans: readonly Pick<Plan, "name">[],
+): string {
+  const name = base.trim();
+  const taken = new Set(plans.map((plan) => plan.name.trim()));
+  if (!name || !taken.has(name)) return base;
+  for (let n = 2; ; n++) {
+    const suffix = ` (${n})`;
+    const candidate = name.slice(0, 200 - suffix.length).trimEnd() + suffix;
+    if (!taken.has(candidate)) return candidate;
+  }
+}
 export function addCourse(plan: Plan, course: Selection): Plan {
   return updateScenario(plan, (s) => ({
     ...s,

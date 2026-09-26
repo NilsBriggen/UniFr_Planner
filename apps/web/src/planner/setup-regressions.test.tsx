@@ -12,9 +12,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
-async function setup() {
+async function setup(seed?: () => Promise<void>) {
   vi.stubGlobal("indexedDB", new IDBFactory());
   localStorage.setItem("unifr.language", "en");
+  // Seeding must follow the stub, which replaces the whole database.
+  await seed?.();
   render(
     <MemoryRouter initialEntries={["/setup"]}>
       <App />
@@ -276,4 +278,102 @@ it("preserves an edited plan name and part-time horizon through Back and Review 
   const saved = (await new PlanStore(indexedDB).load()).plans[0];
   expect(saved.name).toBe("My part-time law");
   expect(saved.semesters).toHaveLength(12);
+});
+
+function existingPlans(...names: string[]) {
+  const plans = names.map((name, index) =>
+    createPlan({
+      id: `existing-${index}`,
+      scenarioId: "main",
+      name,
+      programme: "Law",
+      startTerm: "AS-2026",
+      semesterCount: 6,
+      targetEcts: 180,
+    }),
+  );
+  const seed = async () => {
+    const store = new PlanStore(indexedDB);
+    for (const plan of plans) await store.save(plan, null);
+  };
+  return { plans, seed };
+}
+
+async function reviewLaw() {
+  fireEvent.change(screen.getByLabelText("Main programme"), {
+    target: { value: "bachelor-ius-law" },
+  });
+  fireEvent.change(screen.getByLabelText("Degree structure"), {
+    target: { value: "ba-180" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Review and start" }));
+  return screen.findByLabelText("Plan name");
+}
+
+it("sets up an additional plan with a distinct default name and leaves existing plans unchanged", async () => {
+  const existing = existingPlans("Law");
+  await setup(existing.seed);
+  expect(
+    screen.getByText(
+      "This creates an additional plan. Your existing plans stay unchanged.",
+    ),
+  ).toBeVisible();
+  expect(screen.getByText(/^Your plans stay in this browser/)).toHaveAttribute(
+    "role",
+    "status",
+  );
+  expect(screen.queryByText("Saved on this device")).not.toBeInTheDocument();
+  expect(await reviewLaw()).toHaveValue("Law (2)");
+  fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
+  await waitFor(async () =>
+    expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(2),
+  );
+  const { plans, activeId } = await new PlanStore(indexedDB).load();
+  expect(plans.find((plan) => plan.id === "existing-0")).toEqual(
+    existing.plans[0],
+  );
+  const created = plans.find((plan) => plan.id !== "existing-0")!;
+  expect(created.name).toBe("Law (2)");
+  expect(activeId).toBe(created.id);
+});
+
+it("numbers past every taken default name exactly once", async () => {
+  const existing = existingPlans("Law", "Law (2)");
+  await setup(existing.seed);
+  expect(await reviewLaw()).toHaveValue("Law (3)");
+  fireEvent.click(screen.getByRole("button", { name: "Back" }));
+  expect(await reviewLaw()).toHaveValue("Law (3)");
+  fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
+  await waitFor(async () =>
+    expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(3),
+  );
+  const names = (await new PlanStore(indexedDB).load()).plans.map(
+    (plan) => plan.name,
+  );
+  expect(names.sort()).toEqual(["Law", "Law (2)", "Law (3)"]);
+});
+
+it("keeps a typed plan name exactly even when another plan already uses it", async () => {
+  const existing = existingPlans("Law");
+  await setup(existing.seed);
+  fireEvent.change(await reviewLaw(), { target: { value: "Law" } });
+  expect(screen.getByLabelText("Plan name")).toHaveValue("Law");
+  fireEvent.click(screen.getByRole("button", { name: "Start planning" }));
+  await waitFor(async () =>
+    expect((await new PlanStore(indexedDB).load()).plans).toHaveLength(2),
+  );
+  const names = (await new PlanStore(indexedDB).load()).plans.map(
+    (plan) => plan.name,
+  );
+  expect(names).toEqual(["Law", "Law"]);
+});
+
+it("keeps the first plan's default name and shows no additional-plan notice", async () => {
+  await setup();
+  expect(
+    screen.queryByText(
+      "This creates an additional plan. Your existing plans stay unchanged.",
+    ),
+  ).not.toBeInTheDocument();
+  expect(await reviewLaw()).toHaveValue("Law");
 });

@@ -342,6 +342,9 @@ export function PlanBoard({ language }: { language: Language }) {
             >
               {t.openCalendar}
             </Link>
+            <Link className="text-link" to="/setup">
+              {t.newPlan}
+            </Link>
             <Link
               className="button primary"
               to={`/catalogue?term=${planningSemester(plan)}`}
@@ -633,9 +636,6 @@ export function PlanBoard({ language }: { language: Language }) {
               {suggestionMessages[language].nav}
             </Link>
             <div className="actions no-print">
-              <Link className="button" to="/setup">
-                {t.newPlan}
-              </Link>
               {plan && (
                 <>
                   <Download

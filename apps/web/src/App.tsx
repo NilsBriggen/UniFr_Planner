@@ -275,6 +275,12 @@ function AppShell() {
               ))}
             </select>
           </label>
+          {/* Wide screens only; My studies offers the same link. */}
+          {plans.plans.length > 0 && location.pathname !== "/setup" && (
+            <Link className="button header-new-plan" to="/setup">
+              {t.newPlan}
+            </Link>
+          )}
           <span className="guest-status">{t.guest}</span>
           <Link
             className="button header-settings"

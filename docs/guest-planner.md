@@ -22,6 +22,10 @@ Existing plans remain usable and offer a non-blocking configuration prompt. Chan
 studies preserves course records and requires explicit handling of personal requirement
 evidence when switching curricula.
 
+**New plan** on **My studies**, also in the header on wider screens, starts setup for an
+additional plan; existing plans stay unchanged, and **Current plan** in the header switches
+between them.
+
 After setup, choose semester courses directly. **Add courses** on any semester card
 also opens the catalogue filtered to that semester. Each offering has a semester selector
 and **Add to plan** action directly in the results and on its detail page.
