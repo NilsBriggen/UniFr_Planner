@@ -74,13 +74,37 @@ function EventCard({
     </article>
   );
 }
-/** Periods sharing a label, weekday and local times, in first-entry order. */
+const localTime = (value: string) =>
+  Temporal.Instant.from(value).toZonedDateTimeISO(zone).toPlainDateTime();
+/** Whether `next` is the weekly occurrence after `previous`. One week may be
+ * missing only where weeklyRepeats skips it, inside a DST switch. */
+function followsWeekly(previous: Unavailable, next: Unavailable) {
+  const [start, end] = [previous.start, previous.end].map(localTime);
+  const days = start
+    .toPlainDate()
+    .until(localTime(next.start).toPlainDate()).days;
+  const [skipped, skippedEnd] = [start, end].map((value) =>
+    value.add({ weeks: 1 }),
+  );
+  return (
+    days === 7 ||
+    (days === 14 &&
+      weeklyRepeats(
+        skipped.toString(),
+        skippedEnd.toString(),
+        skipped.toPlainDate().toString(),
+      )?.length === 0)
+  );
+}
+/** Unbroken weekly runs of periods sharing a label, weekday and local times,
+ * in first-entry order. */
 function weeklySeries(periods: Unavailable[]) {
-  const series = new Map<string, Unavailable[]>();
-  for (const period of periods) {
-    const [start, end] = [period.start, period.end].map((value) =>
-      Temporal.Instant.from(value).toZonedDateTimeISO(zone),
-    );
+  const series = new Map<string, Unavailable[][]>();
+  const order = new Map(periods.map((period, index) => [period, index]));
+  for (const period of [...periods].sort(
+    (a, b) => Date.parse(a.start) - Date.parse(b.start),
+  )) {
+    const [start, end] = [period.start, period.end].map(localTime);
     const key = JSON.stringify([
       period.label,
       start.dayOfWeek,
@@ -88,9 +112,15 @@ function weeklySeries(periods: Unavailable[]) {
       end.toPlainTime().toString(),
       start.toPlainDate().until(end.toPlainDate()).days,
     ]);
-    series.set(key, [...(series.get(key) ?? []), period]);
+    const runs = series.get(key) ?? [];
+    const run = runs.find((r) => followsWeekly(r.at(-1)!, period));
+    if (run) run.push(period);
+    else runs.push([period]);
+    series.set(key, runs);
   }
-  return [...series.values()];
+  const first = (run: Unavailable[]) =>
+    Math.min(...run.map((period) => order.get(period)!));
+  return [...series.values()].flat().sort((a, b) => first(a) - first(b));
 }
 export default function SemesterCalendar({ language }: { language: Language }) {
   const { plan } = usePlans();
@@ -201,7 +231,14 @@ function Calendar({ language }: { language: Language }) {
       dateStyle: "medium",
       timeZone: zone,
     }).format(new Date(`${day}T12:00:00Z`));
-  const dayMonth = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.`;
+  // The year shows only when a run crosses New Year.
+  const daySpan = (first: string, last: string) =>
+    [first, last]
+      .map(
+        (day) =>
+          `${day.slice(8, 10)}.${day.slice(5, 7)}.${first.slice(0, 4) === last.slice(0, 4) ? "" : day.slice(0, 4)}`,
+      )
+      .join("–");
   const seriesTime = (period: Unavailable) =>
     `${new Intl.DateTimeFormat(language, {
       weekday: "short",
@@ -719,33 +756,55 @@ function Calendar({ language }: { language: Language }) {
           <ul className="unavailable-list">
             {weeklySeries(scenario.unavailable).map((periods) => {
               const [period] = periods,
-                ids = new Set(periods.map((p) => p.id));
-              const remove = periods.length > 1 ? t.removeAll : t.removeBusy;
-              const starts = periods.map((p) => localDate(p.start)).sort();
-              return (
+                series = periods.length > 1;
+              const remove = (ids: Set<string>) =>
+                change(
+                  updateScenario(plan, (s) => ({
+                    ...s,
+                    unavailable: s.unavailable.filter((b) => !ids.has(b.id)),
+                  })),
+                );
+              const starts = periods.map((p) => localDate(p.start));
+              // Names repeat the visible row, so same-label rows stay distinct.
+              const row = `${period.label} · ${
+                series
+                  ? `${seriesTime(period)} · ${periods.length}× (${daySpan(starts[0], starts.at(-1)!)})`
+                  : shortDate(starts[0])
+              }`;
+              const removeRow = (
+                <Button
+                  disabled={busy}
+                  aria-label={`${series ? t.removeAll : t.removeBusy} · ${row}`}
+                  onClick={() => remove(new Set(periods.map((p) => p.id)))}
+                >
+                  {series ? t.removeAll : t.removeBusy}
+                </Button>
+              );
+              return series ? (
+                <li key={period.id} className="unavailable-series">
+                  <details>
+                    <summary>{row}</summary>
+                    <ul>
+                      {periods.map((occurrence, n) => (
+                        <li key={occurrence.id}>
+                          <span>{shortDate(starts[n])}</span>
+                          <Button
+                            disabled={busy}
+                            aria-label={`${t.removeBusy} · ${period.label} · ${seriesTime(period)} · ${shortDate(starts[n])}`}
+                            onClick={() => remove(new Set([occurrence.id]))}
+                          >
+                            {t.removeBusy}
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                  {removeRow}
+                </li>
+              ) : (
                 <li key={period.id}>
-                  <span>
-                    {period.label} ·{" "}
-                    {periods.length > 1
-                      ? `${seriesTime(period)} · ${periods.length}× (${dayMonth(starts[0])}–${dayMonth(starts.at(-1)!)})`
-                      : shortDate(localDate(period.start))}
-                  </span>
-                  <Button
-                    disabled={busy}
-                    aria-label={`${remove} · ${period.label}`}
-                    onClick={() =>
-                      change(
-                        updateScenario(plan, (s) => ({
-                          ...s,
-                          unavailable: s.unavailable.filter(
-                            (b) => !ids.has(b.id),
-                          ),
-                        })),
-                      )
-                    }
-                  >
-                    {remove}
-                  </Button>
+                  <span>{row}</span>
+                  {removeRow}
                 </li>
               );
             })}
