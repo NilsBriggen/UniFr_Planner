@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -91,4 +91,93 @@ it("requires an explicit preview and save to upgrade every component together", 
       (c) => c.recipeVersion === recipeRegistry.edition,
     ),
   ).toBe(true);
+});
+it("keeps the saved programme selected and previewable while a search excludes it", async () => {
+  render(
+    <MemoryRouter>
+      <DegreeSelectionForm
+        plan={oldPlan()}
+        language="en"
+        onCommit={async () => true}
+      />
+    </MemoryRouter>,
+  );
+  const user = userEvent.setup();
+  await user.type(
+    screen.getByRole("searchbox", { name: "Search main programme" }),
+    "law",
+  );
+  const main = screen.getByRole("combobox", { name: "Main programme" });
+  expect(main).toHaveValue("bachelor-digitinf-informatics");
+  expect(
+    within(main).getByRole("option", { name: "Computer Science" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Search all faculties" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Preview degree" }));
+  expect(
+    screen.getByRole("button", { name: "Save degree selection" }),
+  ).toBeEnabled();
+  await user.click(
+    screen.getByRole("button", { name: "Search all faculties" }),
+  );
+  expect(screen.getByRole("combobox", { name: "Faculty" })).toHaveValue("");
+  expect(main).toHaveValue("bachelor-digitinf-informatics");
+  expect(screen.getByLabelText("Minor · 60 ECTS")).toHaveValue(
+    "bachelor-sci-mathematics/minor-60",
+  );
+});
+it("choosing the saved programme again from the search keeps its components", async () => {
+  render(
+    <MemoryRouter>
+      <DegreeSelectionForm
+        plan={oldPlan()}
+        language="en"
+        onCommit={async () => true}
+      />
+    </MemoryRouter>,
+  );
+  const user = userEvent.setup();
+  await user.type(
+    screen.getByRole("searchbox", { name: "Search main programme" }),
+    "computer{Enter}",
+  );
+  await user.click(
+    screen.getByRole("button", {
+      name: "Computer Science · Science and Medicine",
+      pressed: true,
+    }),
+  );
+  expect(screen.getByLabelText("Degree structure")).toHaveValue("ba-120-60");
+  expect(screen.getByLabelText("Minor · 60 ECTS")).toHaveValue(
+    "bachelor-sci-mathematics/minor-60",
+  );
+});
+it("keeps the search usable but choices locked while busy", async () => {
+  render(
+    <MemoryRouter>
+      <DegreeSelectionForm
+        plan={oldPlan()}
+        language="en"
+        busy
+        onCommit={async () => true}
+      />
+    </MemoryRouter>,
+  );
+  const user = userEvent.setup();
+  const search = screen.getByRole("searchbox", {
+    name: "Search main programme",
+  });
+  expect(search).toBeEnabled();
+  expect(
+    screen.getByRole("combobox", { name: "Main programme" }),
+  ).toBeDisabled();
+  await user.type(search, "math");
+  await user.click(
+    screen.getByRole("button", { name: "Mathematics · Science and Medicine" }),
+  );
+  expect(screen.getByRole("combobox", { name: "Main programme" })).toHaveValue(
+    "bachelor-digitinf-informatics",
+  );
 });

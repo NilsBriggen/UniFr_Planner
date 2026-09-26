@@ -48,9 +48,18 @@ the header. Existing `/semester/:term`, `/catalogue`, `/catalogue/:course_code`,
 `/plan`, `/requirements`, `/plan/completed`, `/suggestions`, `/settings` and shared-plan
 links remain addressable. Routes load lazily with loading/error feedback.
 
-New setup uses two steps: choose studies, then review and start. Programme search
-narrows a native select; faculty is optional. A sole valid variant/structure can be
-selected automatically. Semester fields display season and year while storing the
+New setup uses two steps: choose studies, then review and start. Faculty is optional.
+The main-programme search sits beside the native select it narrows. It matches every
+word of the query, ignoring case and accents, against the official DE/FR/EN names,
+search aliases (BWL, VWL), subject and id; titles starting with the query come first,
+and faculty names are consulted only when no name matches. An always-present status
+line gives the count or a no-match message, up to 8 matches appear as quick picks,
+and "Search all faculties" clears only the faculty filter. Search never chooses a
+programme by itself (a prefix such as "inf" can match just the wrong one); Enter picks
+a single match or moves to the quick picks and never submits the step. The chosen
+programme stays listed while a query excludes it, and choosing it again keeps its
+structure and minors. A sole valid programme, variant or structure can be selected
+automatically. Semester fields display season and year while storing the
 canonical `AS-YYYY`/`SS-YYYY` values. Component cohort dates, the planning semester and
 pinned recipe editions remain distinct. Optional settings contain the plan name and
 planning horizon. Manual setup and skipping completed-course entry remain possible.
