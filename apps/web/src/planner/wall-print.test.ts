@@ -164,6 +164,7 @@ it.each<Language>(["en", "de", "fr"])(
     expect(doc.querySelectorAll(".wall-sheet")).toHaveLength(1);
     expect(html).toContain("@page{size:A4 landscape;margin:8mm}");
     expect(doc.getElementById("print")).not.toBeNull();
+    expect(html).toMatch(/\.tools button\{[^}]*min-height:44px/);
     const tools = doc.querySelector(".tools")!.textContent!;
     expect(tools.match(/A4/g)).toHaveLength(1);
     expect(tools).not.toContain("Letter");
@@ -233,7 +234,7 @@ it("marks slots that do not run every week in text and with a dashed bar", () =>
 });
 
 it("hatches personal commitments with their label and time only", () => {
-  const { doc } = sheet({
+  const { html, doc } = sheet({
     events: [
       ...series("maths", autumn, 1, "10:15", "12:00"),
       ...personal("Work", autumn, 1, "18:00", "22:00"),
@@ -251,6 +252,12 @@ it("hatches personal commitments with their label and time only", () => {
   expect(doc.body.textContent).not.toContain("Dentist");
   expect(doc.querySelector(".wall-notes")!.textContent).toContain(
     "Other commitment: 1 one-off date",
+  );
+  // Without a course colour the accent bar needs its own colour, or the whole
+  // left border is dropped; dashed "not every week" must still win over dotted.
+  expect(html).toContain(".wall-block.personal{--accent:#33414b;");
+  expect(html.indexOf(".wall-block.not-weekly{")).toBeGreaterThan(
+    html.indexOf(".wall-block.personal{"),
   );
 });
 
