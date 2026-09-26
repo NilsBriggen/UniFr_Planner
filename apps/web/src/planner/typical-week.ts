@@ -488,8 +488,11 @@ export function buildTypicalWeek(
     holidays: holidayWeeks,
     span,
   };
-  const inPeriod = (item: Occurrence) =>
-    !period || (item.monday >= period.from && item.monday <= period.to);
+  // Personal series are cropped to the median span they are classified
+  // against, so a commitment that runs all term never shows the edge of a
+  // wider printed period as its own start or end.
+  const inMedianSpan = (item: Occurrence) =>
+    !span || (item.monday >= span.firstWeek && item.monday <= span.lastWeek);
 
   // Overlapping series of one course on one weekday become a single block:
   // at most one of them can be attended. Sequential sessions stay apart.
@@ -518,7 +521,7 @@ export function buildTypicalWeek(
   }
   let personalOneOffs = 0;
   for (const items of series.filter((items) => items[0].personal)) {
-    const kept = items.filter(inPeriod);
+    const kept = items.filter(inMedianSpan);
     // Without a class span a recurring series is dropped, never "one-off".
     if (weeksOf(kept).length < MIN_GRID_WEEKS)
       personalOneOffs += datesOf(kept).length;
@@ -688,7 +691,7 @@ export function buildTypicalWeek(
   const lowerDate = period?.from ?? range.start,
     upperDate = period ? addDays(period.to, 6) : range.end;
   for (const items of longGroups.values()) {
-    const kept = items.filter(inPeriod),
+    const kept = items.filter(inMedianSpan),
       weeks = weeksOf(kept);
     if (span && weeks.length >= MIN_GRID_WEEKS) {
       const first = kept[0],

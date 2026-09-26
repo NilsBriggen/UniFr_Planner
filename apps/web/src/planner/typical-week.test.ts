@@ -636,6 +636,45 @@ it("draws recurring personal periods and keeps one-offs off the grid", () => {
   expect(unflagged).toEqual(typical);
 });
 
+it("never marks a term-long personal commitment from or until a period edge", () => {
+  // Work and an internship run all term (17.08.–11.01.); one course starts a
+  // week early and another continues into January, widening the printed
+  // period beyond the median span that "from" and "until" are judged by.
+  const term = Array.from({ length: 22 }, (_, i) =>
+    addDays("2026-08-17", 7 * i),
+  );
+  for (const extra of [
+    series("early", ["2026-09-07", ...autumn], 1, "12:15", "14:00"),
+    series(
+      "january",
+      [...autumn, "2027-01-04", "2027-01-11"],
+      2,
+      "14:15",
+      "16:00",
+    ),
+  ]) {
+    const typical = build(
+      [
+        ...fullSchedule(autumn),
+        ...extra,
+        ...personal("Work", term, 1, "18:00", "22:00"),
+        ...personal("Internship", term, 3, "00:00", "00:00").map((event) => ({
+          ...event,
+          end: localInstant(`${addDays(localDate(event.start), 1)}T00:00`),
+        })),
+      ],
+      "AS-2026",
+      [extra[0].owner],
+    );
+    expect(typical.slots.find((slot) => slot.personal)!.annotation).toEqual({
+      kind: "weekly",
+    });
+    expect(typical.allDay.map((entry) => entry.annotation)).toEqual([
+      { kind: "weekly" },
+    ]);
+  }
+});
+
 it("keeps full-day periods out of the grid as all-day lines or absences", () => {
   const typical = build([
     ...fullSchedule(autumn),
