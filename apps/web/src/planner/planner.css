@@ -377,13 +377,37 @@
   padding: 0;
   list-style: none;
 }
-.unavailable-list li {
+.unavailable-list > li,
+.unavailable-list details li {
   display: flex;
   gap: 20px;
   justify-content: space-between;
   align-items: center;
+}
+.unavailable-list > li {
   border-bottom: 1px solid var(--color-line);
   padding: 12px 0;
+}
+/* An open date list must not pull "Remove all" down to its middle. */
+.unavailable-list > .unavailable-series {
+  align-items: start;
+}
+.unavailable-list details {
+  flex: 1;
+  min-width: 0;
+}
+.unavailable-list summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 10px;
+}
+.unavailable-list details ul {
+  padding: 0 0 0 20px;
+  list-style: none;
+}
+.unavailable-list details li {
+  flex-wrap: wrap;
+  padding: 4px 0;
 }
 @media (max-width: 1000px) {
   .calendar-week {
@@ -423,7 +447,7 @@
   .planner-page .segmented {
     flex-wrap: wrap;
   }
-  .unavailable-list li {
+  .unavailable-list > li {
     display: grid;
   }
 }
