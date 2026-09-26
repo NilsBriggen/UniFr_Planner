@@ -9,12 +9,12 @@ import {
 
 /**
  * Released editions are immutable for academic content. Display metadata (programme
- * titles/aliases, uncited sources) may be corrected in place; anything else needs a new
- * edition, which adds its own pin deliberately.
+ * titles and aliases) may be corrected in place; anything else needs a new edition, which
+ * adds its own pin deliberately.
  */
 const academicPins = {
   "2026-27.2":
-    "036808d44a88296a2fe5c443801ce6c6ce8f5fb443606c7c5a6f57cb0274a345",
+    "7e963c3c8340e3c0883c110bb743722cf018500723494ca9e3357c9bbc29d97b",
 };
 
 const source = {
@@ -210,13 +210,16 @@ test("the academic digest ignores display metadata but not academic changes", as
   const named = structuredClone(registry);
   named.programmes[0].titles = { de: "Beispiel", fr: "Exemple" };
   named.programmes[0].aliases = ["Ex"];
-  named.sources.push({ ...source, id: "names", url: "https://x.test/names" });
   assert.equal(academicDigest(named), digest);
-  assert.equal(academicProjection(named).sources.length, 1);
+  assert.deepEqual(academicProjection(named).sources, registry.sources);
   for (const change of [
     (r) => (r.programmes[0].title = "Other"),
     (r) => (r.programmes[0].variants[0].ects = 120),
     (r) => (r.sources[0].sha256 = "0".repeat(64)),
+    (r) => (r.sources[0].revisionDate = "2000-01-01"),
+    // Sources are provenance of the edition even when no programme or rule cites them.
+    (r) =>
+      r.sources.push({ ...source, id: "names", url: "https://x.test/names" }),
     (r) => (r.structures[0].slots[0].ects = 120),
     (r) => (r.coverage[0].disposition = "alias"),
   ]) {
