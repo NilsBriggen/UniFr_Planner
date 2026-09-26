@@ -389,11 +389,13 @@ it("summarises each day neutrally and heads it with recurring all-day entries", 
   );
   expect(heads[0]).toEqual(["Monday", "08:15–17:00"]);
   expect(heads[1]).toEqual(["Tuesday", "No fixed commitments"]);
-  expect(heads[2]).toEqual([
-    "Wednesday",
-    "No fixed commitments",
-    "All day: Internship",
-  ]);
+  // An all-day day is neither called free nor left blank.
+  expect(heads[2]).toEqual(["Wednesday", "All day: Internship"]);
+  expect(
+    [...doc.querySelectorAll(".wall-day")].map(
+      (day) => day.querySelectorAll(".wall-all-day").length,
+    ),
+  ).toEqual([0, 0, 1, 0, 0]);
 });
 
 it("lists irregular dates, breaks, missing dates, absences and notes in order", () => {
