@@ -520,7 +520,11 @@ it("heads the sheet with the whole period when most courses end early", () => {
 
 it("keeps an empty term on one sheet with an explanation", () => {
   const { doc } = sheet({
-    events: [session("once", "2026-10-05", "10:15", "12:00")],
+    events: [
+      session("once", "2026-10-05", "10:15", "12:00"),
+      // Weekly, so not "14 one-off dates", even without a class span.
+      ...personal("Work", autumn, 1, "18:00", "22:00"),
+    ],
     courses: [course("once"), course("missing", { offering: null })],
   });
   expect(doc.querySelectorAll(".wall-sheet")).toHaveLength(1);

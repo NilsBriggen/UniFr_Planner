@@ -966,18 +966,20 @@ it("drops personal series and span without recurring classes", () => {
   const typical = build(
     [
       ...personal("Work", autumn, 1, "18:00", "22:00"),
+      ...personal("Dentist", ["2026-10-05"], 2, "09:00", "10:00"),
       ...series("once", ["2026-09-21"], 1, "10:15", "12:00"),
     ],
     "AS-2026",
     ["once"],
   );
+  // A weekly commitment is never counted as one-off dates.
   expect(typical).toMatchObject({
     slots: [],
     events: [],
     teachingWeeks: [],
     holidayWeeks: [],
     breakRuns: [],
-    personalOneOffs: 14,
+    personalOneOffs: 1,
   });
   expect(typical.span).toBeUndefined();
   expect(typical.otherDates.map((group) => group.owner)).toEqual(["once"]);

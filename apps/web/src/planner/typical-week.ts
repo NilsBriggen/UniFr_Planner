@@ -519,8 +519,10 @@ export function buildTypicalWeek(
   let personalOneOffs = 0;
   for (const items of series.filter((items) => items[0].personal)) {
     const kept = items.filter(inPeriod);
-    if (span && weeksOf(kept).length >= MIN_GRID_WEEKS) groups.push([kept]);
-    else personalOneOffs += datesOf(kept).length;
+    // Without a class span a recurring series is dropped, never "one-off".
+    if (weeksOf(kept).length < MIN_GRID_WEEKS)
+      personalOneOffs += datesOf(kept).length;
+    else if (span) groups.push([kept]);
   }
 
   const slots = groups
