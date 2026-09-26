@@ -1,8 +1,11 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { IDBFactory } from "fake-indexeddb";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { createPlan } from "./planner/domain";
+import { PlanStore } from "./planner/storage";
 
 function mount(path = "/") {
   return render(
@@ -137,5 +140,66 @@ describe("application shell", () => {
     expect(
       screen.getByText("Noch keine Veranstaltungen in diesem Semester."),
     ).toBeVisible();
+  });
+});
+
+describe("header New plan link", () => {
+  beforeEach(() => vi.stubGlobal("indexedDB", new IDBFactory()));
+  afterEach(() => vi.unstubAllGlobals());
+  const seed = () =>
+    new PlanStore(indexedDB).save(
+      createPlan({
+        id: "saved",
+        scenarioId: "s",
+        name: "Saved degree",
+        programme: "CS",
+        startTerm: "AS-2026",
+        semesterCount: 6,
+        targetEcts: 180,
+      }),
+      null,
+    );
+  // /plan has a second <header> for its workspace heading.
+  const header = () => within(document.querySelector<HTMLElement>(".header")!);
+
+  it("is absent until a plan exists", async () => {
+    localStorage.setItem("unifr.language", "en");
+    mount("/plan");
+    await screen.findByText(/^Your plans stay in this browser/);
+    expect(
+      header().queryByRole("link", { name: "New plan" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["en", "New plan", "Current plan"],
+    ["de", "Neuer Plan", "Aktueller Plan"],
+    ["fr", "Nouveau plan", "Plan actuel"],
+  ])(
+    "opens setup next to the plan switcher in %s",
+    async (language, name, planLabel) => {
+      localStorage.setItem("unifr.language", language);
+      await seed();
+      mount("/catalogue");
+      await waitFor(() =>
+        expect(header().getByLabelText(planLabel)).toBeEnabled(),
+      );
+      expect(header().getByRole("link", { name })).toHaveAttribute(
+        "href",
+        "/setup",
+      );
+    },
+  );
+
+  it("is not repeated on the setup page itself", async () => {
+    localStorage.setItem("unifr.language", "en");
+    await seed();
+    mount("/setup");
+    await waitFor(() =>
+      expect(header().getByLabelText("Current plan")).toBeEnabled(),
+    );
+    expect(
+      header().queryByRole("link", { name: "New plan" }),
+    ).not.toBeInTheDocument();
   });
 });

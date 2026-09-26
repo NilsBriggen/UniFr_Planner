@@ -13,6 +13,7 @@ export const setupMessages: Record<
     review: string;
     start: string;
     setLater: string;
+    additionalPlan: string;
   }
 > = {
   en: {
@@ -26,6 +27,8 @@ export const setupMessages: Record<
     review: "Review and start",
     start: "Start planning",
     setLater: "Set this up later",
+    additionalPlan:
+      "This creates an additional plan. Your existing plans stay unchanged.",
   },
   de: {
     studies: "1. Studium",
@@ -38,6 +41,8 @@ export const setupMessages: Record<
     review: "Prüfen und starten",
     start: "Planung starten",
     setLater: "Später einrichten",
+    additionalPlan:
+      "Dadurch wird ein zusätzlicher Plan erstellt. Bestehende Pläne bleiben unverändert.",
   },
   fr: {
     studies: "1. Études",
@@ -50,5 +55,7 @@ export const setupMessages: Record<
     review: "Vérifier et commencer",
     start: "Commencer la planification",
     setLater: "Configurer plus tard",
+    additionalPlan:
+      "Un plan supplémentaire sera créé. Vos plans existants restent inchangés.",
   },
 };

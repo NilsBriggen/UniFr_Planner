@@ -155,6 +155,40 @@ describe("local degree plan", () => {
     expect(imported.name).toBe("Imported");
     expect(plan.id).toBe("p1");
   });
+  it("numbers a default plan name only when another plan already uses it", () => {
+    const named = (...names: string[]) => names.map((name) => ({ name }));
+    expect(domain.uniquePlanName("Law", [])).toBe("Law");
+    expect(domain.uniquePlanName("Law", named("Mathematics"))).toBe("Law");
+    expect(domain.uniquePlanName("Law", named("Law"))).toBe("Law (2)");
+    expect(domain.uniquePlanName("Law", named("Law", "Law (2)"))).toBe(
+      "Law (3)",
+    );
+    expect(domain.uniquePlanName("Law", named("Law", "Law (3)"))).toBe(
+      "Law (2)",
+    );
+    expect(domain.uniquePlanName(" Law ", named("Law"))).toBe("Law (2)");
+    expect(domain.uniquePlanName("Law", named(" Law "))).toBe("Law (2)");
+    expect(domain.uniquePlanName("", named(""))).toBe("");
+    const long = "L".repeat(200);
+    const numbered = domain.uniquePlanName(long, named(long));
+    expect(numbered).toHaveLength(200);
+    expect(numbered).toBe(`${"L".repeat(196)} (2)`);
+    const spaced = `${"L".repeat(195)} Law`;
+    expect(domain.uniquePlanName(spaced, named(spaced))).toBe(
+      `${"L".repeat(195)} (2)`,
+    );
+    expect(() =>
+      domain.createPlan({
+        id: "p2",
+        scenarioId: "s2",
+        name: numbered,
+        programme: "Law",
+        startTerm: "AS-2026",
+        semesterCount: 6,
+        targetEcts: 180,
+      }),
+    ).not.toThrow();
+  });
 });
 
 it("keeps v1 legacy references intact and accepts only v2 recipes with unique slots", () => {

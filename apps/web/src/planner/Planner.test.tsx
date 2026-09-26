@@ -116,6 +116,66 @@ it("expands only the planning semester and keeps tools in one disclosure", async
   expect(
     screen.getByRole("group", { name: "Plan settings and backups" }),
   ).not.toHaveAttribute("open");
+  expect(
+    within(
+      document.querySelector<HTMLElement>(".workspace-actions")!,
+    ).getByRole("link", { name: "New plan" }),
+  ).toBeVisible();
+});
+it("offers New plan outside the collapsed tools and adds a plan without changing the first", async () => {
+  const user = userEvent.setup();
+  const store = new PlanStore(indexedDB);
+  const first = createPlan({
+    id: "first",
+    scenarioId: "s",
+    name: "A",
+    programme: "CS",
+    startTerm: "AS-2026",
+    semesterCount: 6,
+    targetEcts: 180,
+  });
+  await store.save(first, null);
+  mount("/plan");
+  await screen.findByRole("heading", { name: "A" });
+  const tools = screen.getByRole("group", {
+    name: "Plan settings and backups",
+  });
+  expect(tools).not.toHaveAttribute("open");
+  expect(
+    within(tools).queryByRole("link", { name: "New plan" }),
+  ).not.toBeInTheDocument();
+  const link = within(
+    document.querySelector<HTMLElement>(".workspace-actions")!,
+  ).getByRole("link", { name: "New plan" });
+  expect(link).toBeVisible();
+  expect(link).toHaveAttribute("href", "/setup");
+  await user.click(link);
+  await screen.findByRole("heading", { level: 1, name: "Set up your studies" });
+  await user.click(
+    await screen.findByRole("button", {
+      name: "My programme or combination is missing",
+    }),
+  );
+  await waitFor(() => expect(screen.getByLabelText("Plan name")).toBeEnabled());
+  await user.clear(screen.getByLabelText("Plan name"));
+  await user.type(screen.getByLabelText("Plan name"), "Second plan");
+  await user.click(screen.getByRole("button", { name: "Start planning" }));
+  await waitFor(async () => expect((await store.load()).plans).toHaveLength(2));
+  const { plans, activeId } = await store.load();
+  expect(plans.find((plan) => plan.id === "first")).toEqual(first);
+  const created = plans.find((plan) => plan.id !== "first")!;
+  expect(created.name).toBe("Second plan");
+  expect(activeId).toBe(created.id);
+  const switcher = within(screen.getByRole("banner")).getByLabelText(
+    "Current plan",
+  );
+  await waitFor(() => expect(switcher).toHaveDisplayValue("Second plan"));
+  expect(
+    within(switcher)
+      .getAllByRole("option")
+      .map((option) => option.textContent)
+      .sort(),
+  ).toEqual(["A", "Second plan"]);
 });
 it("shows only unavailable intervals in the selected semester calendar", async () => {
   const plan = createPlan({

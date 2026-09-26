@@ -45,7 +45,22 @@ for (const language of ["de", "fr", "en"] as const) {
       ).violations,
     ).toEqual([]);
     for (const name of ["First degree", "Second degree"]) {
-      await page.goto("/setup");
+      if (name === "First degree") await page.goto("/setup");
+      else {
+        // Once a plan exists, the next one starts from a visible link.
+        await expect(page.locator("details.plan-tools")).not.toHaveAttribute(
+          "open",
+        );
+        await page
+          .locator(".workspace-actions")
+          .getByRole("link", { name: p.newPlan, exact: true })
+          .click();
+        await expect(
+          page.getByText(setupMessages[language].additionalPlan, {
+            exact: true,
+          }),
+        ).toBeVisible();
+      }
       await chooseManualSetup(page, language);
       await page.getByLabel(p.planName, { exact: true }).fill(name);
       await page
