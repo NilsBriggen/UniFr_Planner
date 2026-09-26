@@ -1,4 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
@@ -133,6 +139,102 @@ it("opens the current week and can return to it after browsing another day", asy
   } finally {
     vi.useRealTimers();
   }
+});
+
+async function addPeriod(
+  language: Language,
+  label: string,
+  start: string,
+  end: string,
+  repeatUntil = "",
+) {
+  const t = plannerMessages[language];
+  const form = screen.getByText(t.addBusy, { selector: "summary" });
+  if (!form.parentElement?.hasAttribute("open")) await userEvent.click(form);
+  await userEvent.clear(screen.getByLabelText(t.busyLabel));
+  await userEvent.type(screen.getByLabelText(t.busyLabel), label);
+  fireEvent.change(screen.getByLabelText(t.starts), {
+    target: { value: start },
+  });
+  fireEvent.change(screen.getByLabelText(t.ends), { target: { value: end } });
+  fireEvent.change(screen.getByLabelText(t.repeatUntil), {
+    target: { value: repeatUntil },
+  });
+  await userEvent.click(screen.getByRole("button", { name: t.addBusy }));
+}
+const storedPeriods = async () =>
+  (await new PlanStore(indexedDB).load()).plans[0].scenarios[0].unavailable;
+
+it.each<[Language, string]>([
+  ["en", "Job · Mon 18:00–22:00 · 6× (01.03.–05.04.)"],
+  ["de", "Job · Mo 18:00–22:00 · 6× (01.03.–05.04.)"],
+  ["fr", "Job · lun. 18:00–22:00 · 6× (01.03.–05.04.)"],
+])(
+  "repeats an unavailable period weekly as one removable row in %s",
+  async (language, row) => {
+    await mountCalendar(language, "2027-03-01");
+    const t = plannerMessages[language];
+    await addPeriod(
+      language,
+      "Job",
+      "2027-03-01T18:00",
+      "2027-03-01T22:00",
+      "2027-04-05",
+    );
+    expect(await screen.findByText(row)).toBeVisible();
+    const periods = await storedPeriods();
+    expect(periods.map((p) => p.start)).toEqual([
+      "2027-03-01T17:00:00Z",
+      "2027-03-08T17:00:00Z",
+      "2027-03-15T17:00:00Z",
+      "2027-03-22T17:00:00Z",
+      "2027-03-29T16:00:00Z",
+      "2027-04-05T16:00:00Z",
+    ]);
+    expect(new Set(periods.map((p) => p.id)).size).toBe(6);
+    expect(periods.every((p) => p.label === "Job")).toBe(true);
+
+    await addPeriod(
+      language,
+      "Dentist",
+      "2027-03-10T09:00",
+      "2027-03-10T10:00",
+    );
+    const list = within(
+      document.querySelector(".unavailable-list") as HTMLElement,
+    );
+    await waitFor(() => expect(list.getAllByRole("listitem")).toHaveLength(2));
+    expect(
+      list.getByRole("button", { name: `${t.removeBusy} · Dentist` }),
+    ).toBeVisible();
+    await userEvent.click(
+      list.getByRole("button", { name: `${t.removeAll} · Job` }),
+    );
+    await waitFor(() => expect(list.getAllByRole("listitem")).toHaveLength(1));
+    expect((await storedPeriods()).map((p) => p.label)).toEqual(["Dentist"]);
+  },
+);
+
+it("refuses weekly repeats beyond the plan limit or before the start", async () => {
+  await mountCalendar("en", "2027-03-01");
+  const t = plannerMessages.en;
+  await addPeriod(
+    "en",
+    "Job",
+    "2027-03-01T18:00",
+    "2027-03-01T22:00",
+    "2037-03-02",
+  );
+  expect(await screen.findByText(t.invalidPeriod)).toBeVisible();
+  await addPeriod(
+    "en",
+    "Job",
+    "2027-03-01T18:00",
+    "2027-03-01T22:00",
+    "2027-02-28",
+  );
+  expect(screen.getByText(t.invalidPeriod)).toBeVisible();
+  expect(await storedPeriods()).toEqual([]);
 });
 
 beforeEach(() => {

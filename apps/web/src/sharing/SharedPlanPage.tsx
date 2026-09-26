@@ -94,6 +94,7 @@ export default function SharedPlanPage({ language }: { language: Language }) {
       owner: period.id,
       title: period.label,
       location: "",
+      personal: true,
     })),
   ];
   const day = Temporal.PlainDate.from(

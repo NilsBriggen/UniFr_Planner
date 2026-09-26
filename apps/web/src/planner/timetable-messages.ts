@@ -42,6 +42,10 @@ export const timetableMessages = {
     allDates: "All selected dates, including evening classes",
     source: "Source",
     unpublished: "Publication date not provided; saved catalogue snapshot",
+    wallEvery2: "every 2 weeks",
+    wallEvery2Short: "every 2 wk",
+    wallFrom: "from",
+    wallUntil: "until",
   },
   de: {
     landscape: "Querformat",
@@ -87,6 +91,10 @@ export const timetableMessages = {
     source: "Quelle",
     unpublished:
       "Veröffentlichungsdatum nicht angegeben; gespeicherter Katalogstand",
+    wallEvery2: "alle 2 Wochen",
+    wallEvery2Short: "alle 2 Wo.",
+    wallFrom: "ab",
+    wallUntil: "bis",
   },
   fr: {
     landscape: "paysage",
@@ -131,5 +139,9 @@ export const timetableMessages = {
     allDates: "Toutes les dates choisies, y compris les cours du soir",
     source: "Source",
     unpublished: "Date de publication non fournie ; catalogue enregistré",
+    wallEvery2: "une semaine sur deux",
+    wallEvery2Short: "1 sem. sur 2",
+    wallFrom: "dès le",
+    wallUntil: "jusqu’au",
   },
 };

@@ -5,6 +5,7 @@ import {
   exportCalendar,
   calendarFor,
   localInstant,
+  weeklyRepeats,
 } from "./calendar";
 import type { Meeting } from "../api/client";
 import type { Selection } from "./domain";
@@ -407,5 +408,56 @@ describe("actual-date calendar", () => {
         "2026-09-01T00:00:00Z",
       ),
     ).toThrow(/unresolved/);
+  });
+});
+
+describe("weekly repeats of a personal period", () => {
+  it("keeps the local time across DST and includes the until date", () => {
+    expect(
+      weeklyRepeats("2027-03-15T18:00", "2027-03-15T22:00", "2027-04-05"),
+    ).toEqual([
+      { start: "2027-03-15T17:00:00Z", end: "2027-03-15T21:00:00Z" },
+      { start: "2027-03-22T17:00:00Z", end: "2027-03-22T21:00:00Z" },
+      { start: "2027-03-29T16:00:00Z", end: "2027-03-29T20:00:00Z" },
+      { start: "2027-04-05T16:00:00Z", end: "2027-04-05T20:00:00Z" },
+    ]);
+    expect(
+      weeklyRepeats("2026-10-20T22:00", "2026-10-21T02:00", "2026-11-02"),
+    ).toEqual([
+      { start: "2026-10-20T20:00:00Z", end: "2026-10-21T00:00:00Z" },
+      { start: "2026-10-27T21:00:00Z", end: "2026-10-28T01:00:00Z" },
+    ]);
+    expect(
+      weeklyRepeats("2026-09-21T18:00", "2026-09-21T22:00", "2026-10-04"),
+    ).toHaveLength(2);
+    expect(
+      weeklyRepeats("2026-09-21T18:00", "2026-09-21T22:00", "2026-09-20"),
+    ).toEqual([]);
+  });
+  it("skips local times that do not exist or repeat on DST Sundays", () => {
+    expect(
+      weeklyRepeats("2027-03-21T02:30", "2027-03-21T03:30", "2027-04-04")?.map(
+        (period) => period.start,
+      ),
+    ).toEqual(["2027-03-21T01:30:00Z", "2027-04-04T00:30:00Z"]);
+    expect(
+      weeklyRepeats("2026-10-18T02:30", "2026-10-18T04:00", "2026-11-01")?.map(
+        (period) => period.start,
+      ),
+    ).toEqual(["2026-10-18T00:30:00Z", "2026-11-01T01:30:00Z"]);
+  });
+  it("refuses more periods than the limit", () => {
+    expect(
+      weeklyRepeats("2027-01-04T08:00", "2027-01-04T12:00", "2027-01-18", 3),
+    ).toHaveLength(3);
+    expect(
+      weeklyRepeats("2027-01-04T08:00", "2027-01-04T12:00", "2027-01-18", 2),
+    ).toBeNull();
+    expect(
+      weeklyRepeats("2027-01-04T08:00", "2027-01-04T12:00", "2037-01-04"),
+    ).toBeNull();
+    expect(
+      weeklyRepeats("2027-01-04T08:00", "2027-01-04T12:00", "2027-01-04", 0),
+    ).toBeNull();
   });
 });

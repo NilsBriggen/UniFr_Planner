@@ -15,6 +15,8 @@ export type CalendarEvent = {
   sessionType?: string;
   sourceUid?: string;
   sourceUrl?: string;
+  /** Derived for display from a personal unavailable period; never persisted. */
+  personal?: boolean;
 };
 export type CalendarResult = {
   events: CalendarEvent[];
@@ -38,6 +40,38 @@ export const localDate = (value: string) =>
     .toZonedDateTimeISO(zone)
     .toPlainDate()
     .toString();
+/** Weekly copies of a local period up to and including `until`. Stepping the
+ * wall-clock date keeps local times across DST; a copy whose local time does
+ * not exist or is ambiguous is skipped. Null when more than `limit` result. */
+export function weeklyRepeats(
+  startLocal: string,
+  endLocal: string,
+  until: string,
+  limit = 500,
+): DateRange[] | null {
+  const last = Temporal.PlainDate.from(until);
+  const periods: DateRange[] = [];
+  for (
+    let start = Temporal.PlainDateTime.from(startLocal),
+      end = Temporal.PlainDateTime.from(endLocal);
+    Temporal.PlainDate.compare(start.toPlainDate(), last) <= 0;
+    start = start.add({ weeks: 1 }), end = end.add({ weeks: 1 })
+  ) {
+    let period: DateRange;
+    try {
+      period = {
+        start: localInstant(start.toString()),
+        end: localInstant(end.toString()),
+      };
+    } catch {
+      continue;
+    }
+    if (Date.parse(period.end) <= Date.parse(period.start)) continue;
+    if (periods.length >= limit) return null;
+    periods.push(period);
+  }
+  return periods;
+}
 const floating = (value: Temporal.PlainDateTime) =>
   new Date(`${value.toString()}Z`);
 const plain = (value: Date) =>

@@ -60,6 +60,7 @@ export const selectionSchema = z.strictObject({
 const busySchema = z
   .strictObject({ id, label: text, start: instant, end: instant })
   .refine((x) => Date.parse(x.end) > Date.parse(x.start));
+export const maxUnavailablePeriods = 500;
 const requirementEvidenceSchema = z.strictObject({
   overrides: z
     .array(
@@ -77,7 +78,7 @@ const scenarioSchema = z.strictObject({
   id,
   name: text,
   courses: z.array(selectionSchema).max(500),
-  unavailable: z.array(busySchema).max(500),
+  unavailable: z.array(busySchema).max(maxUnavailablePeriods),
   travelMinutes: z.number().int().min(0).max(180),
   requirementEvidence: requirementEvidenceSchema.optional(),
   priorStudy: z
