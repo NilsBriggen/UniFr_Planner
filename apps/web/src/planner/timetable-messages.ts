@@ -69,7 +69,7 @@ export const timetableMessages = {
       "Typical week: holidays, cancellations and one-off changes are not shown.",
     wallEmpty: "No recurring classes with published dates in this semester.",
     wallHelp:
-      "One A4 page · in the print dialog choose Landscape, scale 100 % and background graphics",
+      "One A4 page · in the print dialog choose Landscape, scale 100% and background graphics",
     wallAttendanceHint:
       "Some courses list overlapping sessions. Choose your attendance first so the wall timetable shows only your sessions.",
   },
@@ -145,7 +145,7 @@ export const timetableMessages = {
     wallEmpty:
       "Keine wiederkehrenden Lehrveranstaltungen mit veröffentlichten Terminen in diesem Semester.",
     wallHelp:
-      "Eine A4-Seite · im Druckdialog Querformat, Skalierung 100 % und Hintergrundgrafiken wählen",
+      "Eine A4-Seite · im Druckdialog Querformat, Skalierung 100\u00a0% und Hintergrundgrafiken wählen",
     wallAttendanceHint:
       "Einige Kurse haben sich überschneidende Termine. Wähle zuerst deine Teilnahme, damit der Stundenplan nur deine Termine zeigt.",
   },
@@ -220,7 +220,7 @@ export const timetableMessages = {
       "Semaine type : jours fériés, annulations et changements ponctuels non pris en compte.",
     wallEmpty: "Aucun cours récurrent avec des dates publiées ce semestre.",
     wallHelp:
-      "Une page A4 · dans la boîte d’impression, choisir Paysage, échelle 100 % et graphiques d’arrière-plan",
+      "Une page A4 · dans la boîte de dialogue d’impression, choisir Paysage, échelle 100\u00a0% et graphiques d’arrière-plan",
     wallAttendanceHint:
       "Certains cours ont des séances qui se chevauchent. Choisissez d’abord votre présence pour que l’emploi du temps n’affiche que vos séances.",
   },
