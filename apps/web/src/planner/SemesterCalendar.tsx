@@ -100,6 +100,9 @@ function followsWeekly(previous: Unavailable, next: Unavailable) {
  * in first-entry order. */
 function weeklySeries(periods: Unavailable[]) {
   const series = new Map<string, Unavailable[][]>();
+  // Runs of each key indexed by the local date of their last period, so a
+  // period only checks the runs ending one or two weeks before it.
+  const ends = new Map<string, Unavailable[][]>();
   const order = new Map(periods.map((period, index) => [period, index]));
   for (const period of [...periods].sort(
     (a, b) => Date.parse(a.start) - Date.parse(b.start),
@@ -112,11 +115,21 @@ function weeklySeries(periods: Unavailable[]) {
       end.toPlainTime().toString(),
       start.toPlainDate().until(end.toPlainDate()).days,
     ]);
-    const runs = series.get(key) ?? [];
-    const run = runs.find((r) => followsWeekly(r.at(-1)!, period));
-    if (run) run.push(period);
-    else runs.push([period]);
-    series.set(key, runs);
+    const date = start.toPlainDate();
+    const at = (days: number) => `${key}|${date.subtract({ days }).toString()}`;
+    const run = [...(ends.get(at(7)) ?? []), ...(ends.get(at(14)) ?? [])].find(
+      (r) => followsWeekly(r.at(-1)!, period),
+    );
+    if (run) {
+      const last = `${key}|${localTime(run.at(-1)!.start).toPlainDate().toString()}`;
+      ends.set(
+        last,
+        ends.get(last)!.filter((r) => r !== run),
+      );
+      run.push(period);
+    } else series.set(key, [...(series.get(key) ?? []), [period]]);
+    const next = run ?? series.get(key)!.at(-1)!;
+    ends.set(at(0), [...(ends.get(at(0)) ?? []), next]);
   }
   const first = (run: Unavailable[]) =>
     Math.min(...run.map((period) => order.get(period)!));
