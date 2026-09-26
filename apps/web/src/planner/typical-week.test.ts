@@ -267,6 +267,45 @@ it("ignores outlier series when judging the span of regular courses", () => {
   ]);
 });
 
+it("keeps a full-semester course in the period when most series end early", () => {
+  const typical = build(
+    [
+      ...series("full", autumn, 1, "10:15", "12:00"),
+      ...series("seven", autumn.slice(0, 7), 2, "10:15", "12:00"),
+      ...series("six", autumn.slice(0, 6), 3, "10:15", "12:00"),
+      {
+        id: "service",
+        owner: "service",
+        title: "Military service",
+        start: localInstant("2026-11-16T00:00"),
+        end: localInstant("2026-11-23T00:00"),
+        location: "",
+        personal: true,
+      },
+    ],
+    "AS-2026",
+    ["full", "seven", "six"],
+  );
+  // The medians still judge "from" and "until"; the printed period and its
+  // week count cover the course that meets until 14.12.
+  expect(typical.span).toEqual({
+    firstWeek: "2026-09-14",
+    lastWeek: "2026-10-26",
+    firstDate: "2026-09-14",
+    lastDate: "2026-12-14",
+    weeks: 14,
+  });
+  expect(slotOf(typical, "full")[0].annotation).toEqual({
+    kind: "weekly",
+    until: "2026-12-14",
+  });
+  expect(slotOf(typical, "seven")[0].annotation).toEqual({ kind: "weekly" });
+  // An absence while that course still meets stays on the sheet.
+  expect(typical.absences).toEqual([
+    { label: "Military service", start: "2026-11-16", end: "2026-11-22" },
+  ]);
+});
+
 it("reads holidays and single skips as weekly, but three skips as a count", () => {
   const typical = build(
     [

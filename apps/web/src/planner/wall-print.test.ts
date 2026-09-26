@@ -480,6 +480,21 @@ it.each<[Language, string, string]>([
   },
 );
 
+it("heads the sheet with the whole period when most courses end early", () => {
+  const { doc } = sheet({
+    language: "de",
+    events: [
+      ...series("full", autumn, 1, "10:15", "12:00"),
+      ...series("seven", autumn.slice(0, 7), 2, "10:15", "12:00"),
+      ...series("six", autumn.slice(0, 6), 3, "10:15", "12:00"),
+    ],
+  });
+  expect(doc.querySelector(".wall-head p")!.textContent).toBe(
+    "14 Wochen mit Unterricht · 14.09.2026–14.12.2026",
+  );
+  expect(blocks(doc, "full")[0].textContent).toContain("bis 14.12.");
+});
+
 it("keeps an empty term on one sheet with an explanation", () => {
   const { doc } = sheet({
     events: [session("once", "2026-10-05", "10:15", "12:00")],
