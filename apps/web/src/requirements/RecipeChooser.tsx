@@ -3,15 +3,18 @@ import ReviewGaps from "./ReviewGaps";
 import {
   inheritedStructures,
   majorProgrammes,
+  searchProgrammes,
   slotOptions,
 } from "./recipeOptions";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   recipeRegistry,
   recipeRegistryForSelection,
 } from "../../../../packages/domain/src/registry";
 import {
   composeDegree,
+  programmeTitle,
+  type ProgrammeRecipe,
   type SelectedComponent,
   type ResolvedDegree,
 } from "../../../../packages/domain/src/recipes";
@@ -19,9 +22,20 @@ import { Button } from "../components";
 import type { Language } from "../i18n";
 import type { Plan } from "../planner/domain";
 import { usePlans } from "../planner/context";
+import { countLabel } from "../planner/countLabels";
 import { bindDegreeSelection } from "./adapter";
 import { recipeMessages } from "./recipeMessages";
 import { SemesterField } from "../planner/SemesterField";
+
+type FacultyKey = keyof typeof recipeMessages.en.faculties;
+/** Faculty names in every language; the search falls back to them when no name matches. */
+const facultyNames = (programme: ProgrammeRecipe) =>
+  (["de", "fr", "en"] as const).map(
+    (language) =>
+      recipeMessages[language].faculties[programme.faculty as FacultyKey] ?? "",
+  );
+/** Quick picks show at most this many matches; longer lists stay in the select. */
+const quickPickLimit = 8;
 
 export function DegreeSelectionForm({
   plan,
@@ -100,6 +114,10 @@ export function DegreeSelectionForm({
   const [differentStarts, setDifferentStarts] = useState<
     Record<string, boolean>
   >({});
+  const statusId = useId();
+  const searchField = useRef<HTMLInputElement>(null);
+  const mainField = useRef<HTMLSelectElement>(null);
+  const quickPicks = useRef<HTMLUListElement>(null);
 
   const major = registry.programmes.find((p) => p.id === main);
   const track = major?.variants.find((v) => v.id === variant);
@@ -108,11 +126,33 @@ export function DegreeSelectionForm({
     [major, track, registry],
   );
   const layout = registry.structures.find((s) => s.id === structure);
-  const programmes = majorProgrammes(degree, faculty, registry).filter(
-    (programme) =>
-      (programme.titles?.[language] ?? programme.title)
-        .toLocaleLowerCase(language)
-        .includes(search.trim().toLocaleLowerCase(language)),
+  const available = useMemo(
+    () => majorProgrammes(degree, faculty, registry),
+    [degree, faculty, registry],
+  );
+  const query = search.trim();
+  const matches = useMemo(
+    () => searchProgrammes(available, search, facultyNames),
+    [available, search],
+  );
+  // The chosen programme stays listed, so the select never shows "Choose…" while one is set.
+  const options = useMemo(
+    () =>
+      major && available.includes(major) && !matches.includes(major)
+        ? [major, ...matches]
+        : matches,
+    [available, major, matches],
+  );
+  const elsewhere = useMemo(
+    () =>
+      !!faculty &&
+      !!query &&
+      searchProgrammes(
+        majorProgrammes(degree, "", registry),
+        search,
+        facultyNames,
+      ).some((p) => !matches.includes(p)),
+    [degree, faculty, matches, query, registry, search],
   );
   const majorVariants =
     major?.variants.filter((candidate) => candidate.role === "major") ?? [];
@@ -134,6 +174,25 @@ export function DegreeSelectionForm({
     setStructure("");
     invalidate();
   }
+  function chooseMain(id: string) {
+    // Choosing the current programme again keeps its structure and minors.
+    if (busy || id === main) return;
+    setMain(id);
+    setVariant("");
+    resetComponents();
+  }
+  function pickDetail(programme: ProgrammeRecipe) {
+    const title = programmeTitle(programme, language);
+    const twin = matches.some(
+      (other) =>
+        other !== programme &&
+        other.faculty === programme.faculty &&
+        programmeTitle(other, language) === title,
+    );
+    // A few master programmes share name and faculty; the official slug tells them apart.
+    const slug = programme.id.slice(programme.id.lastIndexOf("-") + 1);
+    return `${t.faculties[programme.faculty as FacultyKey] ?? programme.faculty}${twin ? ` · ${slug}` : ""}`;
+  }
   async function commit() {
     if (!preview) return;
     try {
@@ -142,10 +201,11 @@ export function DegreeSelectionForm({
       setError(`${t.failed} ${e instanceof Error ? e.message : ""}`);
     }
   }
+  // Only a sole programme for degree and faculty is chosen automatically; a search never
+  // chooses, because a prefix such as "inf" can match just the wrong programme.
   useEffect(() => {
-    const available = majorProgrammes(degree, faculty, registry);
     if (!main && available.length === 1) setMain(available[0].id);
-  }, [degree, faculty, main, registry]);
+  }, [available, main]);
   useEffect(() => {
     const variants =
       major?.variants.filter((candidate) => candidate.role === "major") ?? [];
@@ -258,16 +318,6 @@ export function DegreeSelectionForm({
           </select>
         </label>
         <label>
-          {t.search}
-          <input
-            aria-label={t.search}
-            type="search"
-            value={search}
-            disabled={busy}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-        <label>
           {t.faculty}
           <select
             aria-label={t.faculty}
@@ -288,27 +338,97 @@ export function DegreeSelectionForm({
             ))}
           </select>
         </label>
-        <label>
-          {t.main}
-          <select
-            aria-label={t.main}
-            value={main}
-            required
-            disabled={busy}
-            onChange={(e) => {
-              setMain(e.target.value);
-              setVariant("");
-              resetComponents();
-            }}
-          >
-            <option value="">{t.choose}</option>
-            {programmes.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.titles?.[language] ?? p.title}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="recipe-programme-picker">
+          <div className="recipe-programme-search">
+            <label>
+              {t.search}
+              {/* Typing never saves, so the search stays usable while plans refresh. */}
+              <input
+                ref={searchField}
+                aria-label={t.search}
+                aria-describedby={statusId}
+                type="search"
+                value={search}
+                placeholder={t.searchPlaceholder}
+                onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter" || event.nativeEvent.isComposing)
+                    return;
+                  // Enter chooses from the results; it never submits the whole step.
+                  event.preventDefault();
+                  if (matches.length === 1) chooseMain(matches[0].id);
+                  else if (query && matches.length)
+                    (
+                      quickPicks.current?.querySelector("button") ??
+                      mainField.current
+                    )?.focus();
+                }}
+              />
+            </label>
+            <p id={statusId} className="recipe-search-status" role="status">
+              {!query
+                ? ""
+                : matches.length
+                  ? `${matches.length} ${countLabel(language, "programme", matches.length)}`
+                  : t.noProgrammeMatch}
+            </p>
+            {elsewhere && (
+              <Button
+                type="button"
+                className="recipe-search-wider"
+                onClick={() => {
+                  // Clearing the filter keeps the chosen programme: it is in every faculty list.
+                  setFaculty("");
+                  searchField.current?.focus();
+                }}
+              >
+                {t.searchAllFaculties}
+              </Button>
+            )}
+          </div>
+          <label>
+            {t.main}
+            <select
+              ref={mainField}
+              aria-label={t.main}
+              value={main}
+              required
+              disabled={busy}
+              onChange={(e) => chooseMain(e.target.value)}
+            >
+              <option value="">{t.choose}</option>
+              {options.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {programmeTitle(p, language)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {query && matches.length > 0 && matches.length <= quickPickLimit && (
+            <ul
+              ref={quickPicks}
+              className="recipe-search-results"
+              aria-label={t.searchResults}
+            >
+              {matches.map((p) => (
+                <li key={p.id}>
+                  <Button
+                    type="button"
+                    aria-pressed={p.id === main}
+                    onClick={() => chooseMain(p.id)}
+                  >
+                    <span>
+                      {programmeTitle(p, language)}
+                      <span className="recipe-search-detail">
+                        {` · ${pickDetail(p)}`}
+                      </span>
+                    </span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         {major && (!setupMode || majorVariants.length > 1) && (
           <label>
             {t.variant}
@@ -466,7 +586,7 @@ export function DegreeSelectionForm({
                             key={`${p.id}/${v.id}`}
                             value={`${p.id}/${v.id}`}
                           >
-                            {p.titles?.[language] ?? p.title} · {v.ects} ECTS
+                            {programmeTitle(p, language)} · {v.ects} ECTS
                             {!major.combinationPolicy ||
                             major.combinationPolicy === "unknown"
                               ? ` · ${t.unknown}`
@@ -553,7 +673,7 @@ export function DegreeSelectionForm({
                 )!;
                 return (
                   <li key={c.slotId}>
-                    {p.titles?.[language] ?? p.title} · {c.variantId} ·{" "}
+                    {programmeTitle(p, language)} · {c.variantId} ·{" "}
                     {c.startSemester} · {c.recipeVersion}
                   </li>
                 );

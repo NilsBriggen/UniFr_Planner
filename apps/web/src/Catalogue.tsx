@@ -778,6 +778,8 @@ function Search({
   const subjectFacets = [
     ...new Set(
       (plan?.degreeSelection?.components ?? []).flatMap((component) => {
+        // Catalogue faculty terms are English, so facets match the English `title`,
+        // never the localized programme name.
         const title = recipeRegistry.programmes.find(
           (programme) => programme.id === component.programmeId,
         )?.title;

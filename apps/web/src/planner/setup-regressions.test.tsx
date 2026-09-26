@@ -1,4 +1,11 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { IDBFactory } from "fake-indexeddb";
@@ -29,8 +36,8 @@ async function setup(seed?: () => Promise<void>) {
 
 it("moves from studies to review without a separate preview action", async () => {
   await setup();
-  expect(screen.getByLabelText("Search programmes")).toBeVisible();
-  fireEvent.change(screen.getByLabelText("Search programmes"), {
+  expect(screen.getByLabelText("Search main programme")).toBeVisible();
+  fireEvent.change(screen.getByLabelText("Search main programme"), {
     target: { value: "Law" },
   });
   fireEvent.change(screen.getByLabelText("Main programme"), {
@@ -376,4 +383,154 @@ it("keeps the first plan's default name and shows no additional-plan notice", as
     ),
   ).not.toBeInTheDocument();
   expect(await reviewLaw()).toHaveValue("Law");
+});
+
+it("shows programme search results as a live count and quick picks", async () => {
+  await setup();
+  const search = screen.getByLabelText("Search main programme");
+  const status = document.getElementById(
+    search.getAttribute("aria-describedby")!,
+  )!;
+  // The live region exists before typing, so its first update is announced.
+  expect(status).toHaveAttribute("role", "status");
+  expect(status).toBeEmptyDOMElement();
+  fireEvent.change(search, { target: { value: "Law" } });
+  expect(status).toHaveTextContent("2 programmes");
+  const picks = within(
+    screen.getByRole("list", { name: "Matching programmes" }),
+  ).getAllByRole("button");
+  expect(picks.map((pick) => pick.textContent)).toEqual([
+    "Law · Law",
+    "Part-time Law studies · Law",
+  ]);
+  expect(screen.getAllByLabelText("Main programme")).toHaveLength(1);
+  expect(screen.getByLabelText("Main programme")).toHaveValue("");
+  fireEvent.click(picks[1]);
+  expect(screen.getByLabelText("Main programme")).toHaveValue(
+    "bachelor-ius-lawparttime",
+  );
+  expect(picks[1]).toHaveAttribute("aria-pressed", "true");
+  expect(picks[0]).toHaveAttribute("aria-pressed", "false");
+});
+
+it("never chooses a programme while typing and picks a single match on Enter", async () => {
+  await setup();
+  const user = userEvent.setup();
+  const search = screen.getByLabelText("Search main programme");
+  await user.type(search, "math");
+  expect(search).toHaveAccessibleDescription("1 programme");
+  expect(screen.getByLabelText("Main programme")).toHaveValue("");
+  await user.keyboard("{Enter}");
+  expect(screen.getByLabelText("Main programme")).toHaveValue(
+    "bachelor-sci-mathematics",
+  );
+  expect(screen.getByLabelText("Degree structure")).toBeVisible();
+  expect(screen.getByText("1. Studies")).toBeVisible();
+});
+
+it("reports a search without matches and keeps only the placeholder", async () => {
+  await setup();
+  fireEvent.change(screen.getByLabelText("Search main programme"), {
+    target: { value: "zzzz" },
+  });
+  expect(
+    screen.getByText(
+      "No programme matches this search. Try another name, degree or faculty.",
+    ),
+  ).toHaveAttribute("role", "status");
+  expect(
+    within(screen.getByLabelText("Main programme")).getAllByRole("option"),
+  ).toHaveLength(1);
+  expect(
+    screen.queryByRole("list", { name: "Matching programmes" }),
+  ).not.toBeInTheDocument();
+});
+
+it("searches all faculties from a faculty without matches", async () => {
+  await setup();
+  fireEvent.change(screen.getByLabelText("Faculty"), {
+    target: { value: "law" },
+  });
+  const search = screen.getByLabelText("Search main programme");
+  fireEvent.change(search, { target: { value: "math" } });
+  expect(search).toHaveAccessibleDescription(
+    "No programme matches this search. Try another name, degree or faculty.",
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Search all faculties" }));
+  expect(screen.getByLabelText("Faculty")).toHaveValue("");
+  expect(
+    screen.getByRole("button", { name: "Mathematics · Science and Medicine" }),
+  ).toBeVisible();
+  expect(search).toHaveFocus();
+  expect(screen.getByLabelText("Main programme")).toHaveValue("");
+  expect(
+    screen.queryByRole("button", { name: "Search all faculties" }),
+  ).not.toBeInTheDocument();
+});
+
+it("keeps Enter in the search on the studies step", async () => {
+  await setup();
+  const user = userEvent.setup();
+  fireEvent.change(screen.getByLabelText("Main programme"), {
+    target: { value: "bachelor-pedpsy-psychology" },
+  });
+  // A complete selection makes Enter a form submission unless the search handles it.
+  expect(
+    screen.getByRole("button", { name: "Review and start" }),
+  ).toBeEnabled();
+  const search = screen.getByLabelText("Search main programme");
+  await user.type(search, "zzzz{Enter}");
+  expect(screen.queryByText("2. Review and start")).not.toBeInTheDocument();
+  expect(screen.getByText("1. Studies")).toBeVisible();
+  expect(search).toHaveFocus();
+  expect(screen.getByLabelText("Main programme")).toHaveValue(
+    "bachelor-pedpsy-psychology",
+  );
+  await user.clear(search);
+  await user.type(search, "psy{Enter}");
+  expect(screen.queryByText("2. Review and start")).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Psychology · Humanities" }),
+  ).toHaveFocus();
+});
+
+it("finds German programme names and keeps the chosen one", async () => {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "de");
+  render(
+    <MemoryRouter initialEntries={["/setup"]}>
+      <App />
+    </MemoryRouter>,
+  );
+  await waitFor(() =>
+    expect(screen.getByLabelText("Hauptprogramm")).toBeEnabled(),
+  );
+  const user = userEvent.setup();
+  const search = screen.getByLabelText("Hauptprogramm suchen");
+  const main = screen.getByLabelText("Hauptprogramm");
+  // "Inf" alone matches only Wirtschaftsinformatik; nothing may be chosen on the way.
+  await user.type(search, "Informatik");
+  expect(search).toHaveAccessibleDescription("2 Studienprogramme");
+  expect(main).toHaveValue("");
+  const picks = within(
+    screen.getByRole("list", { name: "Passende Studienprogramme" }),
+  ).getAllByRole("button");
+  expect(picks.map((pick) => pick.textContent)).toEqual([
+    "Informatik · Mathematisch-Naturwissenschaftliche und Medizinische Fakultät",
+    "Wirtschaftsinformatik · Wirtschafts- und Sozialwissenschaften",
+  ]);
+  await user.click(picks[0]);
+  expect(main).toHaveValue("bachelor-digitinf-informatics");
+  expect(
+    within(main).getByRole("option", { selected: true }),
+  ).toHaveTextContent("Informatik");
+  await user.clear(search);
+  await user.type(search, "Computer{Enter}");
+  expect(search).toHaveAccessibleDescription("1 Studienprogramm");
+  expect(main).toHaveValue("bachelor-digitinf-informatics");
+  expect(
+    screen.getByRole("button", {
+      name: "Informatik · Mathematisch-Naturwissenschaftliche und Medizinische Fakultät",
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
 });

@@ -161,7 +161,42 @@ const roles: ComponentRole[] = [
   "teaching_subject",
 ];
 const text = (s: string): Localized => ({ de: s, fr: s, en: s });
+const localized = (s: string | Localized): Localized =>
+  typeof s === "string" ? text(s) : { ...s };
 const clone = <T>(v: T): T => structuredClone(v);
+/** The official name in the UI language; the English `title` is the fallback. */
+export function programmeTitle(
+  programme: Pick<ProgrammeRecipe, "title" | "titles">,
+  language: keyof Localized,
+): string {
+  return programme.titles?.[language] || programme.title;
+}
+/** Every name a programme can be searched by: official names in all languages, then aliases. */
+export function programmeNames(
+  programme: Pick<ProgrammeRecipe, "title" | "titles" | "aliases">,
+): string[] {
+  const { title, titles, aliases = [] } = programme;
+  return [
+    ...new Set(
+      [title, titles?.de, titles?.fr, titles?.en, ...aliases].filter(
+        (name): name is string => !!name,
+      ),
+    ),
+  ];
+}
+/** Case-, accent- and spacing-insensitive form for matching names typed in any language. */
+export function foldSearch(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[’‘]/g, "'")
+    .replace(/ß/g, "ss")
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 function check(ok: unknown, message: string): asserts ok {
   if (!ok) throw new Error(message);
 }
@@ -169,6 +204,12 @@ const nonempty = (v: unknown): v is string =>
   typeof v === "string" && v.trim().length > 0;
 const url = (v: unknown) =>
   typeof v === "string" && /^https?:\/\/[^\s/]+/.test(v);
+/** Programme names come from official page titles; the page's degree suffix is not part of them. */
+const displayName = (v: unknown): v is string =>
+  nonempty(v) &&
+  v === v.trim() &&
+  v.length <= 200 &&
+  !/\((bachelor|master)\)|\|/i.test(v);
 function review(value: unknown) {
   check(
     ["verified", "draft", "needs_clarification"].includes(value as string),
@@ -366,6 +407,26 @@ export function assertRecipeRegistry(registry: RecipeRegistry): void {
         nonempty(p.faculty) &&
         !p.id.includes("/"),
       `Invalid programme: ${p.id}`,
+    );
+    // Display names are optional (archived editions and fixtures have none) but never malformed.
+    check(
+      Object.entries(p.titles ?? {}).every(
+        ([language, name]) =>
+          ["de", "fr", "en"].includes(language) && displayName(name),
+      ),
+      `Invalid programme titles: ${p.id}`,
+    );
+    const titleKeys = new Set(
+      programmeNames({ title: p.title, titles: p.titles }).map(foldSearch),
+    );
+    const aliasKeys = (p.aliases ?? []).map((a) =>
+      displayName(a) ? foldSearch(a) : "",
+    );
+    check(
+      aliasKeys.every(Boolean) &&
+        new Set(aliasKeys).size === aliasKeys.length &&
+        !aliasKeys.some((a) => titleKeys.has(a)),
+      `Invalid programme aliases: ${p.id}`,
     );
     check(
       p.combinationPolicy === undefined ||
@@ -583,11 +644,12 @@ function completeCitation(c: Citation): boolean {
 function unresolvedTree(
   id: string,
   ects: number,
-  title: string,
+  title: string | Localized,
 ): RequirementNode {
   return {
     id,
-    title: text(title),
+    title: localized(title),
+    // The gap explanation stays; only the title names the component.
     explanation: text("Requirement evidence needs clarification"),
     kind: "credit_pool",
     codes: [],
@@ -621,7 +683,7 @@ function qualify(
   if ("children" in node) {
     if (!node.children.length) {
       issues.push(`Missing requirement children: ${node.id}`);
-      return unresolvedTree(node.id, node.minCredits ?? 0, node.title.en);
+      return unresolvedTree(node.id, node.minCredits ?? 0, node.title);
     }
     node.children = node.children.map((n) => qualify(n, prefix, issues));
   }
@@ -629,7 +691,7 @@ function qualify(
 }
 function group(
   id: string,
-  title: string,
+  title: string | Localized,
   children: RequirementNode[],
   ects: number,
   unresolved: boolean,
@@ -641,8 +703,8 @@ function group(
     : children.flatMap((n) => [...n.citations]);
   return {
     id,
-    title: text(title),
-    explanation: text(title),
+    title: localized(title),
+    explanation: localized(title),
     kind: "all_of",
     children,
     minCredits: ects,
@@ -901,6 +963,8 @@ export function composeDegree(
     prerequisites: RecipePrerequisite[] = [];
   for (const c of components) {
     const prefix = `${c.programme.id}/${c.variant.id}@${registry.edition}`;
+    // Official names label the component; node ids never depend on them.
+    const title = { ...text(c.programme.title), ...c.programme.titles };
     if (c.tree) {
       const documentedGap =
         c.variant.reviewStatus !== "verified" && c.variant.gaps.length > 0;
@@ -931,14 +995,10 @@ export function composeDegree(
       c.local.push(`Missing requirements: ${c.programme.id}/${c.variant.id}`);
     const tree = c.tree
       ? qualify(c.tree, prefix, c.local)
-      : unresolvedTree(
-          `${prefix}/unresolved`,
-          c.variant.ects,
-          c.programme.title,
-        );
+      : unresolvedTree(`${prefix}/unresolved`, c.variant.ects, title);
     const wrapper = group(
       prefix,
-      c.programme.title,
+      title,
       [tree],
       c.variant.ects,
       c.local.length > 0,

@@ -57,8 +57,9 @@ requirements. A major declares the structures it supports. A variant's
 pins the released registry edition, which is a different identifier.
 
 Sources have URLs, retrieval/revision dates and review states. Archived files live in
-`data/programmes/sources/2026-09-21`; SHA-256 is computed over decompressed bytes for gzip
-archives. `contentSha256` ignores ordinary HTML layout/navigation churn while retaining
+dated directories under `data/programmes/sources/` (currently `2026-09-21` and
+`2026-09-24`); SHA-256 is computed over decompressed bytes for gzip archives.
+`contentSha256` ignores ordinary HTML layout/navigation churn while retaining
 text and link changes. PDF changes always require review. Web-only extracts without a
 reproducible archive are marked accordingly; never substitute an error response for a
 source. Detailed research and conflicts are retained in `research-evidence.json`.
@@ -76,6 +77,58 @@ cohort transitions and recognition rules remain incomplete even in these recipes
 Psychology's Clinical and Health specialisation is a separate 30-credit variant; its
 requirements do not apply to every Psychology specialisation.
 
+## Programme names and search aliases
+
+A programme's `title` is its English directory name. `titles.de` and `titles.fr` are the
+official German and French names, taken from each programme's canonical page
+`https://studies.unifr.ch/{de,fr}/<degree>/<faculty>/<slug>` (the English directory source
+URL with the language swapped). The review of 26 September 2026 is recorded in
+[`reviews/2026-09-26-programme-names.json`](../data/programmes/reviews/2026-09-26-programme-names.json).
+Names are display metadata only: they label programmes in the UI and make the setup search
+work in every language, but they are never curriculum, eligibility or completion evidence.
+
+The maintainer tool fetches and validates the names; it never runs in CI:
+
+```sh
+PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.programme_names
+PYTHONPATH=apps/api:packages/ingest/src .venv/bin/python -m unifr_api.programme_names --apply
+npm run recipes:build
+```
+
+- The first command makes about 295 sequential requests (robots.txt, then two pages per
+  programme) with at least 2 s plus jitter between them and a project User-Agent, which
+  takes about 13 minutes. It follows at most one same-host, same-language redirect and
+  retries an HTTP error once after 10 s. A missing page answers HTTP 500, so an error
+  page is never mistaken for a name.
+- A name is accepted only when the `<title>` names the programme's own degree, the first
+  content `<h2>` repeats it, the canonical URL or hreflang alias identifies the programme
+  and the page language matches. Anything else is listed under `unresolved`, gets no
+  `titles` entry and falls back to English. The run stops early only when the anchor
+  names (Mathematik/Mathématiques, Informatik/Informatique, Betriebswirtschaftslehre) fail,
+  which would mean the site no longer serves localized pages.
+- The manifest records each page's URL, final URL, SHA-256, `contentSha256`, title, heading
+  and name. The pages themselves are not archived and not added to the weekly source
+  monitor, so **re-run the tool at every semester review** and inspect the diff.
+- The manifest is written to `data/programmes/reviews/<date>-programme-names.json`; review
+  and commit it first. `--apply` then works offline from that manifest (pass `--manifest`
+  or `--date` for an earlier review). It refuses to run while `recipes.yaml` has
+  uncommitted changes and writes JSON-quoted `titles` right after each programme's
+  `title`; running it twice changes nothing. `scripts/compile-recipes.test.mjs` checks that
+  the YAML titles equal the manifest names; update the manifest path there with each review.
+
+Official names are stored exactly as published, even when they equal the English name
+(French "Management") or carry asymmetric tags ("Soziologie (FR)" but "Sociologie").
+Duplicate names, such as the German "Rechtswissenschaft" for both Law masters, are listed
+in the manifest and left as published; any disambiguator would be invented.
+
+`aliases` are hand-curated search terms, never displayed: colloquial abbreviations that
+students type, such as `BWL` for Management and `VWL` for Economics. They must not repeat
+a title, and they are unrelated to the coverage disposition `alias`.
+
+Configured plans render programme labels from their saved selection in the current UI
+language, including plans on the archived edition. Only plans created in German or French
+from now on save a localized default plan name and legacy `programme` label.
+
 ## Semester review procedure
 
 1. Before each semester, inspect the coverage report and generate a source review:
@@ -89,6 +142,7 @@ requirements do not apply to every Psychology specialisation.
    `--catalogue /path/to/published-snapshot.json` to report unmatched catalogue selectors.
    Network failures are reported as unavailable, not unchanged. The directory baseline
    detects additions/removals, including programmes absent from the previous inventory.
+   Re-run the programme names tool (see above), since renamed pages are not monitored weekly.
 2. Read changed official curricula and transition clauses. Archive successful source
    documents and record retrieval dates, hashes and precise sections. Determine which
    entrant cohorts or continuing students are affected. Never treat annual course
@@ -100,7 +154,13 @@ requirements do not apply to every Psychology specialisation.
    runtime registry and add explicit edition resolution before publishing a second
    edition; the initial release currently ships one recipe edition plus historical
    legacy templates. Do not overwrite the current edition and thereby alter saved plans.
-   Unknown editions fail visibly and remain exportable for recovery.
+   Unknown editions fail visibly and remain exportable for recovery. Display-only metadata
+   (`programmes[].titles`, search `aliases` and sources that no programme or rule cites)
+   may be corrected in the current edition; academic content may not.
+   `scripts/compile-recipes.test.mjs` pins a digest of the current edition's academic
+   projection, so any other change fails until a new edition adds its own pin. Archived editions are
+   never edited; at load time they receive the current names by programme id wherever
+   their English title is unchanged.
 5. Run `npm run recipes:build`, `npm run recipes:check`, `npm run recipes:test`, domain
    and account parity tests, then inspect the diff. Verify representative ordinary and
    exceptional combinations, source gaps and old-plan roundtrips. Publish only the

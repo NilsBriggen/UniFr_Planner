@@ -1976,6 +1976,9 @@ programmes:
     faculty: theology
     degree: bachelor
     title: Theology
+    titles:
+      de: "Theologie"
+      fr: "Théologie"
     sourceIds:
       - directory-bachelor-theo-theology
       - theo180-2026
@@ -2986,6 +2989,9 @@ programmes:
     faculty: theology
     degree: bachelor
     title: Theological Studies
+    titles:
+      de: "Theologische Studien"
+      fr: "Études théologiques"
     sourceIds:
       - directory-bachelor-theo-theologicalstudies
       - theo120-2026
@@ -3907,6 +3913,9 @@ programmes:
     faculty: theology
     degree: bachelor
     title: Interreligious Studies
+    titles:
+      de: "Interreligiöse Studien"
+      fr: "Études interreligieuses"
     sourceIds:
       - directory-bachelor-theo-interreligiousstudies
     reviewStatus: needs_clarification
@@ -3994,6 +4003,9 @@ programmes:
     faculty: law
     degree: bachelor
     title: Law
+    titles:
+      de: "Rechtswissenschaft"
+      fr: "Droit"
     sourceIds:
       - directory-bachelor-ius-law
       - law-plan-de
@@ -4798,6 +4810,9 @@ programmes:
     faculty: law
     degree: bachelor
     title: Part-time Law studies
+    titles:
+      de: "Rechtswissenschaft im Teilzeitstudium"
+      fr: "Droit à temps partiel"
     sourceIds:
       - directory-bachelor-ius-lawparttime
     reviewStatus: needs_clarification
@@ -4874,6 +4889,11 @@ programmes:
     faculty: ses
     degree: bachelor
     title: Management
+    titles:
+      de: "Betriebswirtschaftslehre"
+      fr: "Management"
+    aliases:
+      - BWL
     sourceIds:
       - directory-bachelor-eco-management
     reviewStatus: needs_clarification
@@ -4914,6 +4934,11 @@ programmes:
     faculty: ses
     degree: bachelor
     title: Economics
+    titles:
+      de: "Volkswirtschaftslehre"
+      fr: "Économie politique"
+    aliases:
+      - VWL
     sourceIds:
       - directory-bachelor-eco-economics
     reviewStatus: needs_clarification
@@ -4954,6 +4979,9 @@ programmes:
     faculty: ses
     degree: bachelor
     title: Economic and Legal Studies
+    titles:
+      de: "Wirtschafts- und Rechtswissenschaftliche Studien"
+      fr: "Études économiques et juridiques"
     sourceIds:
       - directory-bachelor-eco-ecoius
     reviewStatus: needs_clarification
@@ -4984,6 +5012,9 @@ programmes:
     faculty: ses
     degree: bachelor
     title: Business Communication
+    titles:
+      de: "Business Communication"
+      fr: "Business Communication"
     sourceIds:
       - directory-bachelor-com-businesscommunication
     reviewStatus: needs_clarification
@@ -5007,6 +5038,9 @@ programmes:
     faculty: ses
     degree: bachelor
     title: Communication and Media Research
+    titles:
+      de: "Kommunikationswissenschaft und Medienforschung"
+      fr: "Sciences de la communication et des médias"
     sourceIds:
       - directory-bachelor-com-mediacommunicationgerman
     reviewStatus: needs_clarification
@@ -5093,6 +5127,9 @@ programmes:
     faculty: ses
     degree: bachelor
     title: Communication Studies
+    titles:
+      de: "Kommunikationswissenschaft"
+      fr: "Sciences de la communication"
     sourceIds:
       - directory-bachelor-com-mediacommunicationfrench
     reviewStatus: needs_clarification
@@ -5172,6 +5209,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Philosophy
+    titles:
+      de: "Philosophie"
+      fr: "Philosophie"
     sourceIds:
       - directory-bachelor-phi-philosophy
     reviewStatus: needs_clarification
@@ -5259,6 +5299,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Classics
+    titles:
+      de: "Klassische Philologie"
+      fr: "Philologie classique"
     sourceIds:
       - directory-bachelor-lang-classics
     reviewStatus: needs_clarification
@@ -5331,6 +5374,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: English Language and Literature
+    titles:
+      de: "Englische Sprache und Literatur"
+      fr: "Langue et littérature anglaises"
     sourceIds:
       - directory-bachelor-lang-english
     reviewStatus: needs_clarification
@@ -5410,6 +5456,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: French
+    titles:
+      de: "Französisch"
+      fr: "Français"
     sourceIds:
       - directory-bachelor-lang-french
     reviewStatus: needs_clarification
@@ -5489,6 +5538,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: "French and German: Bilingualism and Cultural Exchange"
+    titles:
+      de: "Deutsch und Französisch: Zweisprachigkeit und Kulturkontakt"
+      fr: "Français et Allemand: Bilinguisme et échange culturel"
     sourceIds:
       - directory-bachelor-lang-bilingualism
     reviewStatus: needs_clarification
@@ -5515,6 +5567,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: German
+    titles:
+      de: "Germanistik"
+      fr: "Germanistique"
     sourceIds:
       - directory-bachelor-lang-german
       - german60-plan-review
@@ -6191,6 +6246,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: German Literary Studies
+    titles:
+      de: "Germanistische Literaturwissenschaft"
+      fr: "Littérature allemande"
     sourceIds:
       - directory-bachelor-lang-germanliterature
     reviewStatus: needs_clarification
@@ -6214,6 +6272,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Greek Studies
+    titles:
+      de: "Griechische Sprache und Kultur"
+      fr: "Langue et culture grecques"
     sourceIds:
       - directory-bachelor-lang-greekstudies
     reviewStatus: needs_clarification
@@ -6246,6 +6307,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Italian
+    titles:
+      de: "Italienisch"
+      fr: "Italien"
     sourceIds:
       - directory-bachelor-lang-italian
     reviewStatus: needs_clarification
@@ -6332,6 +6396,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Latin Studies
+    titles:
+      de: "Lateinische Sprache und Kultur"
+      fr: "Langue et culture latines"
     sourceIds:
       - directory-bachelor-lang-latinstudies
     reviewStatus: needs_clarification
@@ -6364,6 +6431,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Rhaeto-Romance
+    titles:
+      de: "Rätoromanisch"
+      fr: "Rhéto-roman"
     sourceIds:
       - directory-bachelor-lang-rhaetoromance
     reviewStatus: needs_clarification
@@ -6396,6 +6466,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Slavic Studies
+    titles:
+      de: "Slavistik"
+      fr: "Slavistique"
     sourceIds:
       - directory-bachelor-lang-slavicstudies
     reviewStatus: needs_clarification
@@ -6476,6 +6549,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Spanish
+    titles:
+      de: "Spanisch"
+      fr: "Espagnol"
     sourceIds:
       - directory-bachelor-lang-spanish
     reviewStatus: needs_clarification
@@ -6562,6 +6638,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: German as a Foreign Language
+    titles:
+      de: "Deutsch als Fremdsprache"
+      fr: "Allemand langue étrangère"
     sourceIds:
       - directory-bachelor-multi-germanforeignlanguage
     reviewStatus: needs_clarification
@@ -6585,6 +6664,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: French as a Foreign Language
+    titles:
+      de: "Französisch als Fremdsprache"
+      fr: "Français langue étrangère"
     sourceIds:
       - directory-bachelor-multi-frenchforeignlanguage
     reviewStatus: needs_clarification
@@ -6608,6 +6690,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: History
+    titles:
+      de: "Geschichte"
+      fr: "Histoire"
     sourceIds:
       - directory-bachelor-hist-history
       - history120-plan-review
@@ -7304,6 +7389,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: History of Modern Times
+    titles:
+      de: "Geschichte der Moderne"
+      fr: "Histoire de la modernité"
     sourceIds:
       - directory-bachelor-hist-modernhistory
     reviewStatus: needs_clarification
@@ -7376,6 +7464,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Contemporary History
+    titles:
+      de: "Zeitgeschichte"
+      fr: "Histoire contemporaine"
     sourceIds:
       - directory-bachelor-hist-contemporaryhistory
     reviewStatus: needs_clarification
@@ -7462,6 +7553,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Art History
+    titles:
+      de: "Kunstgeschichte"
+      fr: "Histoire de l'art"
     sourceIds:
       - directory-bachelor-artmus-arthistory
     reviewStatus: needs_clarification
@@ -7549,6 +7643,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Musicology and History of Opera
+    titles:
+      de: "Musikwissenschaft und Geschichte des Musiktheaters"
+      fr: "Musicologie et histoire du théâtre musical"
     sourceIds:
       - directory-bachelor-artmus-musicology
     reviewStatus: needs_clarification
@@ -7636,6 +7733,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Sociology (FR)
+    titles:
+      de: "Soziologie (FR)"
+      fr: "Sociologie"
     sourceIds:
       - directory-bachelor-soc-sociologyfrench
     reviewStatus: needs_clarification
@@ -7721,6 +7821,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Sociology (DE)
+    titles:
+      de: "Soziologie"
+      fr: "Sociologie (DE)"
     sourceIds:
       - directory-bachelor-soc-sociologygerman
     reviewStatus: needs_clarification
@@ -7799,6 +7902,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Social Work and Social Policy (FR)
+    titles:
+      de: "Sozialarbeit und Sozialpolitik (FR)"
+      fr: "Travail social et politiques sociales"
     sourceIds:
       - directory-bachelor-soc-socialworkfrench
     reviewStatus: needs_clarification
@@ -7884,6 +7990,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Social Work and Social Policy (DE)
+    titles:
+      de: "Sozialarbeit und Sozialpolitik"
+      fr: "Travail social et politiques sociales (DE)"
     sourceIds:
       - directory-bachelor-soc-socialworkgerman
     reviewStatus: needs_clarification
@@ -7962,6 +8071,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Eastern European Studies
+    titles:
+      de: "Osteuropa-Studien"
+      fr: "Études de l'Europe orientale"
     sourceIds:
       - directory-bachelor-soc-easterneuropeanstudies
     reviewStatus: needs_clarification
@@ -8042,6 +8154,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Political Science
+    titles:
+      de: "Politikwissenschaft"
+      fr: "Science politique"
     sourceIds:
       - directory-bachelor-soc-politicalscience
     reviewStatus: needs_clarification
@@ -8121,6 +8236,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Religious studies
+    titles:
+      de: "Religionswissenschaft"
+      fr: "Science des religions"
     sourceIds:
       - directory-bachelor-soc-religiousstudies
     reviewStatus: needs_clarification
@@ -8208,6 +8326,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Social Anthropology
+    titles:
+      de: "Sozialanthropologie"
+      fr: "Anthropologie sociale"
     sourceIds:
       - directory-bachelor-soc-socialanthropology
     reviewStatus: needs_clarification
@@ -8295,6 +8416,9 @@ programmes:
     faculty: education
     degree: bachelor
     title: Special Education
+    titles:
+      de: "Sonderpädagogik und Sozialpädagogik"
+      fr: "Éducation spécialisée"
     sourceIds:
       - directory-bachelor-pedpsy-specialeducation
     reviewStatus: needs_clarification
@@ -8321,6 +8445,9 @@ programmes:
     faculty: education
     degree: bachelor
     title: Speech-Language Therapy
+    titles:
+      de: "Logopädie"
+      fr: "Logopédie"
     sourceIds:
       - directory-bachelor-pedpsy-speechtherapy
     reviewStatus: needs_clarification
@@ -8346,6 +8473,9 @@ programmes:
     faculty: education
     degree: bachelor
     title: Special Education
+    titles:
+      de: "Sonderpädagogik"
+      fr: "Pédagogie spécialisée"
     sourceIds:
       - directory-bachelor-pedpsy-specialeduminor
     reviewStatus: needs_clarification
@@ -8370,6 +8500,9 @@ programmes:
     faculty: education
     degree: bachelor
     title: Education Sciences
+    titles:
+      de: "Erziehungswissenschaften"
+      fr: "Sciences de l'éducation"
     sourceIds:
       - directory-bachelor-pedpsy-educationalsciences
       - education-plans
@@ -9342,6 +9475,9 @@ programmes:
     faculty: education
     degree: bachelor
     title: Pedagogy / Psychology
+    titles:
+      de: "Pädagogik / Psychologie"
+      fr: "Pédagogie / Psychologie"
     sourceIds:
       - directory-bachelor-pedpsy-educationpsychology
     reviewStatus: needs_clarification
@@ -9420,6 +9556,9 @@ programmes:
     faculty: humanities
     degree: bachelor
     title: Psychology
+    titles:
+      de: "Psychologie"
+      fr: "Psychologie"
     sourceIds:
       - directory-bachelor-pedpsy-psychology
       - psychology-180
@@ -10829,6 +10968,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Biochemistry
+    titles:
+      de: "Biochemie"
+      fr: "Biochimie"
     sourceIds:
       - directory-bachelor-sci-biochemistry
     reviewStatus: needs_clarification
@@ -10917,6 +11059,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Biology
+    titles:
+      de: "Biologie"
+      fr: "Biologie"
     sourceIds:
       - directory-bachelor-sci-biology
       - biology-major-2026-review
@@ -11789,6 +11934,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Chemistry
+    titles:
+      de: "Chemie"
+      fr: "Chimie"
     sourceIds:
       - directory-bachelor-sci-chemistry
       - chemistry-minor-2026-review
@@ -12240,6 +12388,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Earth Sciences
+    titles:
+      de: "Erdwissenschaften"
+      fr: "Sciences de la Terre"
     sourceIds:
       - directory-bachelor-sci-earthsciences
     reviewStatus: needs_clarification
@@ -12312,6 +12463,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Environmental Sciences and Humanities
+    titles:
+      de: "Umweltwissenschaften und Umweltgeisteswissenschaften"
+      fr: "Sciences de l'environnement et humanités environnementales"
     sourceIds:
       - directory-bachelor-sci-environmentalsciences
     reviewStatus: needs_clarification
@@ -12344,6 +12498,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Geography
+    titles:
+      de: "Geographie"
+      fr: "Géographie"
     sourceIds:
       - directory-bachelor-sci-geography
     reviewStatus: needs_clarification
@@ -12432,6 +12589,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Mathematics
+    titles:
+      de: "Mathematik"
+      fr: "Mathématiques"
     sourceIds:
       - directory-bachelor-sci-mathematics
       - math-minor-2026-review
@@ -12842,6 +13002,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Physics
+    titles:
+      de: "Physik"
+      fr: "Physique"
     sourceIds:
       - directory-bachelor-sci-physics
     reviewStatus: needs_clarification
@@ -12914,6 +13077,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Human Medicine
+    titles:
+      de: "Humanmedizin"
+      fr: "Médecine humaine"
     sourceIds:
       - directory-bachelor-medspo-humanmedicine
     reviewStatus: needs_clarification
@@ -12940,6 +13106,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Biomedical Sciences
+    titles:
+      de: "Biomedizinische Wissenschaften"
+      fr: "Sciences biomédicales"
     sourceIds:
       - directory-bachelor-medspo-biomedicalsciences
     reviewStatus: needs_clarification
@@ -13015,6 +13184,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Sport Sciences and Motor Control
+    titles:
+      de: "Sport- und Bewegungswissenschaften"
+      fr: "Sciences du sport et de la motricité"
     sourceIds:
       - directory-bachelor-medspo-sportsciences
     reviewStatus: needs_clarification
@@ -13092,6 +13264,9 @@ programmes:
     faculty: ses
     degree: bachelor
     title: Business Informatics
+    titles:
+      de: "Wirtschaftsinformatik"
+      fr: "Informatique de gestion"
     sourceIds:
       - directory-bachelor-digitinf-businessinformatics
       - ses-minors
@@ -13702,6 +13877,9 @@ programmes:
     faculty: science-medicine
     degree: bachelor
     title: Computer Science
+    titles:
+      de: "Informatik"
+      fr: "Informatique"
     sourceIds:
       - directory-bachelor-digitinf-informatics
       - cs-current
@@ -14292,6 +14470,9 @@ programmes:
     faculty: education
     degree: bachelor
     title: Teacher Education for Primary Level
+    titles:
+      de: "Ausbildung für den Unterricht auf der Primarstufe"
+      fr: "Formation à l'enseignement pour le degré primaire"
     sourceIds:
       - directory-bachelor-teach-teacheredu0
     reviewStatus: needs_clarification
@@ -14318,6 +14499,9 @@ programmes:
     faculty: education
     degree: bachelor
     title: Teacher Education for Secondary Level I
+    titles:
+      de: "Ausbildung für den Unterricht auf der Sekundarstufe I"
+      fr: "Formation à l'enseignement pour le degré secondaire I"
     sourceIds:
       - directory-bachelor-teach-teacheredu1
     reviewStatus: needs_clarification
@@ -14351,6 +14535,9 @@ programmes:
     faculty: theology
     degree: master
     title: Theology
+    titles:
+      de: "Theologie"
+      fr: "Théologie"
     sourceIds:
       - directory-master-theo-theology
     reviewStatus: needs_clarification
@@ -14384,6 +14571,9 @@ programmes:
     faculty: theology
     degree: master
     title: Theological Studies
+    titles:
+      de: "Theologische Studien"
+      fr: "Études théologiques"
     sourceIds:
       - directory-master-theo-theologicalstudies
     reviewStatus: needs_clarification
@@ -14453,6 +14643,9 @@ programmes:
     faculty: theology
     degree: master
     title: Interreligious Studies
+    titles:
+      de: "Interreligiöse Studien"
+      fr: "Études interreligieuses"
     sourceIds:
       - directory-master-theo-interreligiousstudies
     reviewStatus: needs_clarification
@@ -14529,6 +14722,9 @@ programmes:
     faculty: theology
     degree: master
     title: Theology (Canonical License)
+    titles:
+      de: "Theologie (Kanonisches Lizentiat)"
+      fr: "Théologie (Licence canonique)"
     sourceIds:
       - directory-master-theo-canonicallicence
     reviewStatus: needs_clarification
@@ -14553,6 +14749,9 @@ programmes:
     faculty: law
     degree: master
     title: Law
+    titles:
+      de: "Rechtswissenschaft"
+      fr: "Droit"
     sourceIds:
       - directory-master-ius-law
     reviewStatus: needs_clarification
@@ -14625,6 +14824,9 @@ programmes:
     faculty: law
     degree: master
     title: Law
+    titles:
+      de: "Rechtswissenschaft"
+      fr: "Droit"
     sourceIds:
       - directory-master-ius-lawparttime
     reviewStatus: needs_clarification
@@ -14697,6 +14899,9 @@ programmes:
     faculty: law
     degree: master
     title: Legal Studies
+    titles:
+      de: "Rechtswissenschaftliche Studien"
+      fr: "Études juridiques"
     sourceIds:
       - directory-master-ius-legalstudies
     reviewStatus: needs_clarification
@@ -14723,6 +14928,11 @@ programmes:
     faculty: ses
     degree: master
     title: Management
+    titles:
+      de: "Betriebswirtschaftslehre"
+      fr: "Management"
+    aliases:
+      - BWL
     sourceIds:
       - directory-master-eco-management
     reviewStatus: needs_clarification
@@ -14756,6 +14966,11 @@ programmes:
     faculty: ses
     degree: master
     title: Economics
+    titles:
+      de: "Volkswirtschaftslehre"
+      fr: "Économie politique"
+    aliases:
+      - VWL
     sourceIds:
       - directory-master-eco-economics
       - economics-master-structure-review
@@ -14897,6 +15112,9 @@ programmes:
     faculty: ses
     degree: master
     title: Accounting and Finance
+    titles:
+      de: "Accounting and Finance"
+      fr: "Accounting and Finance"
     sourceIds:
       - directory-master-eco-accountingfinance
     reviewStatus: needs_clarification
@@ -14932,6 +15150,9 @@ programmes:
     faculty: ses
     degree: master
     title: International and European Business
+    titles:
+      de: "International and European Business"
+      fr: "International and European Business"
     sourceIds:
       - directory-master-eco-europeanbusiness
     reviewStatus: needs_clarification
@@ -14966,6 +15187,9 @@ programmes:
     faculty: ses
     degree: master
     title: Marketing
+    titles:
+      de: "Marketing"
+      fr: "Marketing"
     sourceIds:
       - directory-master-eco-marketing
     reviewStatus: needs_clarification
@@ -14991,6 +15215,9 @@ programmes:
     faculty: ses
     degree: master
     title: Ethics and Economics
+    titles:
+      de: "Ethik und Volkswirtschaftslehre"
+      fr: "Éthique et économie politique"
     sourceIds:
       - directory-master-eco-ethicseco30
     reviewStatus: needs_clarification
@@ -15014,6 +15241,9 @@ programmes:
     faculty: ses
     degree: master
     title: Business Communication
+    titles:
+      de: "Business Communication"
+      fr: "Business Communication"
     sourceIds:
       - directory-master-com-businesscommunication
     reviewStatus: needs_clarification
@@ -15039,6 +15269,9 @@ programmes:
     faculty: ses
     degree: master
     title: Digital Media & Communication for Social Impact
+    titles:
+      de: "Digital Media & Communication for Social Impact"
+      fr: "Digital Media & Communication for Social Impact"
     sourceIds:
       - directory-master-com-mediacommunicationgerman
     reviewStatus: needs_clarification
@@ -15071,6 +15304,9 @@ programmes:
     faculty: ses
     degree: master
     title: Digital Media & Communication for Social Impact
+    titles:
+      de: "Digital Media & Communication for Social Impact"
+      fr: "Digital Media & Communication for Social Impact"
     sourceIds:
       - directory-master-com-mediacommunicationfrench
     reviewStatus: needs_clarification
@@ -15103,6 +15339,9 @@ programmes:
     faculty: ses
     degree: master
     title: Digital Communication and Creative Media Production
+    titles:
+      de: "Digital Communication and Creative Media Production"
+      fr: "Digital Communication and Creative Media Production"
     sourceIds:
       - directory-master-com-digitalcommunication
     reviewStatus: needs_clarification
@@ -15135,6 +15374,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Philosophy
+    titles:
+      de: "Philosophie"
+      fr: "Philosophie"
     sourceIds:
       - directory-master-phi-philosophy
     reviewStatus: needs_clarification
@@ -15215,6 +15457,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Classics
+    titles:
+      de: "Klassische Philologie"
+      fr: "Philologie classique"
     sourceIds:
       - directory-master-lang-classics
     reviewStatus: needs_clarification
@@ -15287,6 +15532,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Comparative Literature
+    titles:
+      de: "Allgemeine und vergleichende Literaturwissenschaft"
+      fr: "Littérature générale et comparée"
     sourceIds:
       - directory-master-lang-comparativeliterature
     reviewStatus: needs_clarification
@@ -15367,6 +15615,9 @@ programmes:
     faculty: humanities
     degree: master
     title: English Language and Literature
+    titles:
+      de: "Englische Sprache und Literatur"
+      fr: "Langue et littérature anglaises"
     sourceIds:
       - directory-master-lang-english
     reviewStatus: needs_clarification
@@ -15446,6 +15697,9 @@ programmes:
     faculty: humanities
     degree: master
     title: French
+    titles:
+      de: "Französisch"
+      fr: "Français"
     sourceIds:
       - directory-master-lang-french
     reviewStatus: needs_clarification
@@ -15518,6 +15772,9 @@ programmes:
     faculty: humanities
     degree: master
     title: "French: Foundational Curriculum"
+    titles:
+      de: "Französisch: Grundausbildung"
+      fr: "Français: formation de base"
     sourceIds:
       - directory-master-lang-foundationalcurriculum30
     reviewStatus: needs_clarification
@@ -15540,6 +15797,9 @@ programmes:
     faculty: humanities
     degree: master
     title: German
+    titles:
+      de: "Germanistik"
+      fr: "Germanistique"
     sourceIds:
       - directory-master-lang-german
     reviewStatus: needs_clarification
@@ -15618,6 +15878,9 @@ programmes:
     faculty: humanities
     degree: master
     title: German Literary Studies
+    titles:
+      de: "Germanistische Literaturwissenschaft"
+      fr: "Littérature allemande"
     sourceIds:
       - directory-master-lang-germanliterature
     reviewStatus: needs_clarification
@@ -15640,6 +15903,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Greek Studies
+    titles:
+      de: "Griechische Sprache und Kultur"
+      fr: "Langue et culture grecques"
     sourceIds:
       - directory-master-lang-greekstudies
     reviewStatus: needs_clarification
@@ -15664,6 +15930,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Italian
+    titles:
+      de: "Italienisch"
+      fr: "Italien"
     sourceIds:
       - directory-master-lang-italian
     reviewStatus: needs_clarification
@@ -15753,6 +16022,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Italian [Double Degree]
+    titles:
+      de: "Italienisch [Double Degree]"
+      fr: "Italien [Double Degree]"
     sourceIds:
       - directory-master-lang-italiandd
     reviewStatus: needs_clarification
@@ -15780,6 +16052,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Latin Studies
+    titles:
+      de: "Lateinische Sprache und Kultur"
+      fr: "Langue et culture latines"
     sourceIds:
       - directory-master-lang-latinstudies
     reviewStatus: needs_clarification
@@ -15804,6 +16079,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Rhaeto-Romance
+    titles:
+      de: "Rätoromanisch"
+      fr: "Rhéto-roman"
     sourceIds:
       - directory-master-lang-rhaetoromance
     reviewStatus: needs_clarification
@@ -15835,6 +16113,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Slavic Studies
+    titles:
+      de: "Slavistik"
+      fr: "Slavistique"
     sourceIds:
       - directory-master-lang-slavicstudies
     reviewStatus: needs_clarification
@@ -15915,6 +16196,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Spanish
+    titles:
+      de: "Spanisch"
+      fr: "Espagnol"
     sourceIds:
       - directory-master-lang-spanish
     reviewStatus: needs_clarification
@@ -16004,6 +16288,9 @@ programmes:
     faculty: humanities
     degree: master
     title: German as a Foreign Language / German as a Second Language
+    titles:
+      de: "Deutsch als Fremdsprache / Deutsch als Zweitsprache"
+      fr: "Allemand langue étrangère / Allemand langue seconde"
     sourceIds:
       - directory-master-multi-germanforeignlanguage
     reviewStatus: needs_clarification
@@ -16092,6 +16379,9 @@ programmes:
     faculty: humanities
     degree: master
     title: French as a Foreign Language / French as a Second Language
+    titles:
+      de: "Französisch als Fremdsprache / Französisch als Zweitsprache"
+      fr: "Français langue étrangère / Français langue seconde"
     sourceIds:
       - directory-master-multi-frenchforeignlanguage
     reviewStatus: needs_clarification
@@ -16180,6 +16470,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Foreign Language Didactics
+    titles:
+      de: "Fremdsprachendidaktik"
+      fr: "Didactique des langues étrangères"
     sourceIds:
       - directory-master-multi-foreignlanguagedidactics
     reviewStatus: needs_clarification
@@ -16253,6 +16546,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Multilingualism Studies
+    titles:
+      de: "Mehrsprachigkeitsforschung"
+      fr: "Sciences du plurilinguisme"
     sourceIds:
       - directory-master-multi-multilingualism
     reviewStatus: needs_clarification
@@ -16342,6 +16638,9 @@ programmes:
     faculty: humanities
     degree: master
     title: History
+    titles:
+      de: "Geschichte"
+      fr: "Histoire"
     sourceIds:
       - directory-master-hist-history
     reviewStatus: needs_clarification
@@ -16431,6 +16730,9 @@ programmes:
     faculty: humanities
     degree: master
     title: General and Swiss History of Modern Times
+    titles:
+      de: "Allgemeine und Schweizergeschichte der Neuzeit"
+      fr: "Histoire générale et suisse de l'époque moderne"
     sourceIds:
       - directory-master-hist-modernhistory
     reviewStatus: needs_clarification
@@ -16504,6 +16806,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Contemporary History
+    titles:
+      de: "Zeitgeschichte"
+      fr: "Histoire contemporaine"
     sourceIds:
       - directory-master-hist-contemporaryhistory
     reviewStatus: needs_clarification
@@ -16590,6 +16895,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Art History
+    titles:
+      de: "Kunstgeschichte"
+      fr: "Histoire de l'art"
     sourceIds:
       - directory-master-artmus-arthistory
     reviewStatus: needs_clarification
@@ -16679,6 +16987,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Musicology and History of Opera
+    titles:
+      de: "Musikwissenschaft und Geschichte des Musiktheaters"
+      fr: "Musicologie et histoire du théâtre musical"
     sourceIds:
       - directory-master-artmus-musicology
     reviewStatus: needs_clarification
@@ -16761,6 +17072,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Archaeology
+    titles:
+      de: "Archäologie"
+      fr: "Archéologie"
     sourceIds:
       - directory-master-artmus-archaeology
     reviewStatus: needs_clarification
@@ -16841,6 +17155,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Culture, Politics and Religion in Pluralist Societies
+    titles:
+      de: "Kultur, Politik und Religion in der pluralistischen Gesellschaft"
+      fr: "Sociétés plurielles: cultures, politique et religions"
     sourceIds:
       - directory-master-soc-sociologyfrench
     reviewStatus: needs_clarification
@@ -16931,6 +17248,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Sociology, Social Policy, Social Work
+    titles:
+      de: "Soziologie, Sozialpolitik, Sozialarbeit"
+      fr: "Sociologie, politiques sociales, travail social"
     sourceIds:
       - directory-master-soc-sociologygerman
     reviewStatus: needs_clarification
@@ -17004,6 +17324,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Social Problems, Social Policy and Risk Prevention
+    titles:
+      de: "Soziale Probleme, Sozialpolitik und Risikoprävention"
+      fr: "Problèmes sociaux, politiques sociales et préventions des risques"
     sourceIds:
       - directory-master-soc-socialworkfrench
     reviewStatus: needs_clarification
@@ -17092,6 +17415,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Sociology, Social Policy, Social Work
+    titles:
+      de: "Soziologie, Sozialpolitik, Sozialarbeit"
+      fr: "Sociologie, politiques sociales, travail social"
     sourceIds:
       - directory-master-soc-socialworkgerman
     reviewStatus: needs_clarification
@@ -17165,6 +17491,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Eastern European Studies
+    titles:
+      de: "Osteuropa-Studien"
+      fr: "Études de l'Europe orientale"
     sourceIds:
       - directory-master-soc-easterneuropeanstudies
     reviewStatus: needs_clarification
@@ -17254,6 +17583,9 @@ programmes:
     faculty: humanities
     degree: master
     title: European Studies
+    titles:
+      de: "Europastudien"
+      fr: "Études européennes"
     sourceIds:
       - directory-master-soc-europeanstudies
     reviewStatus: needs_clarification
@@ -17344,6 +17676,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Gender, Society, Social Policy
+    titles:
+      de: "Gender, Gesellschaft, Sozialpolitik"
+      fr: "Genre, sociétés, politiques sociales"
     sourceIds:
       - directory-master-soc-gendersocietysocialpolicy30
     reviewStatus: needs_clarification
@@ -17374,6 +17709,9 @@ programmes:
     faculty: humanities
     degree: master
     title: International and Comparative Social Policy
+    titles:
+      de: "International and Comparative Social Policy"
+      fr: "International and Comparative Social Policy"
     sourceIds:
       - directory-master-soc-internationalcomparativesocialpolicy30
     reviewStatus: needs_clarification
@@ -17404,6 +17742,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Culture, Politics and Religion in Pluralist Societies
+    titles:
+      de: "Kultur, Politik und Religion in der pluralistischen Gesellschaft"
+      fr: "Sociétés plurielles: cultures, politique et religions"
     sourceIds:
       - directory-master-soc-religiousstudies
     reviewStatus: needs_clarification
@@ -17494,6 +17835,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Culture, Politics and Religion in Pluralist Societies
+    titles:
+      de: "Kultur, Politik und Religion in der pluralistischen Gesellschaft"
+      fr: "Sociétés plurielles: cultures, politique et religions"
     sourceIds:
       - directory-master-soc-socialanthropology
     reviewStatus: needs_clarification
@@ -17584,6 +17928,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Sociology of Social Problems
+    titles:
+      de: "Soziologie sozialer Probleme"
+      fr: "Sociologie des problèmes sociaux"
     sourceIds:
       - directory-master-soc-sociologysocialproblems30
     reviewStatus: needs_clarification
@@ -17614,6 +17961,9 @@ programmes:
     faculty: education
     degree: master
     title: Special Education
+    titles:
+      de: "Sonderpädagogik"
+      fr: "Pédagogie spécialisée"
     sourceIds:
       - directory-master-pedpsy-specialeducation
     reviewStatus: needs_clarification
@@ -17684,6 +18034,9 @@ programmes:
     faculty: education
     degree: master
     title: Special Education
+    titles:
+      de: "Sonderpädagogik"
+      fr: "Pédagogie spécialisée"
     sourceIds:
       - directory-master-pedpsy-speechtherapy
     reviewStatus: needs_clarification
@@ -17754,6 +18107,9 @@ programmes:
     faculty: education
     degree: master
     title: Remedial Education at School (FR)
+    titles:
+      de: "Schulische Heilpädagogik (FR)"
+      fr: "Enseignement spécialisé"
     sourceIds:
       - directory-master-pedpsy-specialneedseducationfrench
     reviewStatus: needs_clarification
@@ -17786,6 +18142,9 @@ programmes:
     faculty: education
     degree: master
     title: Remedial Education at School (DE)
+    titles:
+      de: "Schulische Heilpädagogik"
+      fr: "Enseignement spécialisé (DE)"
     sourceIds:
       - directory-master-pedpsy-specialneedseducationgerman
     reviewStatus: needs_clarification
@@ -17820,6 +18179,9 @@ programmes:
     faculty: education
     degree: master
     title: Special Education
+    titles:
+      de: "Sonderpädagogik"
+      fr: "Pédagogie spécialisée"
     sourceIds:
       - directory-master-pedpsy-specialeduminor
     reviewStatus: needs_clarification
@@ -17890,6 +18252,9 @@ programmes:
     faculty: education
     degree: master
     title: Education Sciences
+    titles:
+      de: "Erziehungswissenschaften"
+      fr: "Sciences de l'éducation"
     sourceIds:
       - directory-master-pedpsy-educationalsciences
     reviewStatus: needs_clarification
@@ -17975,6 +18340,9 @@ programmes:
     faculty: education
     degree: master
     title: Pedagogy / Psychology
+    titles:
+      de: "Pädagogik / Psychologie"
+      fr: "Pédagogie / Psychologie"
     sourceIds:
       - directory-master-pedpsy-educationpsychology
     reviewStatus: needs_clarification
@@ -18049,6 +18417,9 @@ programmes:
     faculty: humanities
     degree: master
     title: Psychology
+    titles:
+      de: "Psychologie"
+      fr: "Psychologie"
     sourceIds:
       - directory-master-pedpsy-psychology
       - psychology-master-main
@@ -18613,6 +18984,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Molecular Life and Health Sciences
+    titles:
+      de: "Molekulare Lebens- und Gesundheitswissenschaften"
+      fr: "Sciences moléculaires du vivant et de la santé"
     sourceIds:
       - directory-master-sci-biochemistry
     reviewStatus: needs_clarification
@@ -18647,6 +19021,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Environmental Biology
+    titles:
+      de: "Umweltbiologie"
+      fr: "Biologie de l'environnement"
     sourceIds:
       - directory-master-sci-biology
     reviewStatus: needs_clarification
@@ -18690,6 +19067,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Chemistry
+    titles:
+      de: "Chemie"
+      fr: "Chimie"
     sourceIds:
       - directory-master-sci-chemistry
     reviewStatus: needs_clarification
@@ -18734,6 +19114,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Dynamics in Glaciology and Geomorphology
+    titles:
+      de: "Dynamische Systeme in Glaziologie und Geomorphologie"
+      fr: "Glaciologie et géomorphologie dynamiques"
     sourceIds:
       - directory-master-sci-glaciology
     reviewStatus: needs_clarification
@@ -18759,6 +19142,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Earth Sciences
+    titles:
+      de: "Erdwissenschaften"
+      fr: "Sciences de la Terre"
     sourceIds:
       - directory-master-sci-earthsciences
     reviewStatus: needs_clarification
@@ -18784,6 +19170,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Environmental Sciences and Humanities
+    titles:
+      de: "Umweltwissenschaften und Umweltgeisteswissenschaften"
+      fr: "Sciences de l'environnement et humanités environnementales"
     sourceIds:
       - directory-master-sci-environmentalsciences
     reviewStatus: needs_clarification
@@ -18816,6 +19205,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Geography
+    titles:
+      de: "Geographie"
+      fr: "Géographie"
     sourceIds:
       - directory-master-sci-geography
     reviewStatus: needs_clarification
@@ -18850,6 +19242,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Mathematics
+    titles:
+      de: "Mathematik"
+      fr: "Mathématiques"
     sourceIds:
       - directory-master-sci-mathematics
     reviewStatus: needs_clarification
@@ -18884,6 +19279,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Nature, Society and Politics
+    titles:
+      de: "Natur, Gesellschaft und Politik"
+      fr: "Nature, société et politique"
     sourceIds:
       - directory-master-sci-naturesocietypolitics
     reviewStatus: needs_clarification
@@ -18909,6 +19307,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Physics
+    titles:
+      de: "Physik"
+      fr: "Physique"
     sourceIds:
       - directory-master-sci-physics
     reviewStatus: needs_clarification
@@ -18943,6 +19344,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Human Medicine
+    titles:
+      de: "Humanmedizin"
+      fr: "Médecine humaine"
     sourceIds:
       - directory-master-medspo-humanmedicine
     reviewStatus: needs_clarification
@@ -18968,6 +19372,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Sport Sciences
+    titles:
+      de: "Sportwissenschaften"
+      fr: "Sciences du sport"
     sourceIds:
       - directory-master-medspo-sportsciences
     reviewStatus: needs_clarification
@@ -19003,6 +19410,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Experimental Biomedical Research
+    titles:
+      de: "Experimentelle biomedizinische Forschung"
+      fr: "Recherche biomédicale expérimentale"
     sourceIds:
       - directory-master-medspo-biomedicalresearch
     reviewStatus: needs_clarification
@@ -19028,6 +19438,9 @@ programmes:
     faculty: ses
     degree: master
     title: Business Informatics
+    titles:
+      de: "Wirtschaftsinformatik"
+      fr: "Informatique de gestion"
     sourceIds:
       - directory-master-digitinf-businessinformatics
     reviewStatus: needs_clarification
@@ -19061,6 +19474,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Computer Science
+    titles:
+      de: "Informatik"
+      fr: "Informatique"
     sourceIds:
       - directory-master-digitinf-informatics
       - msc-cs-study-plan-review
@@ -19303,6 +19719,9 @@ programmes:
     faculty: ses
     degree: master
     title: Data Analytics & Economics
+    titles:
+      de: "Data Analytics & Economics"
+      fr: "Data Analytics & Economics"
     sourceIds:
       - directory-master-digitinf-dataeco
     reviewStatus: needs_clarification
@@ -19335,6 +19754,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Bioinformatics and Computational Biology
+    titles:
+      de: "Bioinformatik und computationale Biologie"
+      fr: "Bioinformatique et biologie computationnelle"
     sourceIds:
       - directory-master-digitinf-bioinformatics
     reviewStatus: needs_clarification
@@ -19360,6 +19782,9 @@ programmes:
     faculty: science-medicine
     degree: master
     title: Digital Neuroscience
+    titles:
+      de: "Digitale Neurowissenschaft"
+      fr: "Neurosciences digitales"
     sourceIds:
       - directory-master-digitinf-digitalneuroscience
     reviewStatus: needs_clarification
@@ -19385,6 +19810,9 @@ programmes:
     faculty: education
     degree: master
     title: Teacher Education for Secondary Level I
+    titles:
+      de: "Ausbildung für den Unterricht auf der Sekundarstufe I"
+      fr: "Formation à l'enseignement pour le degré secondaire I"
     sourceIds:
       - directory-master-teach-teacheredu1
     reviewStatus: needs_clarification
@@ -19411,6 +19839,9 @@ programmes:
     faculty: education
     degree: master
     title: Teacher Education for Baccalaureate Schools
+    titles:
+      de: "Ausbildung für den Unterricht an Maturitätsschulen"
+      fr: "Formation à l'enseignement pour les écoles de maturité"
     sourceIds:
       - directory-master-teach-teacheredu2
     reviewStatus: needs_clarification
@@ -19438,6 +19869,9 @@ programmes:
     faculty: education
     degree: master
     title: Teacher Education for Secondary Level I and Baccalaureate Schools
+    titles:
+      de: "Ausbildung für den Unterricht auf der Sekundarstufe I und an Maturitätsschulen"
+      fr: "Formation à l'enseignement pour le degré secondaire I et les écoles de maturité"
     sourceIds:
       - directory-master-teach-teacheredu1-2
     reviewStatus: needs_clarification
@@ -19463,6 +19897,9 @@ programmes:
     faculty: interfaculty
     degree: master
     title: Digital Society
+    titles:
+      de: "Digital Society"
+      fr: "Digital Society"
     sourceIds:
       - directory-master-int-digitalsociety
     reviewStatus: needs_clarification
@@ -19541,6 +19978,9 @@ programmes:
     faculty: interfaculty
     degree: master
     title: Environmental Humanities and Sustainability Studies
+    titles:
+      de: "Umweltgeisteswissenschaften und Nachhaltigkeitsforschung"
+      fr: "Humanités environnementales et durabilité"
     sourceIds:
       - directory-master-int-environmentalhumanitiessustainability
     reviewStatus: needs_clarification
@@ -19573,6 +20013,9 @@ programmes:
     faculty: interfaculty
     degree: master
     title: Family, Children and Youth Studies
+    titles:
+      de: "Familien-, Kinder- und Jugendstudien"
+      fr: "Études sur la famille, l'enfance et la jeunesse"
     sourceIds:
       - directory-master-int-familystudies
     reviewStatus: needs_clarification
@@ -19646,6 +20089,9 @@ programmes:
     faculty: interfaculty
     degree: master
     title: Islam and Society
+    titles:
+      de: "Islam und Gesellschaft"
+      fr: "Islam et société"
     sourceIds:
       - directory-master-int-islamsociety
     reviewStatus: needs_clarification
@@ -19720,6 +20166,9 @@ programmes:
     faculty: interfaculty
     degree: master
     title: Medieval Studies
+    titles:
+      de: "Mediävistik"
+      fr: "Études médiévales"
     sourceIds:
       - directory-master-int-medievalstudies30
     reviewStatus: needs_clarification

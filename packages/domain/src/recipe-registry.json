@@ -2406,6 +2406,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "theology",
       "title": "Theology",
+      "titles": {
+        "de": "Theologie",
+        "fr": "Théologie"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2026",
@@ -3638,6 +3642,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "theological-studies",
       "title": "Theological Studies",
+      "titles": {
+        "de": "Theologische Studien",
+        "fr": "Études théologiques"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2026",
@@ -4705,6 +4713,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "interreligious-studies",
       "title": "Interreligious Studies",
+      "titles": {
+        "de": "Interreligiöse Studien",
+        "fr": "Études interreligieuses"
+      },
       "variants": [
         {
           "ects": 120,
@@ -4816,6 +4828,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters or 180 ECTS credits + 60 or 30 ECTS credits as an addition in one or two study programmes freely chosen, 6 semesters Lectures and tutorials on at least four weekdays.",
       "subject": "law",
       "title": "Law",
+      "titles": {
+        "de": "Rechtswissenschaft",
+        "fr": "Droit"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2023",
@@ -5723,6 +5739,10 @@
       "structureEvidence": "180 ECTS credits, 8 semesters or 180 ECTS credits + 60 or 30 ECTS credits as an addition in one or two study programmes freely chosen, 8 semesters Lectures and selected tutorials on two weekdays. The self-study concerns in particular the tutorials and lectures which do not take place on the two weekdays.",
       "subject": "part-time-law-studies",
       "title": "Part-time Law studies",
+      "titles": {
+        "de": "Rechtswissenschaft im Teilzeitstudium",
+        "fr": "Droit à temps partiel"
+      },
       "variants": [
         {
           "ects": 180,
@@ -5742,6 +5762,9 @@
       ]
     },
     {
+      "aliases": [
+        "BWL"
+      ],
       "combinationPolicy": "unknown",
       "curriculumUrls": [
         "https://studies.unifr.ch/go/HMgAg",
@@ -5760,6 +5783,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "management",
       "title": "Management",
+      "titles": {
+        "de": "Betriebswirtschaftslehre",
+        "fr": "Management"
+      },
       "variants": [
         {
           "ects": 180,
@@ -5794,6 +5821,9 @@
       ]
     },
     {
+      "aliases": [
+        "VWL"
+      ],
       "combinationPolicy": "unknown",
       "curriculumUrls": [
         "https://studies.unifr.ch/go/kBF3p",
@@ -5812,6 +5842,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "economics",
       "title": "Economics",
+      "titles": {
+        "de": "Volkswirtschaftslehre",
+        "fr": "Économie politique"
+      },
       "variants": [
         {
           "ects": 180,
@@ -5869,6 +5903,10 @@
       "structureEvidence": "120 ECTS credits Management and Economics + 60 ECTS credits Law, 6 semesters",
       "subject": "economic-and-legal-studies",
       "title": "Economic and Legal Studies",
+      "titles": {
+        "de": "Wirtschafts- und Rechtswissenschaftliche Studien",
+        "fr": "Études économiques et juridiques"
+      },
       "variants": [
         {
           "ects": 120,
@@ -5902,6 +5940,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "business-communication",
       "title": "Business Communication",
+      "titles": {
+        "de": "Business Communication",
+        "fr": "Business Communication"
+      },
       "variants": [
         {
           "ects": 60,
@@ -5979,6 +6021,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "communication-and-media-research",
       "title": "Communication and Media Research",
+      "titles": {
+        "de": "Kommunikationswissenschaft und Medienforschung",
+        "fr": "Sciences de la communication et des médias"
+      },
       "variants": [
         {
           "ects": 120,
@@ -6078,6 +6124,10 @@
       "structureEvidence": "90 ECTS credits + 60 ECTS credits + 30 ECTS credits in two minor study programmes freely chosen, 6 semesters",
       "subject": "communication-studies",
       "title": "Communication Studies",
+      "titles": {
+        "de": "Kommunikationswissenschaft",
+        "fr": "Sciences de la communication"
+      },
       "variants": [
         {
           "ects": 90,
@@ -6169,6 +6219,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "philosophy",
       "title": "Philosophy",
+      "titles": {
+        "de": "Philosophie",
+        "fr": "Philosophie"
+      },
       "variants": [
         {
           "ects": 120,
@@ -6268,6 +6322,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "classics",
       "title": "Classics",
+      "titles": {
+        "de": "Klassische Philologie",
+        "fr": "Philologie classique"
+      },
       "variants": [
         {
           "ects": 120,
@@ -6349,6 +6407,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "english-language-and-literature",
       "title": "English Language and Literature",
+      "titles": {
+        "de": "Englische Sprache und Literatur",
+        "fr": "Langue et littérature anglaises"
+      },
       "variants": [
         {
           "ects": 120,
@@ -6439,6 +6501,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "french",
       "title": "French",
+      "titles": {
+        "de": "Französisch",
+        "fr": "Français"
+      },
       "variants": [
         {
           "ects": 120,
@@ -6482,6 +6548,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "french-and-german-bilingualism-and-cultural-exchange",
       "title": "French and German: Bilingualism and Cultural Exchange",
+      "titles": {
+        "de": "Deutsch und Französisch: Zweisprachigkeit und Kulturkontakt",
+        "fr": "Français et Allemand: Bilinguisme et échange culturel"
+      },
       "variants": [
         {
           "ects": 180,
@@ -6563,6 +6633,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "german",
       "title": "German",
+      "titles": {
+        "de": "Germanistik",
+        "fr": "Germanistique"
+      },
       "variants": [
         {
           "ects": 120,
@@ -7369,6 +7443,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "german-literary-studies",
       "title": "German Literary Studies",
+      "titles": {
+        "de": "Germanistische Literaturwissenschaft",
+        "fr": "Littérature allemande"
+      },
       "variants": [
         {
           "ects": 60,
@@ -7400,6 +7478,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "greek-studies",
       "title": "Greek Studies",
+      "titles": {
+        "de": "Griechische Sprache und Kultur",
+        "fr": "Langue et culture grecques"
+      },
       "variants": [
         {
           "ects": 60,
@@ -7488,6 +7570,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "italian",
       "title": "Italian",
+      "titles": {
+        "de": "Italienisch",
+        "fr": "Italien"
+      },
       "variants": [
         {
           "ects": 120,
@@ -7540,6 +7626,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "latin-studies",
       "title": "Latin Studies",
+      "titles": {
+        "de": "Lateinische Sprache und Kultur",
+        "fr": "Langue et culture latines"
+      },
       "variants": [
         {
           "ects": 60,
@@ -7581,6 +7671,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "rhaeto-romance",
       "title": "Rhaeto-Romance",
+      "titles": {
+        "de": "Rätoromanisch",
+        "fr": "Rhéto-roman"
+      },
       "variants": [
         {
           "ects": 60,
@@ -7670,6 +7764,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "slavic-studies",
       "title": "Slavic Studies",
+      "titles": {
+        "de": "Slavistik",
+        "fr": "Slavistique"
+      },
       "variants": [
         {
           "ects": 120,
@@ -7760,6 +7858,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "spanish",
       "title": "Spanish",
+      "titles": {
+        "de": "Spanisch",
+        "fr": "Espagnol"
+      },
       "variants": [
         {
           "ects": 120,
@@ -7811,6 +7913,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "german-as-a-foreign-language",
       "title": "German as a Foreign Language",
+      "titles": {
+        "de": "Deutsch als Fremdsprache",
+        "fr": "Allemand langue étrangère"
+      },
       "variants": [
         {
           "ects": 60,
@@ -7841,6 +7947,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "french-as-a-foreign-language",
       "title": "French as a Foreign Language",
+      "titles": {
+        "de": "Französisch als Fremdsprache",
+        "fr": "Français langue étrangère"
+      },
       "variants": [
         {
           "ects": 60,
@@ -7920,6 +8030,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "history",
       "title": "History",
+      "titles": {
+        "de": "Geschichte",
+        "fr": "Histoire"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2016",
@@ -8838,6 +8952,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "history-of-modern-times",
       "title": "History of Modern Times",
+      "titles": {
+        "de": "Geschichte der Moderne",
+        "fr": "Histoire de la modernité"
+      },
       "variants": [
         {
           "ects": 120,
@@ -8919,6 +9037,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "contemporary-history",
       "title": "Contemporary History",
+      "titles": {
+        "de": "Zeitgeschichte",
+        "fr": "Histoire contemporaine"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9019,6 +9141,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "art-history",
       "title": "Art History",
+      "titles": {
+        "de": "Kunstgeschichte",
+        "fr": "Histoire de l'art"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9119,6 +9245,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "musicology-and-history-of-opera",
       "title": "Musicology and History of Opera",
+      "titles": {
+        "de": "Musikwissenschaft und Geschichte des Musiktheaters",
+        "fr": "Musicologie et histoire du théâtre musical"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9217,6 +9347,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "sociology-fr",
       "title": "Sociology (FR)",
+      "titles": {
+        "de": "Soziologie (FR)",
+        "fr": "Sociologie"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9315,6 +9449,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "sociology-de",
       "title": "Sociology (DE)",
+      "titles": {
+        "de": "Soziologie",
+        "fr": "Sociologie (DE)"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9404,6 +9542,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "social-work-and-social-policy-fr",
       "title": "Social Work and Social Policy (FR)",
+      "titles": {
+        "de": "Sozialarbeit und Sozialpolitik (FR)",
+        "fr": "Travail social et politiques sociales"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9502,6 +9644,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "social-work-and-social-policy-de",
       "title": "Social Work and Social Policy (DE)",
+      "titles": {
+        "de": "Sozialarbeit und Sozialpolitik",
+        "fr": "Travail social et politiques sociales (DE)"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9593,6 +9739,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "eastern-european-studies",
       "title": "Eastern European Studies",
+      "titles": {
+        "de": "Osteuropa-Studien",
+        "fr": "Études de l'Europe orientale"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9683,6 +9833,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "political-science",
       "title": "Political Science",
+      "titles": {
+        "de": "Politikwissenschaft",
+        "fr": "Science politique"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9774,6 +9928,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "religious-studies",
       "title": "Religious studies",
+      "titles": {
+        "de": "Religionswissenschaft",
+        "fr": "Science des religions"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9874,6 +10032,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "social-anthropology",
       "title": "Social Anthropology",
+      "titles": {
+        "de": "Sozialanthropologie",
+        "fr": "Anthropologie sociale"
+      },
       "variants": [
         {
           "ects": 120,
@@ -9926,6 +10088,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "special-education",
       "title": "Special Education",
+      "titles": {
+        "de": "Sonderpädagogik und Sozialpädagogik",
+        "fr": "Éducation spécialisée"
+      },
       "variants": [
         {
           "ects": 180,
@@ -9959,6 +10125,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "speech-language-therapy",
       "title": "Speech-Language Therapy",
+      "titles": {
+        "de": "Logopädie",
+        "fr": "Logopédie"
+      },
       "variants": [
         {
           "ects": 180,
@@ -9993,6 +10163,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "special-education",
       "title": "Special Education",
+      "titles": {
+        "de": "Sonderpädagogik",
+        "fr": "Pédagogie spécialisée"
+      },
       "variants": [
         {
           "ects": 60,
@@ -10077,6 +10251,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "education-sciences",
       "title": "Education Sciences",
+      "titles": {
+        "de": "Erziehungswissenschaften",
+        "fr": "Sciences de l'éducation"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2025",
@@ -11236,6 +11414,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "pedagogy-psychology",
       "title": "Pedagogy / Psychology",
+      "titles": {
+        "de": "Pädagogik / Psychologie",
+        "fr": "Pédagogie / Psychologie"
+      },
       "variants": [
         {
           "ects": 120,
@@ -11288,6 +11470,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "psychology",
       "title": "Psychology",
+      "titles": {
+        "de": "Psychologie",
+        "fr": "Psychologie"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2019",
@@ -12956,6 +13142,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "biochemistry",
       "title": "Biochemistry",
+      "titles": {
+        "de": "Biochemie",
+        "fr": "Biochimie"
+      },
       "variants": [
         {
           "ects": 120,
@@ -13059,6 +13249,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "biology",
       "title": "Biology",
+      "titles": {
+        "de": "Biologie",
+        "fr": "Biologie"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2026",
@@ -14108,6 +14302,10 @@
       "structureEvidence": "150 ECTS credits + 30 ECTS credits in a minor study programme freely chosen, 6 semesters or 120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen that corresponds to a teaching subject for baccalaureate schools (DEEM/LDM), 6 semesters",
       "subject": "chemistry",
       "title": "Chemistry",
+      "titles": {
+        "de": "Chemie",
+        "fr": "Chimie"
+      },
       "variants": [
         {
           "ects": 150,
@@ -14638,6 +14836,10 @@
       "structureEvidence": "150 ECTS credits + 30 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "earth-sciences",
       "title": "Earth Sciences",
+      "titles": {
+        "de": "Erdwissenschaften",
+        "fr": "Sciences de la Terre"
+      },
       "variants": [
         {
           "ects": 150,
@@ -14690,6 +14892,10 @@
       "structureEvidence": "60 ECTS credits as a minor study programme",
       "subject": "environmental-sciences-and-humanities",
       "title": "Environmental Sciences and Humanities",
+      "titles": {
+        "de": "Umweltwissenschaften und Umweltgeisteswissenschaften",
+        "fr": "Sciences de l'environnement et humanités environnementales"
+      },
       "variants": [
         {
           "ects": 60,
@@ -14779,6 +14985,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "geography",
       "title": "Geography",
+      "titles": {
+        "de": "Geographie",
+        "fr": "Géographie"
+      },
       "variants": [
         {
           "ects": 120,
@@ -14883,6 +15093,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "mathematics",
       "title": "Mathematics",
+      "titles": {
+        "de": "Mathematik",
+        "fr": "Mathématiques"
+      },
       "variants": [
         {
           "ects": 120,
@@ -15326,6 +15540,10 @@
       "structureEvidence": "150 ECTS credits + 30 ECTS credits in a minor study programme freely chosen, 6 semesters",
       "subject": "physics",
       "title": "Physics",
+      "titles": {
+        "de": "Physik",
+        "fr": "Physique"
+      },
       "variants": [
         {
           "ects": 150,
@@ -15378,6 +15596,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "human-medicine",
       "title": "Human Medicine",
+      "titles": {
+        "de": "Humanmedizin",
+        "fr": "Médecine humaine"
+      },
       "variants": [
         {
           "ects": 180,
@@ -15461,6 +15683,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "biomedical-sciences",
       "title": "Biomedical Sciences",
+      "titles": {
+        "de": "Biomedizinische Wissenschaften",
+        "fr": "Sciences biomédicales"
+      },
       "variants": [
         {
           "ects": 120,
@@ -15522,6 +15748,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters or 120 ECTS credits + 60 ECTS credits in a minor study programme freely chosen that corresponds to a teaching subject for baccalaureate schools (DEEM/LDM), 6 semesters",
       "subject": "sport-sciences-and-motor-control",
       "title": "Sport Sciences and Motor Control",
+      "titles": {
+        "de": "Sport- und Bewegungswissenschaften",
+        "fr": "Sciences du sport et de la motricité"
+      },
       "variants": [
         {
           "ects": 180,
@@ -15591,6 +15821,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "business-informatics",
       "title": "Business Informatics",
+      "titles": {
+        "de": "Wirtschaftsinformatik",
+        "fr": "Informatique de gestion"
+      },
       "variants": [
         {
           "curriculumVersion": "bi-major-department-summary-review",
@@ -16373,6 +16607,10 @@
       "structureEvidence": "120 ECTS credits + 60 ECTS credits in one or two minor study programmes freely chosen, 6 semesters",
       "subject": "computer-science",
       "title": "Computer Science",
+      "titles": {
+        "de": "Informatik",
+        "fr": "Informatique"
+      },
       "variants": [
         {
           "curriculumVersion": "2026.1",
@@ -17102,6 +17340,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "teacher-education-for-primary-level",
       "title": "Teacher Education for Primary Level",
+      "titles": {
+        "de": "Ausbildung für den Unterricht auf der Primarstufe",
+        "fr": "Formation à l'enseignement pour le degré primaire"
+      },
       "variants": [
         {
           "ects": 180,
@@ -17133,6 +17375,10 @@
       "structureEvidence": "150 ECTS credits at least (academic training) + 30 ECTS credits (teacher training), 6 semesters Table of bachelor's study programmes which entitle students to train for a DEDS/LDS in the corresponding teaching subject.",
       "subject": "teacher-education-for-secondary-level-i",
       "title": "Teacher Education for Secondary Level I",
+      "titles": {
+        "de": "Ausbildung für den Unterricht auf der Sekundarstufe I",
+        "fr": "Formation à l'enseignement pour le degré secondaire I"
+      },
       "variants": [
         {
           "ects": 150,
@@ -17176,6 +17422,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "theology",
       "title": "Theology",
+      "titles": {
+        "de": "Theologie",
+        "fr": "Théologie"
+      },
       "variants": [
         {
           "ects": 120,
@@ -17263,6 +17513,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits in a minor study programme freely chosen, 4 semesters",
       "subject": "theological-studies",
       "title": "Theological Studies",
+      "titles": {
+        "de": "Theologische Studien",
+        "fr": "Études théologiques"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17341,6 +17595,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits in a minor study programme freely chosen, 4 semesters",
       "subject": "interreligious-studies",
       "title": "Interreligious Studies",
+      "titles": {
+        "de": "Interreligiöse Studien",
+        "fr": "Études interreligieuses"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17381,6 +17639,10 @@
       "structureEvidence": "60 ECTS credits, 2 semesters",
       "subject": "theology-canonical-license",
       "title": "Theology (Canonical License)",
+      "titles": {
+        "de": "Theologie (Kanonisches Lizentiat)",
+        "fr": "Théologie (Licence canonique)"
+      },
       "variants": [
         {
           "ects": 60,
@@ -17460,6 +17722,10 @@
       "structureEvidence": "90 ECTS credits, 2 to 3 semesters or 90 ECTS credits + 30 ECTS credits as an addition in a study programme freely chosen, 2 to 3 semesters",
       "subject": "law",
       "title": "Law",
+      "titles": {
+        "de": "Rechtswissenschaft",
+        "fr": "Droit"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17540,6 +17806,10 @@
       "structureEvidence": "90 ECTS credits, 2 to 3 semesters or 90 ECTS credits + 30 ECTS credits as an addition in a study programme freely chosen, 2 to 3 semesters",
       "subject": "law",
       "title": "Law",
+      "titles": {
+        "de": "Rechtswissenschaft",
+        "fr": "Droit"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17575,6 +17845,10 @@
       "structureEvidence": "90 ECTS credits, 2-3 semesters",
       "subject": "legal-studies",
       "title": "Legal Studies",
+      "titles": {
+        "de": "Rechtswissenschaftliche Studien",
+        "fr": "Études juridiques"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17591,6 +17865,9 @@
       ]
     },
     {
+      "aliases": [
+        "BWL"
+      ],
       "combinationPolicy": "unknown",
       "curriculumUrls": [
         "https://studies.unifr.ch/go/orMLz",
@@ -17609,6 +17886,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "management",
       "title": "Management",
+      "titles": {
+        "de": "Betriebswirtschaftslehre",
+        "fr": "Management"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17634,6 +17915,9 @@
       ]
     },
     {
+      "aliases": [
+        "VWL"
+      ],
       "combinationPolicy": "unknown",
       "curriculumUrls": [
         "https://studies.unifr.ch/go/o4j52",
@@ -17653,6 +17937,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "economics",
       "title": "Economics",
+      "titles": {
+        "de": "Volkswirtschaftslehre",
+        "fr": "Économie politique"
+      },
       "variants": [
         {
           "curriculumVersion": "economics-standard-summary-2026-review",
@@ -17833,6 +18121,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters or 120 ECTS credits, 4 semesters, for the optional double degree programme.",
       "subject": "accounting-and-finance",
       "title": "Accounting and Finance",
+      "titles": {
+        "de": "Accounting and Finance",
+        "fr": "Accounting and Finance"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17878,6 +18170,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters or 120 ECTS credits, 4 semesters, for the optional double degree programmes.",
       "subject": "international-and-european-business",
       "title": "International and European Business",
+      "titles": {
+        "de": "International and European Business",
+        "fr": "International and European Business"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17923,6 +18219,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "marketing",
       "title": "Marketing",
+      "titles": {
+        "de": "Marketing",
+        "fr": "Marketing"
+      },
       "variants": [
         {
           "ects": 90,
@@ -17956,6 +18256,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme",
       "subject": "ethics-and-economics",
       "title": "Ethics and Economics",
+      "titles": {
+        "de": "Ethik und Volkswirtschaftslehre",
+        "fr": "Éthique et économie politique"
+      },
       "variants": [
         {
           "ects": 30,
@@ -17986,6 +18290,10 @@
       "structureEvidence": "60 ECTS credits + 30 ECTS credit in a specialisation programme freely chosen, 3 or 4 semesters",
       "subject": "business-communication",
       "title": "Business Communication",
+      "titles": {
+        "de": "Business Communication",
+        "fr": "Business Communication"
+      },
       "variants": [
         {
           "ects": 60,
@@ -18019,6 +18327,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "digital-media-communication-for-social-impact",
       "title": "Digital Media & Communication for Social Impact",
+      "titles": {
+        "de": "Digital Media & Communication for Social Impact",
+        "fr": "Digital Media & Communication for Social Impact"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18061,6 +18373,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "digital-media-communication-for-social-impact",
       "title": "Digital Media & Communication for Social Impact",
+      "titles": {
+        "de": "Digital Media & Communication for Social Impact",
+        "fr": "Digital Media & Communication for Social Impact"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18103,6 +18419,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "digital-communication-and-creative-media-production",
       "title": "Digital Communication and Creative Media Production",
+      "titles": {
+        "de": "Digital Communication and Creative Media Production",
+        "fr": "Digital Communication and Creative Media Production"
+      },
       "variants": [
         {
           "ects": 120,
@@ -18194,6 +18514,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "philosophy",
       "title": "Philosophy",
+      "titles": {
+        "de": "Philosophie",
+        "fr": "Philosophie"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18284,6 +18608,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "classics",
       "title": "Classics",
+      "titles": {
+        "de": "Klassische Philologie",
+        "fr": "Philologie classique"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18366,6 +18694,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "comparative-literature",
       "title": "Comparative Literature",
+      "titles": {
+        "de": "Allgemeine und vergleichende Literaturwissenschaft",
+        "fr": "Littérature générale et comparée"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18456,6 +18788,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "english-language-and-literature",
       "title": "English Language and Literature",
+      "titles": {
+        "de": "Englische Sprache und Literatur",
+        "fr": "Langue et littérature anglaises"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18546,6 +18882,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "french",
       "title": "French",
+      "titles": {
+        "de": "Französisch",
+        "fr": "Français"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18577,6 +18917,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme",
       "subject": "french-foundational-curriculum",
       "title": "French: Foundational Curriculum",
+      "titles": {
+        "de": "Französisch: Grundausbildung",
+        "fr": "Français: formation de base"
+      },
       "variants": [
         {
           "ects": 30,
@@ -18654,6 +18998,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "german",
       "title": "German",
+      "titles": {
+        "de": "Germanistik",
+        "fr": "Germanistique"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18694,6 +19042,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme",
       "subject": "german-literary-studies",
       "title": "German Literary Studies",
+      "titles": {
+        "de": "Germanistische Literaturwissenschaft",
+        "fr": "Littérature allemande"
+      },
       "variants": [
         {
           "ects": 30,
@@ -18725,6 +19077,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme, 2 to 4 semesters",
       "subject": "greek-studies",
       "title": "Greek Studies",
+      "titles": {
+        "de": "Griechische Sprache und Kultur",
+        "fr": "Langue et culture grecques"
+      },
       "variants": [
         {
           "ects": 30,
@@ -18804,6 +19160,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "italian",
       "title": "Italian",
+      "titles": {
+        "de": "Italienisch",
+        "fr": "Italien"
+      },
       "variants": [
         {
           "ects": 90,
@@ -18856,6 +19216,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters (60 ECTS credits must be acquired at the University of Fribourg, 1 st and 4 th semesters; 60 ECTS credits must be acquired at the University of Verona, 2 nd and 3 rd semesters).",
       "subject": "italian",
       "title": "Italian [Double Degree]",
+      "titles": {
+        "de": "Italienisch [Double Degree]",
+        "fr": "Italien [Double Degree]"
+      },
       "variants": [
         {
           "ects": 120,
@@ -18890,6 +19254,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme, 2 to 4 semesters",
       "subject": "latin-studies",
       "title": "Latin Studies",
+      "titles": {
+        "de": "Lateinische Sprache und Kultur",
+        "fr": "Langue et culture latines"
+      },
       "variants": [
         {
           "ects": 30,
@@ -18921,6 +19289,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme or a specialisation programme",
       "subject": "rhaeto-romance",
       "title": "Rhaeto-Romance",
+      "titles": {
+        "de": "Rätoromanisch",
+        "fr": "Rhéto-roman"
+      },
       "variants": [
         {
           "ects": 30,
@@ -19009,6 +19381,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "slavic-studies",
       "title": "Slavic Studies",
+      "titles": {
+        "de": "Slavistik",
+        "fr": "Slavistique"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19100,6 +19476,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "spanish",
       "title": "Spanish",
+      "titles": {
+        "de": "Spanisch",
+        "fr": "Espagnol"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19200,6 +19580,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "german-as-a-foreign-language-german-as-a-second-language",
       "title": "German as a Foreign Language / German as a Second Language",
+      "titles": {
+        "de": "Deutsch als Fremdsprache / Deutsch als Zweitsprache",
+        "fr": "Allemand langue étrangère / Allemand langue seconde"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19300,6 +19684,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "french-as-a-foreign-language-french-as-a-second-language",
       "title": "French as a Foreign Language / French as a Second Language",
+      "titles": {
+        "de": "Französisch als Fremdsprache / Französisch als Zweitsprache",
+        "fr": "Français langue étrangère / Français langue seconde"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19399,6 +19787,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 4 to 5 semesters",
       "subject": "foreign-language-didactics",
       "title": "Foreign Language Didactics",
+      "titles": {
+        "de": "Fremdsprachendidaktik",
+        "fr": "Didactique des langues étrangères"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19482,6 +19874,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 4 to 5 semesters",
       "subject": "multilingualism-studies",
       "title": "Multilingualism Studies",
+      "titles": {
+        "de": "Mehrsprachigkeitsforschung",
+        "fr": "Sciences du plurilinguisme"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19583,6 +19979,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "history",
       "title": "History",
+      "titles": {
+        "de": "Geschichte",
+        "fr": "Histoire"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19684,6 +20084,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "general-and-swiss-history-of-modern-times",
       "title": "General and Swiss History of Modern Times",
+      "titles": {
+        "de": "Allgemeine und Schweizergeschichte der Neuzeit",
+        "fr": "Histoire générale et suisse de l'époque moderne"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19765,6 +20169,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "contemporary-history",
       "title": "Contemporary History",
+      "titles": {
+        "de": "Zeitgeschichte",
+        "fr": "Histoire contemporaine"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19865,6 +20273,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "art-history",
       "title": "Art History",
+      "titles": {
+        "de": "Kunstgeschichte",
+        "fr": "Histoire de l'art"
+      },
       "variants": [
         {
           "ects": 90,
@@ -19966,6 +20378,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "musicology-and-history-of-opera",
       "title": "Musicology and History of Opera",
+      "titles": {
+        "de": "Musikwissenschaft und Geschichte des Musiktheaters",
+        "fr": "Musicologie et histoire du théâtre musical"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20058,6 +20474,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "archaeology",
       "title": "Archaeology",
+      "titles": {
+        "de": "Archäologie",
+        "fr": "Archéologie"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20150,6 +20570,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "culture-politics-and-religion-in-pluralist-societies",
       "title": "Culture, Politics and Religion in Pluralist Societies",
+      "titles": {
+        "de": "Kultur, Politik und Religion in der pluralistischen Gesellschaft",
+        "fr": "Sociétés plurielles: cultures, politique et religions"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20251,6 +20675,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "sociology-social-policy-social-work",
       "title": "Sociology, Social Policy, Social Work",
+      "titles": {
+        "de": "Soziologie, Sozialpolitik, Sozialarbeit",
+        "fr": "Sociologie, politiques sociales, travail social"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20332,6 +20760,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "social-problems-social-policy-and-risk-prevention",
       "title": "Social Problems, Social Policy and Risk Prevention",
+      "titles": {
+        "de": "Soziale Probleme, Sozialpolitik und Risikoprävention",
+        "fr": "Problèmes sociaux, politiques sociales et préventions des risques"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20433,6 +20865,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen, 3 to 4 semesters",
       "subject": "sociology-social-policy-social-work",
       "title": "Sociology, Social Policy, Social Work",
+      "titles": {
+        "de": "Soziologie, Sozialpolitik, Sozialarbeit",
+        "fr": "Sociologie, politiques sociales, travail social"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20515,6 +20951,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits in a minor study programme freely chosen or in a specialisation programme, 4 semesters",
       "subject": "eastern-european-studies",
       "title": "Eastern European Studies",
+      "titles": {
+        "de": "Osteuropa-Studien",
+        "fr": "Études de l'Europe orientale"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20617,6 +21057,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "european-studies",
       "title": "European Studies",
+      "titles": {
+        "de": "Europastudien",
+        "fr": "Études européennes"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20669,6 +21113,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme or a specialisation programme",
       "subject": "gender-society-social-policy",
       "title": "Gender, Society, Social Policy",
+      "titles": {
+        "de": "Gender, Gesellschaft, Sozialpolitik",
+        "fr": "Genre, sociétés, politiques sociales"
+      },
       "variants": [
         {
           "ects": 30,
@@ -20708,6 +21156,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme or a specialisation programme",
       "subject": "international-and-comparative-social-policy",
       "title": "International and Comparative Social Policy",
+      "titles": {
+        "de": "International and Comparative Social Policy",
+        "fr": "International and Comparative Social Policy"
+      },
       "variants": [
         {
           "ects": 30,
@@ -20797,6 +21249,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "culture-politics-and-religion-in-pluralist-societies",
       "title": "Culture, Politics and Religion in Pluralist Societies",
+      "titles": {
+        "de": "Kultur, Politik und Religion in der pluralistischen Gesellschaft",
+        "fr": "Sociétés plurielles: cultures, politique et religions"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20899,6 +21355,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "culture-politics-and-religion-in-pluralist-societies",
       "title": "Culture, Politics and Religion in Pluralist Societies",
+      "titles": {
+        "de": "Kultur, Politik und Religion in der pluralistischen Gesellschaft",
+        "fr": "Sociétés plurielles: cultures, politique et religions"
+      },
       "variants": [
         {
           "ects": 90,
@@ -20951,6 +21411,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme or a specialisation programme",
       "subject": "sociology-of-social-problems",
       "title": "Sociology of Social Problems",
+      "titles": {
+        "de": "Soziologie sozialer Probleme",
+        "fr": "Sociologie des problèmes sociaux"
+      },
       "variants": [
         {
           "ects": 30,
@@ -21036,6 +21500,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme, 3-4 semesters",
       "subject": "special-education",
       "title": "Special Education",
+      "titles": {
+        "de": "Sonderpädagogik",
+        "fr": "Pédagogie spécialisée"
+      },
       "variants": [
         {
           "ects": 90,
@@ -21115,6 +21583,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme, 3-4 semesters",
       "subject": "special-education",
       "title": "Special Education",
+      "titles": {
+        "de": "Sonderpädagogik",
+        "fr": "Pédagogie spécialisée"
+      },
       "variants": [
         {
           "ects": 90,
@@ -21148,6 +21620,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits in a supplement, 4 semesters",
       "subject": "remedial-education-at-school-fr",
       "title": "Remedial Education at School (FR)",
+      "titles": {
+        "de": "Schulische Heilpädagogik (FR)",
+        "fr": "Enseignement spécialisé"
+      },
       "variants": [
         {
           "ects": 90,
@@ -21191,6 +21667,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits in one or two supplements, 4 to 6 semesters",
       "subject": "remedial-education-at-school-de",
       "title": "Remedial Education at School (DE)",
+      "titles": {
+        "de": "Schulische Heilpädagogik",
+        "fr": "Enseignement spécialisé (DE)"
+      },
       "variants": [
         {
           "ects": 90,
@@ -21279,6 +21759,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme, 3-4 semesters",
       "subject": "special-education",
       "title": "Special Education",
+      "titles": {
+        "de": "Sonderpädagogik",
+        "fr": "Pédagogie spécialisée"
+      },
       "variants": [
         {
           "ects": 90,
@@ -21357,6 +21841,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme freely chosen or in a specialisation programme, 3 to 4 semesters",
       "subject": "education-sciences",
       "title": "Education Sciences",
+      "titles": {
+        "de": "Erziehungswissenschaften",
+        "fr": "Sciences de l'éducation"
+      },
       "variants": [
         {
           "ects": 90,
@@ -21452,6 +21940,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme, 3-4 semesters",
       "subject": "pedagogy-psychology",
       "title": "Pedagogy / Psychology",
+      "titles": {
+        "de": "Pädagogik / Psychologie",
+        "fr": "Pédagogie / Psychologie"
+      },
       "variants": [
         {
           "ects": 90,
@@ -21504,6 +21996,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits in a specialisation programme, 4 semesters",
       "subject": "psychology",
       "title": "Psychology",
+      "titles": {
+        "de": "Psychologie",
+        "fr": "Psychologie"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2025",
@@ -22167,6 +22663,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters or 90 ECTS credits, 3 semesters (option «Teaching»)",
       "subject": "molecular-life-and-health-sciences",
       "title": "Molecular Life and Health Sciences",
+      "titles": {
+        "de": "Molekulare Lebens- und Gesundheitswissenschaften",
+        "fr": "Sciences moléculaires du vivant et de la santé"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22213,6 +22713,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters or 90 ECTS credits, 3 semesters (option «Teaching»)",
       "subject": "environmental-biology",
       "title": "Environmental Biology",
+      "titles": {
+        "de": "Umweltbiologie",
+        "fr": "Biologie de l'environnement"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22267,6 +22771,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters or 120 ECTS credits, 4 semesters (option «Chemistry, option Chemistry, Communication and Innovation»)",
       "subject": "chemistry",
       "title": "Chemistry",
+      "titles": {
+        "de": "Chemie",
+        "fr": "Chimie"
+      },
       "variants": [
         {
           "ects": 90,
@@ -22322,6 +22830,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "dynamics-in-glaciology-and-geomorphology",
       "title": "Dynamics in Glaciology and Geomorphology",
+      "titles": {
+        "de": "Dynamische Systeme in Glaziologie und Geomorphologie",
+        "fr": "Glaciologie et géomorphologie dynamiques"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22355,6 +22867,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "earth-sciences",
       "title": "Earth Sciences",
+      "titles": {
+        "de": "Erdwissenschaften",
+        "fr": "Sciences de la Terre"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22388,6 +22904,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "environmental-sciences-and-humanities",
       "title": "Environmental Sciences and Humanities",
+      "titles": {
+        "de": "Umweltwissenschaften und Umweltgeisteswissenschaften",
+        "fr": "Sciences de l'environnement et humanités environnementales"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22431,6 +22951,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "geography",
       "title": "Geography",
+      "titles": {
+        "de": "Geographie",
+        "fr": "Géographie"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22473,6 +22997,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "mathematics",
       "title": "Mathematics",
+      "titles": {
+        "de": "Mathematik",
+        "fr": "Mathématiques"
+      },
       "variants": [
         {
           "ects": 90,
@@ -22516,6 +23044,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "nature-society-and-politics",
       "title": "Nature, Society and Politics",
+      "titles": {
+        "de": "Natur, Gesellschaft und Politik",
+        "fr": "Nature, société et politique"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22550,6 +23082,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "physics",
       "title": "Physics",
+      "titles": {
+        "de": "Physik",
+        "fr": "Physique"
+      },
       "variants": [
         {
           "ects": 90,
@@ -22592,6 +23128,10 @@
       "structureEvidence": "180 ECTS credits, 6 semesters",
       "subject": "human-medicine",
       "title": "Human Medicine",
+      "titles": {
+        "de": "Humanmedizin",
+        "fr": "Médecine humaine"
+      },
       "variants": [
         {
           "ects": 180,
@@ -22627,6 +23167,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "sport-sciences",
       "title": "Sport Sciences",
+      "titles": {
+        "de": "Sportwissenschaften",
+        "fr": "Sciences du sport"
+      },
       "variants": [
         {
           "ects": 90,
@@ -22669,6 +23213,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "experimental-biomedical-research",
       "title": "Experimental Biomedical Research",
+      "titles": {
+        "de": "Experimentelle biomedizinische Forschung",
+        "fr": "Recherche biomédicale expérimentale"
+      },
       "variants": [
         {
           "ects": 120,
@@ -22703,6 +23251,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "business-informatics",
       "title": "Business Informatics",
+      "titles": {
+        "de": "Wirtschaftsinformatik",
+        "fr": "Informatique de gestion"
+      },
       "variants": [
         {
           "ects": 90,
@@ -22749,6 +23301,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme, 3-4 semesters For a list of the minor study programmes to choose from, please contact the Departement of Informatics of the Faculty of Science and Medicine.",
       "subject": "computer-science",
       "title": "Computer Science",
+      "titles": {
+        "de": "Informatik",
+        "fr": "Informatique"
+      },
       "variants": [
         {
           "applicableFrom": "AS-2026",
@@ -23050,6 +23606,10 @@
       "structureEvidence": "90 ECTS credits, 3-4 semesters",
       "subject": "data-analytics-economics",
       "title": "Data Analytics & Economics",
+      "titles": {
+        "de": "Data Analytics & Economics",
+        "fr": "Data Analytics & Economics"
+      },
       "variants": [
         {
           "ects": 90,
@@ -23092,6 +23652,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "bioinformatics-and-computational-biology",
       "title": "Bioinformatics and Computational Biology",
+      "titles": {
+        "de": "Bioinformatik und computationale Biologie",
+        "fr": "Bioinformatique et biologie computationnelle"
+      },
       "variants": [
         {
           "ects": 120,
@@ -23125,6 +23689,10 @@
       "structureEvidence": "120 ECTS credits, 4 semesters",
       "subject": "digital-neuroscience",
       "title": "Digital Neuroscience",
+      "titles": {
+        "de": "Digitale Neurowissenschaft",
+        "fr": "Neurosciences digitales"
+      },
       "variants": [
         {
           "ects": 120,
@@ -23159,6 +23727,10 @@
       "structureEvidence": "90 ECTS credits (teacher training), 3 semesters",
       "subject": "teacher-education-for-secondary-level-i",
       "title": "Teacher Education for Secondary Level I",
+      "titles": {
+        "de": "Ausbildung für den Unterricht auf der Sekundarstufe I",
+        "fr": "Formation à l'enseignement pour le degré secondaire I"
+      },
       "variants": [
         {
           "ects": 90,
@@ -23193,6 +23765,10 @@
       "structureEvidence": "60 ECTS credits (teacher training), 2 semesters Table of bachelor's and master's degree programmes which entitle students to train for a DEEM/LDM I in the corresponding teaching subject.",
       "subject": "teacher-education-for-baccalaureate-schools",
       "title": "Teacher Education for Baccalaureate Schools",
+      "titles": {
+        "de": "Ausbildung für den Unterricht an Maturitätsschulen",
+        "fr": "Formation à l'enseignement pour les écoles de maturité"
+      },
       "variants": [
         {
           "ects": 60,
@@ -23226,6 +23802,10 @@
       "structureEvidence": "106 ECTS credits",
       "subject": "teacher-education-for-secondary-level-i-and-baccalaureate-schools",
       "title": "Teacher Education for Secondary Level I and Baccalaureate Schools",
+      "titles": {
+        "de": "Ausbildung für den Unterricht auf der Sekundarstufe I und an Maturitätsschulen",
+        "fr": "Formation à l'enseignement pour le degré secondaire I et les écoles de maturité"
+      },
       "variants": [
         {
           "ects": 106,
@@ -23306,6 +23886,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "digital-society",
       "title": "Digital Society",
+      "titles": {
+        "de": "Digital Society",
+        "fr": "Digital Society"
+      },
       "variants": [
         {
           "ects": 90,
@@ -23348,6 +23932,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "environmental-humanities-and-sustainability-studies",
       "title": "Environmental Humanities and Sustainability Studies",
+      "titles": {
+        "de": "Umweltgeisteswissenschaften und Nachhaltigkeitsforschung",
+        "fr": "Humanités environnementales et durabilité"
+      },
       "variants": [
         {
           "ects": 90,
@@ -23439,6 +24027,10 @@
       "structureEvidence": "90 ECTS credits + 30 ECTS credits as an option in a minor study programme, 3-4 semesters",
       "subject": "family-children-and-youth-studies",
       "title": "Family, Children and Youth Studies",
+      "titles": {
+        "de": "Familien-, Kinder- und Jugendstudien",
+        "fr": "Études sur la famille, l'enfance et la jeunesse"
+      },
       "variants": [
         {
           "ects": 90,
@@ -23515,6 +24107,10 @@
       "structureEvidence": "90 ECTS credits, 3 semesters",
       "subject": "islam-and-society",
       "title": "Islam and Society",
+      "titles": {
+        "de": "Islam und Gesellschaft",
+        "fr": "Islam et société"
+      },
       "variants": [
         {
           "ects": 90,
@@ -23555,6 +24151,10 @@
       "structureEvidence": "30 ECTS credits as a minor study programme",
       "subject": "medieval-studies",
       "title": "Medieval Studies",
+      "titles": {
+        "de": "Mediävistik",
+        "fr": "Études médiévales"
+      },
       "variants": [
         {
           "ects": 30,

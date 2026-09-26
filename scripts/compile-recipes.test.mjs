@@ -1,7 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { compileRecipes } from "./compile-recipes.mjs";
+import {
+  academicDigest,
+  academicProjection,
+  compileRecipes,
+} from "./compile-recipes.mjs";
+
+/**
+ * Released editions are immutable for academic content. Display metadata (programme
+ * titles/aliases, uncited sources) may be corrected in place; anything else needs a new
+ * edition, which adds its own pin deliberately.
+ */
+const academicPins = {
+  "2026-27.2":
+    "036808d44a88296a2fe5c443801ce6c6ce8f5fb443606c7c5a6f57cb0274a345",
+};
 
 const source = {
   id: "official",
@@ -115,6 +129,101 @@ test("the shipped registry accounts for every captured catalogue entry", async (
     assert.ok(faculties.has(faculty));
   assert.ok(registry.programmes.some((p) => p.degree === "master"));
   assert.ok(report.programmesWithGaps > 0);
+});
+test("the current edition's academic content matches its pinned digest", async () => {
+  const { registry } = await compileRecipes(
+    await readFile(
+      new URL("../data/programmes/recipes.yaml", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.ok(
+    academicPins[registry.edition],
+    `Pin the academic digest of new edition ${registry.edition}`,
+  );
+  assert.equal(academicDigest(registry), academicPins[registry.edition]);
+});
+test("official German and French names equal the reviewed names manifest", async () => {
+  const { registry } = await compileRecipes(
+    await readFile(
+      new URL("../data/programmes/recipes.yaml", import.meta.url),
+      "utf8",
+    ),
+  );
+  const manifest = JSON.parse(
+    await readFile(
+      new URL(
+        "../data/programmes/reviews/2026-09-26-programme-names.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  );
+  assert.equal(manifest.edition, registry.edition);
+  assert.equal(manifest.academicRulesChanged, false);
+  assert.equal(manifest.documents.length, registry.programmes.length * 2);
+  const reviewed = new Map(
+    manifest.documents
+      .filter((d) => d.status === "resolved")
+      .map((d) => [`${d.programmeId}/${d.lang}`, d.name]),
+  );
+  const unresolved = new Set(
+    manifest.unresolved.map((u) => `${u.programmeId}/${u.lang}`),
+  );
+  for (const programme of registry.programmes) {
+    assert.equal(programme.titles?.en, undefined, programme.id);
+    for (const language of ["de", "fr"]) {
+      const key = `${programme.id}/${language}`;
+      // Every programme is named in both languages unless the review left it unresolved.
+      assert.notEqual(reviewed.has(key), unresolved.has(key), key);
+      assert.equal(programme.titles?.[language], reviewed.get(key), key);
+    }
+  }
+});
+test("rejects malformed programme names and search aliases", async () => {
+  for (const names of [
+    { titles: { de: "Beispiel (bachelor)" } },
+    { titles: { fr: " Exemple" } },
+    { titles: { de: "Beispiel | Studies" } },
+    { aliases: ["Ex", "ex"] },
+    { aliases: ["Example"] },
+    { titles: { de: "Beispiel" }, aliases: ["beispiel"] },
+  ]) {
+    const input = structuredClone(base);
+    Object.assign(input.programmes[0], names);
+    await assert.rejects(
+      compileRecipes(JSON.stringify(input)),
+      /programme (titles|aliases)/,
+    );
+  }
+  const named = structuredClone(base);
+  Object.assign(named.programmes[0], {
+    titles: { de: "Beispiel", fr: "Exemple: « modèle »" },
+    aliases: ["Ex"],
+  });
+  const { registry } = await compileRecipes(JSON.stringify(named));
+  assert.deepEqual(registry.programmes[0].titles, named.programmes[0].titles);
+});
+test("the academic digest ignores display metadata but not academic changes", async () => {
+  const { registry } = await compileRecipes(JSON.stringify(base));
+  const digest = academicDigest(registry);
+  const named = structuredClone(registry);
+  named.programmes[0].titles = { de: "Beispiel", fr: "Exemple" };
+  named.programmes[0].aliases = ["Ex"];
+  named.sources.push({ ...source, id: "names", url: "https://x.test/names" });
+  assert.equal(academicDigest(named), digest);
+  assert.equal(academicProjection(named).sources.length, 1);
+  for (const change of [
+    (r) => (r.programmes[0].title = "Other"),
+    (r) => (r.programmes[0].variants[0].ects = 120),
+    (r) => (r.sources[0].sha256 = "0".repeat(64)),
+    (r) => (r.structures[0].slots[0].ects = 120),
+    (r) => (r.coverage[0].disposition = "alias"),
+  ]) {
+    const changed = structuredClone(registry);
+    change(changed);
+    assert.notEqual(academicDigest(changed), digest);
+  }
 });
 test("coverage follows resolved evidence, applicability and inherited uncertainty", async () => {
   const input = structuredClone(base),
