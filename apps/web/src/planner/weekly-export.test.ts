@@ -89,6 +89,16 @@ it("prints only the selected week, escapes source text and retains all exact les
   expect(html).toContain("Algèbre");
   expect(html).not.toContain("Next week");
   expect(html).toContain("incomplete dates");
+  // Both midnight fragments of one event keep a single reference.
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  expect(
+    [...doc.querySelectorAll(".calendar-sheet .events article")].map(
+      (article) => article.textContent,
+    ),
+  ).toEqual(["S1", "S2", "S3", "S3"]);
+  expect(doc.querySelectorAll(".week-key li")[2].textContent).toBe(
+    "S3 Night · Tue 23:30–24:00 · Room not published; Wed 00:00–01:30 · Room not published",
+  );
 });
 it("names undated selections with credits and gives every short parallel event a same-page key", async () => {
   const course = (id: string, ects: number) => ({

@@ -81,6 +81,25 @@ test("personal attendance, later weekday navigation and explicit semester print 
   );
   await expect(page.locator(".screen-calendar")).toContainText("8:00 PM");
   await page.getByRole("button", { name: "Week", exact: true }).click();
+  // Lecture and exercise sessions of one course share a single print reference.
+  const weekPrintPromise = page.waitForEvent("popup");
+  await page
+    .locator(".workspace-heading")
+    .getByRole("button", { name: "Print week / save PDF", exact: true })
+    .click();
+  const weekPrint = await weekPrintPromise;
+  await expect(weekPrint.locator(".calendar-sheet .events article")).toHaveText(
+    ["S1", "S1", "S1"],
+  );
+  const key = weekPrint.locator(".calendar-sheet .week-key li");
+  await expect(key).toHaveCount(1);
+  for (const slot of [
+    "Mon 17:15–20:00 · A · Cours",
+    "Mon 17:15–20:00 · B · Exercice",
+    "Fri 17:15–20:00 · C · Cours",
+  ])
+    await expect(key).toContainText(slot);
+  await weekPrint.close();
   await page.getByText("Choose personal attendance", { exact: true }).click();
   await page.getByRole("checkbox", { name: /Exercice/ }).click();
   await expect(page.locator(".timetable-event")).toHaveCount(2);
