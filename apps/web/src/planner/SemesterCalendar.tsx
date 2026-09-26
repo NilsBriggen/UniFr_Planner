@@ -14,6 +14,8 @@ import {
   updateScenario,
   planningSemester,
   currentSemester,
+  maxUnavailablePeriods,
+  type Unavailable,
 } from "./domain";
 import { usePlans } from "./context";
 import {
@@ -24,6 +26,7 @@ import {
   localDate,
   localInstant,
   termRange,
+  weeklyRepeats,
   zone,
   type CalendarEvent,
 } from "./calendar";
@@ -36,6 +39,7 @@ import WeeklyDownloads from "./WeeklyDownloads";
 import { experienceMessages } from "../experience-messages";
 import { defaultCalendarDate, readCalendarView } from "./calendar-view";
 import { countLabel } from "./countLabels";
+import { internalOverlapOwners } from "./typical-week";
 
 function EventCard({
   event,
@@ -69,6 +73,24 @@ function EventCard({
       {event.sessionType && <p>{event.sessionType}</p>}
     </article>
   );
+}
+/** Periods sharing a label, weekday and local times, in first-entry order. */
+function weeklySeries(periods: Unavailable[]) {
+  const series = new Map<string, Unavailable[]>();
+  for (const period of periods) {
+    const [start, end] = [period.start, period.end].map((value) =>
+      Temporal.Instant.from(value).toZonedDateTimeISO(zone),
+    );
+    const key = JSON.stringify([
+      period.label,
+      start.dayOfWeek,
+      start.toPlainTime().toString(),
+      end.toPlainTime().toString(),
+      start.toPlainDate().until(end.toPlainDate()).days,
+    ]);
+    series.set(key, [...(series.get(key) ?? []), period]);
+  }
+  return [...series.values()];
 }
 export default function SemesterCalendar({ language }: { language: Language }) {
   const { plan } = usePlans();
@@ -143,6 +165,7 @@ function Calendar({ language }: { language: Language }) {
       owner: period.id,
       title: period.label,
       location: t.unavailable,
+      personal: true,
     }));
   const all = [...calendar.events, ...busyEvents].sort(
     (a, b) => Date.parse(a.start) - Date.parse(b.start),
@@ -178,6 +201,19 @@ function Calendar({ language }: { language: Language }) {
       dateStyle: "medium",
       timeZone: zone,
     }).format(new Date(`${day}T12:00:00Z`));
+  const dayMonth = (day: string) => `${day.slice(8, 10)}.${day.slice(5, 7)}.`;
+  const seriesTime = (period: Unavailable) =>
+    `${new Intl.DateTimeFormat(language, {
+      weekday: "short",
+      timeZone: zone,
+    }).format(new Date(period.start))} ${[period.start, period.end]
+      .map((value) =>
+        Temporal.Instant.from(value)
+          .toZonedDateTimeISO(zone)
+          .toPlainTime()
+          .toString({ smallestUnit: "minute" }),
+      )
+      .join("–")}`;
   const change = (next: typeof plan) => {
     void save(next).then((ok) => setError(!ok));
   };
@@ -203,6 +239,12 @@ function Calendar({ language }: { language: Language }) {
     unresolved: calendar.unresolved.length > 0,
     conflicts,
   };
+  // Unchosen parallel groups would all land on the wall sheet as one block.
+  const wallHint = internalOverlapOwners(calendar.events).some(
+    (id) => !scenario.courses.find((c) => c.id === id)?.attendance,
+  )
+    ? tx.wallAttendanceHint
+    : undefined;
   const conflictGroups = new Map<string, typeof conflicts>();
   for (const conflict of conflicts) {
     const key = [
@@ -474,7 +516,7 @@ function Calendar({ language }: { language: Language }) {
             {monday.add({ days: 6 }).toString()}
           </p>
           <div className="calendar-export">
-            <WeeklyDownloads input={exportInput} />
+            <WeeklyDownloads input={exportInput} hint={wallHint} />
             <Button
               onClick={() =>
                 openPrintHtml(scopedPrintHtml(exportInput, "roster"))
@@ -614,21 +656,34 @@ function Calendar({ language }: { language: Language }) {
                 const form = e.currentTarget,
                   data = new FormData(form);
                 try {
-                  const start = localInstant(String(data.get("start"))),
-                    end = localInstant(String(data.get("end")));
+                  const startLocal = String(data.get("start")),
+                    endLocal = String(data.get("end")),
+                    until = String(data.get("repeatUntil") ?? "");
+                  const start = localInstant(startLocal),
+                    end = localInstant(endLocal);
                   if (Date.parse(end) <= Date.parse(start))
                     throw new Error("invalid end");
+                  // Weekly copies step the local date, so times survive DST.
+                  const periods = until
+                    ? weeklyRepeats(
+                        startLocal,
+                        endLocal,
+                        until,
+                        maxUnavailablePeriods - scenario.unavailable.length,
+                      )
+                    : [{ start, end }];
+                  if (!periods?.length) throw new Error("invalid repeat");
+                  const label = String(data.get("label"));
                   change(
                     updateScenario(plan, (s) => ({
                       ...s,
                       unavailable: [
                         ...s.unavailable,
-                        {
+                        ...periods.map((period) => ({
                           id: crypto.randomUUID(),
-                          label: String(data.get("label")),
-                          start,
-                          end,
-                        },
+                          label,
+                          ...period,
+                        })),
                       ],
                     })),
                   );
@@ -652,35 +707,48 @@ function Calendar({ language }: { language: Language }) {
                   {t.ends}
                   <input name="end" type="datetime-local" required />
                 </label>
+                <label>
+                  {t.repeatUntil}
+                  <input name="repeatUntil" type="date" />
+                </label>
                 <Button type="submit">{t.addBusy}</Button>
               </fieldset>
             </form>
             {error && <p role="alert">{t.invalidPeriod}</p>}
           </details>
           <ul className="unavailable-list">
-            {scenario.unavailable.map((period) => (
-              <li key={period.id}>
-                <span>
-                  {period.label} · {shortDate(localDate(period.start))}
-                </span>
-                <Button
-                  disabled={busy}
-                  aria-label={`${t.removeBusy} · ${period.label}`}
-                  onClick={() =>
-                    change(
-                      updateScenario(plan, (s) => ({
-                        ...s,
-                        unavailable: s.unavailable.filter(
-                          (b) => b.id !== period.id,
-                        ),
-                      })),
-                    )
-                  }
-                >
-                  {t.removeBusy}
-                </Button>
-              </li>
-            ))}
+            {weeklySeries(scenario.unavailable).map((periods) => {
+              const [period] = periods,
+                ids = new Set(periods.map((p) => p.id));
+              const remove = periods.length > 1 ? t.removeAll : t.removeBusy;
+              const starts = periods.map((p) => localDate(p.start)).sort();
+              return (
+                <li key={period.id}>
+                  <span>
+                    {period.label} ·{" "}
+                    {periods.length > 1
+                      ? `${seriesTime(period)} · ${periods.length}× (${dayMonth(starts[0])}–${dayMonth(starts.at(-1)!)})`
+                      : shortDate(localDate(period.start))}
+                  </span>
+                  <Button
+                    disabled={busy}
+                    aria-label={`${remove} · ${period.label}`}
+                    onClick={() =>
+                      change(
+                        updateScenario(plan, (s) => ({
+                          ...s,
+                          unavailable: s.unavailable.filter(
+                            (b) => !ids.has(b.id),
+                          ),
+                        })),
+                      )
+                    }
+                  >
+                    {remove}
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         </section>
       </div>

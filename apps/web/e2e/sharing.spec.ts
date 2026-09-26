@@ -190,6 +190,20 @@ test("share owner updates automatically while another guest can only import a co
       path: info.outputPath("shared-plan.png"),
       fullPage: true,
     });
+    // Family members can print the wall timetable from the link themselves.
+    const wallEvent = recipient.waitForEvent("popup");
+    await recipient
+      .getByRole("button", {
+        name: "Wall timetable · typical week · A4 landscape",
+        exact: true,
+      })
+      .click();
+    const wall = await wallEvent;
+    await expect(wall.locator(".wall-sheet")).toHaveCount(1);
+    await expect(wall.locator(".wall-head h1")).toHaveText(
+      "Shared CS semester",
+    );
+    await wall.close();
     const apiPath = new URL(link).pathname.replace(
       "/shared/",
       "/api/v1/shares/",

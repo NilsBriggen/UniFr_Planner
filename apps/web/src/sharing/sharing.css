@@ -82,6 +82,10 @@
   flex-wrap: wrap;
   align-items: center;
 }
+.weekly-download-actions > p {
+  flex-basis: 100%;
+  margin: 0;
+}
 .weekly-download-panel {
   grid-column: 1 / -1;
   padding: 16px;

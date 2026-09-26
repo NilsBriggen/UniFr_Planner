@@ -1,6 +1,12 @@
 import type { Language } from "../i18n";
 
-type CountKind = "course" | "selected" | "meeting" | "programme";
+type CountKind =
+  | "course"
+  | "selected"
+  | "meeting"
+  | "programme"
+  | "classWeek"
+  | "oneOff";
 
 const forms: Record<Language, Record<CountKind, readonly [string, string]>> = {
   en: {
@@ -8,18 +14,24 @@ const forms: Record<Language, Record<CountKind, readonly [string, string]>> = {
     selected: ["course selected", "courses selected"],
     meeting: ["dated meeting", "dated meetings"],
     programme: ["programme", "programmes"],
+    classWeek: ["week with classes", "weeks with classes"],
+    oneOff: ["one-off date", "one-off dates"],
   },
   de: {
     course: ["Kurs", "Kurse"],
     selected: ["Kurs ausgewählt", "Kurse ausgewählt"],
     meeting: ["datierte Veranstaltung", "datierte Veranstaltungen"],
     programme: ["Studienprogramm", "Studienprogramme"],
+    classWeek: ["Woche mit Unterricht", "Wochen mit Unterricht"],
+    oneOff: ["Einzeltermin", "Einzeltermine"],
   },
   fr: {
     course: ["cours", "cours"],
     selected: ["cours sélectionné", "cours sélectionnés"],
     meeting: ["séance datée", "séances datées"],
     programme: ["programme", "programmes"],
+    classWeek: ["semaine de cours", "semaines de cours"],
+    oneOff: ["date ponctuelle", "dates ponctuelles"],
   },
 };
 

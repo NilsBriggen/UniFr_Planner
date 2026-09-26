@@ -11,6 +11,7 @@ import {
 } from "./weekly-export";
 import { weeklyPrintHtml } from "./weekly-print";
 import { scopedPrintHtml } from "./scoped-print";
+import { wallPrintHtml } from "./wall-print";
 import { timetableMessages } from "./timetable-messages";
 
 it.each([false, true])(
@@ -60,6 +61,19 @@ it.each([false, true])(
     expect(weeklyPrintHtml(input)).toContain(reason);
     expect(scopedPrintHtml(input, "agenda")).toContain(reason);
     expect(scopedPrintHtml(input, "roster")).toContain(reason);
+    // The wall sheet hangs at home: the same fact in neutral words.
+    const wall = wallPrintHtml(input);
+    expect(wall).toContain(
+      stale
+        ? timetableMessages.en.wallStale
+        : timetableMessages.en.wallAttendance,
+    );
+    expect(wall).not.toContain(
+      stale
+        ? timetableMessages.en.wallAttendance
+        : timetableMessages.en.wallStale,
+    );
+    expect(wall).not.toContain(reason);
     const workbook = await weeklyWorkbook(input);
     expect(workbook.worksheets.at(-1)!.getCell("D3").value).toBe(reason);
     expect(calendar.events).toHaveLength(stale ? 2 : 1);

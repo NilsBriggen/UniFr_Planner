@@ -285,6 +285,17 @@ calendar. They are also available on read-only shared plans.
   the browser's print dialog, including Save as PDF where available. The first
   page is a coloured weekly grid with notes space; subsequent pages contain
   every lesson's full title, exact time and room.
+- **Wall timetable · typical week · A4 landscape** prints one page to hang up
+  at home. Instead of the selected week it shows the semester's typical week:
+  every class or unavailable period that recurs in at least three weeks, with
+  title, time, room and session type inside the block as far as space allows.
+  Sessions that do not run every week carry a dashed bar and a mark such as
+  "every 2 weeks" or "6× · 17.09.–26.11."; personal periods are hatched with
+  their label. Monday to Friday are always shown, weekend days only when
+  something recurs there. The footer lists other dates, weeks without classes,
+  courses without published dates and absences. The sheet uses neutral wording
+  for family members; the dated **Print week** remains the full-detail
+  printout. Use **Repeat weekly until** for regular commitments so they appear.
 - **Download Excel** creates an editable `.xlsx` file. The weekly sheet has
   coloured lessons, 15-minute rows, frozen headings, free cells and a notes area
   for personal additions. A second sheet lists exact dates/times, locations,

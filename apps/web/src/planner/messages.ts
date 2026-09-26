@@ -98,15 +98,17 @@ const en = {
   ends: "Ends (Europe/Zurich)",
   addBusy: "Add unavailable period",
   removeBusy: "Remove period",
+  repeatUntil: "Repeat weekly until",
+  removeAll: "Remove all",
   invalidPeriod:
-    "Enter a valid end after the start. Ambiguous or missing daylight-saving times cannot be saved.",
+    "Enter a valid end after the start and a repeat date from the start date on. Ambiguous or missing daylight-saving times cannot be saved, and a plan holds at most 500 periods.",
   exportIcs: "Export semester ICS",
   print: "Print",
   cancelled: "Cancelled",
   dates: "dated meetings",
   noEvents: "No meetings in this view.",
   busyHelp:
-    "One dated interval, including overnight periods. Times use Europe/Zurich.",
+    "One dated interval, including overnight periods, optionally repeated weekly. Times use Europe/Zurich.",
 };
 export type PlannerMessages = typeof en;
 const de: PlannerMessages = {
@@ -209,15 +211,17 @@ const de: PlannerMessages = {
   ends: "Ende (Europe/Zurich)",
   addBusy: "Sperrzeit hinzufügen",
   removeBusy: "Sperrzeit entfernen",
+  repeatUntil: "Wöchentlich wiederholen bis",
+  removeAll: "Alle entfernen",
   invalidPeriod:
-    "Gib ein gültiges Ende nach dem Beginn ein. Mehrdeutige oder fehlende Zeiten bei Zeitumstellungen können nicht gespeichert werden.",
+    "Gib ein gültiges Ende nach dem Beginn und ein Wiederholungsdatum ab dem Startdatum ein. Mehrdeutige oder fehlende Zeiten bei Zeitumstellungen können nicht gespeichert werden; ein Plan fasst höchstens 500 Sperrzeiten.",
   exportIcs: "Semester als ICS exportieren",
   print: "Drucken",
   cancelled: "Abgesagt",
   dates: "datierte Veranstaltungen",
   noEvents: "Keine Veranstaltungen in dieser Ansicht.",
   busyHelp:
-    "Ein datiertes Intervall, auch über Mitternacht. Zeitzone: Europe/Zurich.",
+    "Ein datiertes Intervall, auch über Mitternacht, auf Wunsch wöchentlich wiederholt. Zeitzone: Europe/Zurich.",
 };
 const fr: PlannerMessages = {
   planName: "Nom du plan",
@@ -319,15 +323,17 @@ const fr: PlannerMessages = {
   ends: "Fin (Europe/Zurich)",
   addBusy: "Ajouter une indisponibilité",
   removeBusy: "Supprimer la période",
+  repeatUntil: "Répéter chaque semaine jusqu’au",
+  removeAll: "Tout supprimer",
   invalidPeriod:
-    "Indiquez une fin valide après le début. Les heures ambiguës ou absentes lors du changement d’heure ne peuvent pas être enregistrées.",
+    "Indiquez une fin valide après le début et une date de répétition à partir de la date de début. Les heures ambiguës ou absentes lors du changement d’heure ne peuvent pas être enregistrées ; un plan contient au plus 500 périodes.",
   exportIcs: "Exporter le semestre ICS",
   print: "Imprimer",
   cancelled: "Annulé",
   dates: "séances datées",
   noEvents: "Aucune séance dans cette vue.",
   busyHelp:
-    "Un intervalle daté, y compris à cheval sur minuit. Fuseau : Europe/Zurich.",
+    "Un intervalle daté, y compris à cheval sur minuit, éventuellement répété chaque semaine. Fuseau : Europe/Zurich.",
 };
 export const plannerMessages: Record<Language, PlannerMessages> = {
   de,
