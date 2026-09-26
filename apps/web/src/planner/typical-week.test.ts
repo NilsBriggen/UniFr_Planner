@@ -380,6 +380,84 @@ it("reads holidays and single skips as weekly, but three skips as a count", () =
   );
 });
 
+it("reads a Thursday-only or Friday-only spring as weekly", () => {
+  // Easter, Ascension and Corpus Christi; the Friday course also skips the
+  // Good Friday week and the Friday after Ascension.
+  const thursday = build(
+    series(
+      "thursday",
+      spring.filter((week) => !["2027-05-03", "2027-05-24"].includes(week)),
+      4,
+      "10:15",
+      "12:00",
+    ),
+    "SS-2027",
+    ["thursday"],
+  );
+  expect(thursday.holidayWeeks).toEqual([
+    ...easter,
+    "2027-05-03",
+    "2027-05-24",
+  ]);
+  expect(slotOf(thursday, "thursday")[0].annotation).toEqual({
+    kind: "weekly",
+  });
+  const friday = build(
+    series(
+      "friday",
+      spring.filter((week) => !["2027-03-22", "2027-05-03"].includes(week)),
+      5,
+      "10:15",
+      "12:00",
+    ),
+    "SS-2027",
+    ["friday"],
+  );
+  expect(friday.holidayWeeks).toEqual(["2027-03-22", ...easter, "2027-05-03"]);
+  expect(slotOf(friday, "friday")[0].annotation).toEqual({ kind: "weekly" });
+});
+
+it("keeps Easter as a holiday when a summer block follows the lecture period", () => {
+  const typical = build(
+    [
+      ...fullSchedule(spring),
+      ...series(
+        "tutorial",
+        [
+          "2027-02-22",
+          "2027-03-08",
+          "2027-03-22",
+          "2027-04-12",
+          "2027-04-26",
+          "2027-05-10",
+          "2027-05-24",
+        ],
+        2,
+        "16:15",
+        "18:00",
+      ),
+      ...series(
+        "summer",
+        ["2027-07-05", "2027-07-12", "2027-07-19"],
+        6,
+        "09:15",
+        "12:00",
+      ),
+    ],
+    "SS-2027",
+    ["tutorial", "summer"],
+  );
+  expect(typical.breakRuns.at(-1)).toEqual({
+    from: "2027-06-07",
+    to: "2027-07-04",
+    weeks: 4,
+  });
+  expect(typical.holidayWeeks).toEqual(easter);
+  expect(slotOf(typical, "tutorial")[0].annotation).toEqual({
+    kind: "biweekly",
+  });
+});
+
 it("counts irregular published dates and lists short series as other dates", () => {
   // The Thursday and Friday dates of the detail.html fixture course.
   const detail = [

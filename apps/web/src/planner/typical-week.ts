@@ -464,12 +464,21 @@ export function buildTypicalWeek(
       if (run && addDays(run.at(-1)!, 7) === week) run.push(week);
       else runs.push([week]);
     }
-  // Only a few short gaps in a full semester are read as holidays.
+  // Only a few short gaps in a full semester are read as holidays: at most one
+  // per five weeks of the printed period, so a Thursday-only spring (Easter,
+  // Ascension, Corpus Christi) keeps its holidays and a lone biweekly course
+  // does not. Gaps before or after the period (a summer block, January
+  // revision) come from outliers and never veto the rest; the period starts
+  // and ends in teaching weeks, so a gap lies wholly inside or outside it.
+  const inside = (run: string[]) =>
+    !period || (run[0] > period.from && run[0] < period.to);
+  const interior = runs.filter(inside);
+  const spanned = (span?.weeks ?? 0) + interior.flat().length;
   const holidayWeeks =
-    teachingWeeks.length >= 8 &&
-    runs.length <= Math.max(1, Math.floor(teachingWeeks.length / 6)) &&
-    runs.every((run) => run.length <= 3)
-      ? runs.flat()
+    (span?.weeks ?? 0) >= 8 &&
+    interior.length <= Math.max(1, Math.floor(spanned / 5)) &&
+    interior.every((run) => run.length <= 3)
+      ? runs.filter((run) => inside(run) || run.length <= 3).flat()
       : [];
   const context: ClassifyContext = {
     teaching: teachingWeeks,
