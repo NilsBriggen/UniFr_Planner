@@ -15,8 +15,37 @@ export const recipeRegistry: RecipeRegistry = freeze(
   data as unknown as RecipeRegistry,
 );
 
+/**
+ * Programme names are display metadata keyed by stable programme id, not academic content.
+ * An archived edition receives the current official names and search aliases wherever its
+ * English title is unchanged; the archive itself (and every rule in it) stays untouched.
+ */
+export function withCurrentDisplayNames(
+  archive: RecipeRegistry,
+  current: RecipeRegistry = recipeRegistry,
+): RecipeRegistry {
+  const names = new Map(current.programmes.map((p) => [p.id, p]));
+  return {
+    ...archive,
+    programmes: archive.programmes.map((programme) => {
+      const named = names.get(programme.id);
+      if (!named || named.title !== programme.title) return programme;
+      return {
+        ...programme,
+        ...(!programme.titles && named.titles ? { titles: named.titles } : {}),
+        ...(!programme.aliases && named.aliases
+          ? { aliases: named.aliases }
+          : {}),
+      };
+    }),
+  };
+}
+
+// The overlay builds a copy, which is frozen together with the archive it wraps.
 const archivedRegistries: Readonly<Record<string, RecipeRegistry>> = freeze({
-  "2026-27.1": previousEdition as unknown as RecipeRegistry,
+  "2026-27.1": withCurrentDisplayNames(
+    previousEdition as unknown as RecipeRegistry,
+  ),
 });
 
 /** Existing plans retain their source edition until the student explicitly migrates. */

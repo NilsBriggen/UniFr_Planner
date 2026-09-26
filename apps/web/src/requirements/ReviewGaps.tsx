@@ -1,5 +1,8 @@
 import { recipeRegistryForSelection } from "../../../../packages/domain/src/registry";
-import type { ResolvedDegree } from "../../../../packages/domain/src/recipes";
+import {
+  programmeTitle,
+  type ResolvedDegree,
+} from "../../../../packages/domain/src/recipes";
 import type { Language } from "../i18n";
 import { recipeMessages } from "./recipeMessages";
 
@@ -56,7 +59,7 @@ export default function ReviewGaps({
     return messages.size
       ? [
           {
-            title: programme.titles?.[language] ?? programme.title,
+            title: programmeTitle(programme, language),
             messages: [...messages],
             key: component.slotId,
           },
