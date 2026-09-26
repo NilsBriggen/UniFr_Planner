@@ -174,9 +174,12 @@ it("keeps the search usable but choices locked while busy", async () => {
     screen.getByRole("combobox", { name: "Main programme" }),
   ).toBeDisabled();
   await user.type(search, "math");
-  await user.click(
-    screen.getByRole("button", { name: "Mathematics · Science and Medicine" }),
-  );
+  const pick = screen.getByRole("button", {
+    name: "Mathematics · Science and Medicine",
+  });
+  // The quick pick is a choice too, so it shows it is locked instead of ignoring clicks.
+  expect(pick).toBeDisabled();
+  await user.click(pick);
   expect(screen.getByRole("combobox", { name: "Main programme" })).toHaveValue(
     "bachelor-digitinf-informatics",
   );

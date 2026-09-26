@@ -415,6 +415,7 @@ export function DegreeSelectionForm({
                   <Button
                     type="button"
                     aria-pressed={p.id === main}
+                    disabled={busy}
                     onClick={() => chooseMain(p.id)}
                   >
                     <span>
