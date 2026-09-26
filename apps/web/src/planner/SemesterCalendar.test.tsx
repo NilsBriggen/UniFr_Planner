@@ -11,9 +11,13 @@ import { beforeEach, afterEach, expect, it, vi } from "vitest";
 import { IDBFactory } from "fake-indexeddb";
 import App from "../App";
 import { type Language } from "../i18n";
+import { Temporal } from "@js-temporal/polyfill";
 import { PlanStore } from "./storage";
-import { createPlan } from "./domain";
+import { createPlan, type Selection } from "./domain";
 import { plannerMessages } from "./messages";
+import { attendanceChoice } from "./attendance";
+import { shareMessages } from "../sharing/messages";
+import { timetableMessages } from "./timetable-messages";
 
 beforeEach(() => vi.stubGlobal("indexedDB", new IDBFactory()));
 afterEach(() => vi.unstubAllGlobals());
@@ -22,6 +26,7 @@ async function mountCalendar(
   language: Language,
   date: string,
   cancelled = false,
+  { weeks = 1, edit }: { weeks?: number; edit?: (c: Selection) => void } = {},
 ) {
   localStorage.setItem("unifr.language", language);
   const plan = createPlan({
@@ -49,21 +54,24 @@ async function mountCalendar(
         source_url: "https://www.unifr.ch",
         snapshot_id: "snapshot",
         development_fixture: false,
-        meetings: [
-          {
-            starts_at: `${date}T10:00:00Z`,
-            ends_at: `${date}T11:00:00Z`,
+        // Weekly dates stay before 28.03.2027, so local times do not shift.
+        meetings: Array.from({ length: weeks }, (_, i) => {
+          const day = Temporal.PlainDate.from(date).add({ days: 7 * i });
+          return {
+            starts_at: `${day}T10:00:00Z`,
+            ends_at: `${day}T11:00:00Z`,
             location: "PER 21",
             unresolved: false,
             cancelled,
             excluded_dates: [],
             additional_dates: [],
             note: "",
-          },
-        ],
+          };
+        }),
       },
     },
   ];
+  edit?.(plan.scenarios[0].courses[0]);
   await new PlanStore(indexedDB).save(plan, null);
   const app = render(
     <MemoryRouter initialEntries={["/semester/SS-2027"]}>
@@ -140,6 +148,101 @@ it("opens the current week and can return to it after browsing another day", asy
     vi.useRealTimers();
   }
 });
+
+const wallButton = (language: Language) =>
+  within(document.querySelector(".calendar-exports") as HTMLElement).getByRole(
+    "button",
+    {
+      name: `${shareMessages[language].wallPrint} · A4 ${timetableMessages[language].landscape}`,
+    },
+  );
+function stubPrintWindow(blocked = false) {
+  const written: string[] = [];
+  const preview = {
+    opener: {},
+    focus: vi.fn(),
+    print: vi.fn(),
+    document: {
+      open: vi.fn(),
+      write: (html: string) => written.push(html),
+      close: vi.fn(),
+      getElementById: () => ({}),
+    },
+  };
+  const open = vi
+    .spyOn(window, "open")
+    .mockReturnValue(blocked ? null : (preview as unknown as Window));
+  return { open, written };
+}
+
+it.each<Language>(["en", "de", "fr"])(
+  "prints the typical week as a one-page wall timetable in %s",
+  async (language) => {
+    await mountCalendar(language, "2027-03-01", false, { weeks: 3 });
+    const { open, written } = stubPrintWindow();
+    try {
+      await userEvent.click(wallButton(language));
+      expect(open).toHaveBeenCalledWith("", "_blank");
+      const html = written.join("");
+      expect(html).toContain("@page{size:A4 landscape");
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      expect(doc.querySelectorAll(".wall-sheet")).toHaveLength(1);
+      expect(doc.querySelector(".wall-head strong")!.textContent).toContain(
+        timetableMessages[language].typicalWeek,
+      );
+      expect(doc.querySelector(".wall-block")!.textContent).toContain(
+        "Two-term course",
+      );
+      expect(doc.querySelector(".wall-block .time")!.textContent).toBe(
+        "11:00–12:00",
+      );
+      expect(
+        within(
+          document.querySelector(".calendar-exports") as HTMLElement,
+        ).queryByRole("alert"),
+      ).not.toBeInTheDocument();
+    } finally {
+      open.mockRestore();
+    }
+  },
+);
+
+it("reports a blocked wall timetable window next to the button", async () => {
+  await mountCalendar("fr", "2027-03-01", false, { weeks: 3 });
+  const { open } = stubPrintWindow(true);
+  try {
+    await userEvent.click(wallButton("fr"));
+    expect(
+      within(
+        document.querySelector(".calendar-exports") as HTMLElement,
+      ).getByRole("alert"),
+    ).toHaveTextContent(shareMessages.fr.exportError);
+  } finally {
+    open.mockRestore();
+  }
+});
+
+it.each([false, true])(
+  "asks to choose attendance before printing parallel sessions (chosen=%s)",
+  async (chosen) => {
+    await mountCalendar("en", "2027-03-01", false, {
+      edit: (course) => {
+        const [meeting] = course.offering!.meetings;
+        course.offering!.meetings = ["PER 21", "PER 08", "MIS 03"].map(
+          (location) => ({ ...meeting, location }),
+        );
+        // Two groups still overlap after the choice; the choice was made.
+        if (chosen) course.attendance = attendanceChoice(course, [2]);
+      },
+    });
+    const exports = within(
+      document.querySelector(".calendar-exports") as HTMLElement,
+    );
+    const hint = timetableMessages.en.wallAttendanceHint;
+    if (chosen) expect(exports.queryByText(hint)).not.toBeInTheDocument();
+    else expect(exports.getByText(hint)).toBeVisible();
+  },
+);
 
 async function addPeriod(
   language: Language,

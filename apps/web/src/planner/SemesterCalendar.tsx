@@ -39,6 +39,7 @@ import WeeklyDownloads from "./WeeklyDownloads";
 import { experienceMessages } from "../experience-messages";
 import { defaultCalendarDate, readCalendarView } from "./calendar-view";
 import { countLabel } from "./countLabels";
+import { internalOverlapOwners } from "./typical-week";
 
 function EventCard({
   event,
@@ -238,6 +239,12 @@ function Calendar({ language }: { language: Language }) {
     unresolved: calendar.unresolved.length > 0,
     conflicts,
   };
+  // Unchosen parallel groups would all land on the wall sheet as one block.
+  const wallHint = internalOverlapOwners(calendar.events).some(
+    (id) => !scenario.courses.find((c) => c.id === id)?.attendance,
+  )
+    ? tx.wallAttendanceHint
+    : undefined;
   const conflictGroups = new Map<string, typeof conflicts>();
   for (const conflict of conflicts) {
     const key = [
@@ -509,7 +516,7 @@ function Calendar({ language }: { language: Language }) {
             {monday.add({ days: 6 }).toString()}
           </p>
           <div className="calendar-export">
-            <WeeklyDownloads input={exportInput} />
+            <WeeklyDownloads input={exportInput} hint={wallHint} />
             <Button
               onClick={() =>
                 openPrintHtml(scopedPrintHtml(exportInput, "roster"))

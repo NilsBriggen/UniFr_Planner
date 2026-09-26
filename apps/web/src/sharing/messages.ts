@@ -42,6 +42,7 @@ const en = {
   noCourses: "No courses in this semester.",
   close: "Close",
   print: "Print week / save PDF",
+  wallPrint: "Wall timetable · typical week",
   excel: "Download Excel",
   exporting: "Preparing Excel…",
   exportError: "The download could not be created. Try again.",
@@ -115,6 +116,7 @@ export const shareMessages: Record<Language, Copy> = {
     noCourses: "Keine Kurse in diesem Semester.",
     close: "Schliessen",
     print: "Woche drucken / PDF speichern",
+    wallPrint: "Stundenplan zum Aufhängen · typische Woche",
     excel: "Excel herunterladen",
     exporting: "Excel vorbereiten…",
     exportError:
@@ -187,6 +189,7 @@ export const shareMessages: Record<Language, Copy> = {
     noCourses: "Aucun cours dans ce semestre.",
     close: "Fermer",
     print: "Imprimer la semaine / PDF",
+    wallPrint: "Emploi du temps à afficher · semaine type",
     excel: "Télécharger Excel",
     exporting: "Préparation d’Excel…",
     exportError: "Le téléchargement n’a pas pu être créé. Réessayez.",
