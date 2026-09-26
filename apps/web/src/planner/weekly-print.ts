@@ -25,8 +25,12 @@ export function weeklyPrintHtml(input: WeeklyExport) {
     week = layoutWeek(input.events, input.monday);
   const total = week.endMinute - week.startMinute;
   const lessons = week.days.flatMap((d) => d.lessons);
+  // One reference per course (event owner): lecture, exercises, every weekday and
+  // both halves of an overnight event share it. Numbered by first appearance.
+  const owners = [...new Set(lessons.map((l) => l.event.owner))];
+  const label = (owner: string) => `S${owners.indexOf(owner) + 1}`;
   const reference = (lesson: (typeof lessons)[number]) =>
-    `S${lessons.indexOf(lesson) + 1}`;
+    label(lesson.event.owner);
   const manifest = exportManifest(input);
   const conflicts = (
     input.conflicts ?? detectConflicts(input.events, [], 0)
@@ -38,6 +42,7 @@ export function weeklyPrintHtml(input: WeeklyExport) {
   const summary = `${conflicts.filter((c) => c.kind !== "internal").length} ${x.collisions} · ${conflicts.filter((c) => c.kind === "internal").length} ${x.internalCount}`;
   // Dense weeks use one page per teaching day. Every page keeps true time geometry
   // and its own complete key; a small box never has to contain a long course title.
+  // References stay week-wide, so a course keeps its label on every day page.
   const groups = !lessons.length
     ? []
     : lessons.length > 14
@@ -56,13 +61,18 @@ export function weeklyPrintHtml(input: WeeklyExport) {
             `<section class="day"><h2>${e(weekDate(day.date, input.language))}</h2><div class="events">${day.lessons.map((lesson) => `<article style="top:${((lesson.startMinute - week.startMinute) / total) * 100}%;height:${((lesson.endMinute - lesson.startMinute) / total) * 100}%;left:${(lesson.lane / lesson.lanes) * 100}%;width:${100 / lesson.lanes}%;background:#${weekColours[courseColour(lesson.event.owner)]}">${reference(lesson)}</article>`).join("")}</div></section>`,
         )
         .join("");
-      const key = days
-        .flatMap((d) =>
-          d.lessons.map(
-            (l) =>
-              `<li><b>${reference(l)}</b> ${e(l.event.title)} · ${minuteText(l.startMinute)}–${minuteText(l.endMinute)} · ${e(l.event.location || x.roomUnknown)}${l.event.sessionType ? ` · ${e(l.event.sessionType)}` : ""}</li>`,
-          ),
-        )
+      // One entry per course on this page, in ascending reference order. Its slots
+      // stay inline, so the key is no taller than one line per lesson.
+      const key = owners
+        .map((owner) => {
+          const slots = days.flatMap((d) =>
+            d.lessons
+              .filter((l) => l.event.owner === owner)
+              .map((l) => ({ date: d.date, l })),
+          );
+          if (!slots.length) return "";
+          return `<li><b>${label(owner)}</b> ${e(slots[0].l.event.title)} · ${slots.map(({ date, l }) => `${e(weekDate(date, input.language, { weekday: "short" }))} ${minuteText(l.startMinute)}–${minuteText(l.endMinute)} · ${e(l.event.location || x.roomUnknown)}${l.event.sessionType ? ` · ${e(l.event.sessionType)}` : ""}`).join("; ")}</li>`;
+        })
         .join("");
       return `<section class="calendar-sheet"><h1>${e(input.name)}</h1><p class="subtitle">${e(x.week)} · ${input.monday} – ${week.days[6].date} · ${e(input.term)} · Europe/Zurich</p><p class="warning">${e(summary)}${input.unresolved ? ` · ${e(t.missingDates)}` : ""}</p><div class="page-layout ${days.length === 1 ? "single-day" : ""}"><div class="week" style="grid-template-columns:40px repeat(${days.length},minmax(0,1fr))"><div class="ruler">${hours}</div>${grid}</div><div class="week-key"><h2>${e(x.key)}</h2><ol>${key}</ol></div></div><footer>UniFr Planner · ${e(x.generated)} ${new Date().toISOString().slice(0, 10)} · ${e(input.term)} · ${e(
         printSourceNote(

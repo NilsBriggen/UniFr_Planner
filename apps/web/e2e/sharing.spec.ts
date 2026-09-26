@@ -321,6 +321,7 @@ test("the selected week downloads as an editable workbook and a complete landsca
   );
   const popupEvent = page.waitForEvent("popup");
   await page
+    .locator(".calendar-exports")
     .getByRole("button", { name: "Print week / save PDF", exact: true })
     .click();
   const popup = await popupEvent;
@@ -331,7 +332,7 @@ test("the selected week downloads as an editable workbook and a complete landsca
     "S1",
   ]);
   await expect(popup.locator(".calendar-sheet .week-key li")).toHaveText([
-    /S1 Algebra · 12:00–13:00 · PER 21/,
+    /S1 Algebra · Mon 12:00–13:00 · PER 21/,
   ]);
   await expect(
     popup.locator(".lesson-list table").first().locator("tbody tr"),
