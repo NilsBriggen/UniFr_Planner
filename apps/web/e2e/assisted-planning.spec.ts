@@ -1,4 +1,8 @@
-import { chooseManualSetup } from "./studies-helpers";
+import {
+  chooseManualSetup,
+  discoveryScope,
+  openResultOptions,
+} from "./studies-helpers";
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -41,16 +45,18 @@ test("semester discovery explains lesson times and updates its overview as cours
     .click();
   await expect(overview).toContainText("6 ECTS");
   await expect(overview).toContainText("Algebra");
+  await openResultOptions(page);
   await page.getByLabel("Hide added courses", { exact: true }).click();
   await expect(algebra).toHaveCount(0);
   await expect(overview).toContainText("Algebra");
   await page.getByLabel("Hide added courses", { exact: true }).click();
   await expect(algebra).toBeVisible();
-  await page.getByRole("button", { name: "All courses", exact: true }).click();
+  await (await discoveryScope(page, "All courses")).click();
   const ecology = page
     .locator(".course-results > li")
     .filter({ has: page.getByRole("heading", { name: /Ecology/ }) });
   await expect(ecology).toContainText("Clashes with");
+  await openResultOptions(page);
   await page.getByLabel("Only courses that fit", { exact: true }).click();
   await expect(
     page.getByLabel("Only courses that fit", { exact: true }),
@@ -151,7 +157,7 @@ test("semester discovery explains lesson times and updates its overview as cours
     .click();
   await expect(overview).toContainText("6 ECTS");
   await expect(overview).not.toContainText("Ecology");
-  await page.getByRole("button", { name: "All courses", exact: true }).click();
+  await (await discoveryScope(page, "All courses")).click();
   await ecology
     .getByRole("button", { name: "Add to semester", exact: true })
     .click();

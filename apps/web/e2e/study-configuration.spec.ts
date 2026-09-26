@@ -10,8 +10,10 @@ import { catchupMessages } from "../src/planner/catchup-messages";
 import { createPlan, type Plan } from "../src/planner/domain";
 import {
   chooseComputerScience,
+  discoveryScope,
   importStudyPlan,
   openPlanTools,
+  openResultOptions,
 } from "./studies-helpers";
 import type { Language } from "../src/i18n";
 
@@ -122,17 +124,17 @@ for (const language of ["en", "de", "fr"] as const) {
       .fill("Configured degree");
     await page.getByRole("button", { name: s.start, exact: true }).click();
     await expect(page).toHaveURL(/catalogue\?term=AS-2026&focus=programme$/);
-    await expect(
-      page.getByRole("button", { name: d.listedProgramme, exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+    await expect(await discoveryScope(page, d.listedProgramme)).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     // Published programme membership and known requirement matching are separate scopes.
     await expect(page.locator(".course-results > li")).toHaveCount(1);
-    await page
-      .getByRole("button", { name: d.knownRequirements, exact: true })
-      .click();
+    await (await discoveryScope(page, d.knownRequirements)).click();
     await expect(
-      page.getByRole("button", { name: d.knownRequirements, exact: true }),
+      await discoveryScope(page, d.knownRequirements),
     ).toHaveAttribute("aria-pressed", "true");
+    await openResultOptions(page);
     await page
       .getByRole("checkbox", { name: d.hideAdded, exact: true })
       .click();
@@ -166,10 +168,12 @@ for (const language of ["en", "de", "fr"] as const) {
     await expect(overview).toContainText("6 ECTS");
     await expect(page.locator(".course-results > li")).toHaveCount(0);
     await expect(page.getByText(d.noMatches).first()).toBeVisible();
-    await page.getByRole("button", { name: d.all, exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: d.all, exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+    await (await discoveryScope(page, d.all)).click();
+    await expect(await discoveryScope(page, d.all)).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await openResultOptions(page);
     await page
       .getByRole("checkbox", { name: d.hideAdded, exact: true })
       .click();
@@ -256,10 +260,7 @@ test("existing unconfigured plans remain usable and keep their courses when stud
   await expect(completed).toContainText("Prior programming");
   await page.goto("/catalogue?term=AS-2026");
   await expect(
-    page.getByRole("button", {
-      name: discoveryMessages.en.listedProgramme,
-      exact: true,
-    }),
+    await discoveryScope(page, discoveryMessages.en.listedProgramme),
   ).toHaveCount(0);
   await page.goto("/requirements#study-configuration");
   await chooseComputerScience(page, "en", "AS-2024");
@@ -276,17 +277,11 @@ test("existing unconfigured plans remain usable and keep their courses when stud
   expect(saved.planningSemester).toBe("AS-2026");
   await page.goto("/catalogue?term=AS-2026");
   await expect(
-    page.getByRole("button", {
-      name: discoveryMessages.en.listedProgramme,
-      exact: true,
-    }),
+    await discoveryScope(page, discoveryMessages.en.listedProgramme),
   ).toHaveAttribute("aria-pressed", "true");
-  await page
-    .getByRole("button", {
-      name: discoveryMessages.en.knownRequirements,
-      exact: true,
-    })
-    .click();
+  await (
+    await discoveryScope(page, discoveryMessages.en.knownRequirements)
+  ).click();
   await expect(page.locator(".course-results > li")).toHaveCount(0);
 });
 
@@ -316,16 +311,10 @@ test("a configured continuing student reaches semester recommendations after cat
     .click();
   await expect(page).toHaveURL(/catalogue\?term=AS-2026&focus=programme$/);
   await expect(
-    page.getByRole("button", {
-      name: discoveryMessages.en.listedProgramme,
-      exact: true,
-    }),
+    await discoveryScope(page, discoveryMessages.en.listedProgramme),
   ).toHaveAttribute("aria-pressed", "true");
-  await page
-    .getByRole("button", {
-      name: discoveryMessages.en.knownRequirements,
-      exact: true,
-    })
-    .click();
+  await (
+    await discoveryScope(page, discoveryMessages.en.knownRequirements)
+  ).click();
   await expect(page.locator(".course-results > li")).toHaveCount(1);
 });
