@@ -202,6 +202,10 @@ test("the typical semester week prints on exactly one legible A4 landscape page"
       .click();
     const popup = await popupEvent;
     await expect(popup.locator(".wall-sheet")).toHaveCount(1);
+    // The popup's only control is a full touch target on every device.
+    expect(
+      (await popup.locator("#print").boundingBox())!.height,
+    ).toBeGreaterThanOrEqual(44);
     await expect(popup.locator(".day-head")).toHaveCount(5);
     await expect(popup.locator(".wall-head strong")).toHaveText(
       `${x.typicalWeek} · ${{ en: "Autumn", de: "Herbst", fr: "Automne" }[language]} 2026`,
@@ -263,15 +267,28 @@ test("the typical semester week prints on exactly one legible A4 landscape page"
           text: element.textContent,
           pt: (parseFloat(getComputedStyle(element).fontSize) * 72) / 96,
         }));
+      // Hatched blocks keep the accent bar, dotted like the legend chip.
+      const personal = [
+        ...document.querySelectorAll(".wall-block.personal"),
+      ].map((block) => {
+        const style = getComputedStyle(block);
+        return [
+          style.borderLeftStyle,
+          parseFloat(style.borderLeftWidth) / mm,
+        ] as const;
+      });
       const sheet = document.querySelector(".wall-sheet")!;
       return {
         boxes,
         fonts,
+        personal,
         sheet: sheet.getBoundingClientRect().height / mm,
         overflow: sheet.scrollHeight - sheet.clientHeight,
       };
     });
     expect(measured.boxes.length).toBeGreaterThanOrEqual(12);
+    expect(measured.personal).toEqual([["dotted", expect.any(Number)]]);
+    expect(measured.personal[0][1]).toBeGreaterThanOrEqual(1);
     for (const box of measured.boxes) {
       expect(box.overflowY, box.text!).toBeLessThanOrEqual(1);
       expect(box.overflowX, box.text!).toBeLessThanOrEqual(1);

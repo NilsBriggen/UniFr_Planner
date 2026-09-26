@@ -267,6 +267,45 @@ it("ignores outlier series when judging the span of regular courses", () => {
   ]);
 });
 
+it("keeps a full-semester course in the period when most series end early", () => {
+  const typical = build(
+    [
+      ...series("full", autumn, 1, "10:15", "12:00"),
+      ...series("seven", autumn.slice(0, 7), 2, "10:15", "12:00"),
+      ...series("six", autumn.slice(0, 6), 3, "10:15", "12:00"),
+      {
+        id: "service",
+        owner: "service",
+        title: "Military service",
+        start: localInstant("2026-11-16T00:00"),
+        end: localInstant("2026-11-23T00:00"),
+        location: "",
+        personal: true,
+      },
+    ],
+    "AS-2026",
+    ["full", "seven", "six"],
+  );
+  // The medians still judge "from" and "until"; the printed period and its
+  // week count cover the course that meets until 14.12.
+  expect(typical.span).toEqual({
+    firstWeek: "2026-09-14",
+    lastWeek: "2026-10-26",
+    firstDate: "2026-09-14",
+    lastDate: "2026-12-14",
+    weeks: 14,
+  });
+  expect(slotOf(typical, "full")[0].annotation).toEqual({
+    kind: "weekly",
+    until: "2026-12-14",
+  });
+  expect(slotOf(typical, "seven")[0].annotation).toEqual({ kind: "weekly" });
+  // An absence while that course still meets stays on the sheet.
+  expect(typical.absences).toEqual([
+    { label: "Military service", start: "2026-11-16", end: "2026-11-22" },
+  ]);
+});
+
 it("reads holidays and single skips as weekly, but three skips as a count", () => {
   const typical = build(
     [
@@ -341,6 +380,84 @@ it("reads holidays and single skips as weekly, but three skips as a count", () =
   );
 });
 
+it("reads a Thursday-only or Friday-only spring as weekly", () => {
+  // Easter, Ascension and Corpus Christi; the Friday course also skips the
+  // Good Friday week and the Friday after Ascension.
+  const thursday = build(
+    series(
+      "thursday",
+      spring.filter((week) => !["2027-05-03", "2027-05-24"].includes(week)),
+      4,
+      "10:15",
+      "12:00",
+    ),
+    "SS-2027",
+    ["thursday"],
+  );
+  expect(thursday.holidayWeeks).toEqual([
+    ...easter,
+    "2027-05-03",
+    "2027-05-24",
+  ]);
+  expect(slotOf(thursday, "thursday")[0].annotation).toEqual({
+    kind: "weekly",
+  });
+  const friday = build(
+    series(
+      "friday",
+      spring.filter((week) => !["2027-03-22", "2027-05-03"].includes(week)),
+      5,
+      "10:15",
+      "12:00",
+    ),
+    "SS-2027",
+    ["friday"],
+  );
+  expect(friday.holidayWeeks).toEqual(["2027-03-22", ...easter, "2027-05-03"]);
+  expect(slotOf(friday, "friday")[0].annotation).toEqual({ kind: "weekly" });
+});
+
+it("keeps Easter as a holiday when a summer block follows the lecture period", () => {
+  const typical = build(
+    [
+      ...fullSchedule(spring),
+      ...series(
+        "tutorial",
+        [
+          "2027-02-22",
+          "2027-03-08",
+          "2027-03-22",
+          "2027-04-12",
+          "2027-04-26",
+          "2027-05-10",
+          "2027-05-24",
+        ],
+        2,
+        "16:15",
+        "18:00",
+      ),
+      ...series(
+        "summer",
+        ["2027-07-05", "2027-07-12", "2027-07-19"],
+        6,
+        "09:15",
+        "12:00",
+      ),
+    ],
+    "SS-2027",
+    ["tutorial", "summer"],
+  );
+  expect(typical.breakRuns.at(-1)).toEqual({
+    from: "2027-06-07",
+    to: "2027-07-04",
+    weeks: 4,
+  });
+  expect(typical.holidayWeeks).toEqual(easter);
+  expect(slotOf(typical, "tutorial")[0].annotation).toEqual({
+    kind: "biweekly",
+  });
+});
+
 it("counts irregular published dates and lists short series as other dates", () => {
   // The Thursday and Friday dates of the detail.html fixture course.
   const detail = [
@@ -375,6 +492,7 @@ it("counts irregular published dates and lists short series as other dates", () 
         dates: [
           {
             date: "2026-12-04",
+            endDate: "2026-12-04",
             weekday: 5,
             startMinute: 915,
             endMinute: 1020,
@@ -382,6 +500,7 @@ it("counts irregular published dates and lists short series as other dates", () 
           },
           {
             date: "2026-12-11",
+            endDate: "2026-12-11",
             weekday: 5,
             startMinute: 795,
             endMinute: 1020,
@@ -424,6 +543,38 @@ it("counts irregular published dates and lists short series as other dates", () 
   expect(typical.otherDates.map((group) => group.owner)).toEqual([
     "block",
     "twice",
+  ]);
+});
+
+it("keeps the last date of a course event longer than a day", () => {
+  const typical = build(
+    [
+      ...fullSchedule(spring),
+      {
+        ...session("block", "2027-03-05", "09:00", "17:00"),
+        end: localInstant("2027-03-06T17:00"),
+      },
+      // The same hours on the next day stay a separate entry.
+      session("block", "2027-03-07", "09:00", "17:00"),
+      session("block", "2027-03-12", "09:00", "17:00"),
+      session("block", "2027-03-13", "09:00", "17:00"),
+      // A night session keeps one date: its hours show the crossing.
+      session("block", "2027-03-19", "22:00", "02:00"),
+    ],
+    "SS-2027",
+    ["block"],
+  );
+  const [block] = typical.otherDates;
+  expect(block.dates[0]).toMatchObject({
+    date: "2027-03-05",
+    endDate: "2027-03-06",
+    timeLabel: "09:00–17:00",
+  });
+  expect(block.runs).toEqual([
+    { from: "2027-03-05", to: "2027-03-06", timeLabel: "09:00–17:00" },
+    { from: "2027-03-07", to: "2027-03-07", timeLabel: "09:00–17:00" },
+    { from: "2027-03-12", to: "2027-03-13", timeLabel: "09:00–17:00" },
+    { from: "2027-03-19", to: "2027-03-19", timeLabel: "22:00–02:00" },
   ]);
 });
 
@@ -815,18 +966,20 @@ it("drops personal series and span without recurring classes", () => {
   const typical = build(
     [
       ...personal("Work", autumn, 1, "18:00", "22:00"),
+      ...personal("Dentist", ["2026-10-05"], 2, "09:00", "10:00"),
       ...series("once", ["2026-09-21"], 1, "10:15", "12:00"),
     ],
     "AS-2026",
     ["once"],
   );
+  // A weekly commitment is never counted as one-off dates.
   expect(typical).toMatchObject({
     slots: [],
     events: [],
     teachingWeeks: [],
     holidayWeeks: [],
     breakRuns: [],
-    personalOneOffs: 14,
+    personalOneOffs: 1,
   });
   expect(typical.span).toBeUndefined();
   expect(typical.otherDates.map((group) => group.owner)).toEqual(["once"]);

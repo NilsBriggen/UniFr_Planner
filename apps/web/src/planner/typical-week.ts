@@ -52,15 +52,22 @@ export type TypicalSlot = {
   parts?: TypicalPart[];
 };
 export type TypicalSpan = {
+  /** Medians of the recurring series' first and last weeks; a series that
+   * starts or ends apart from them is marked "from" or "until". */
   firstWeek: string;
   lastWeek: string;
+  /** The printed period: every recurring series that meets between the
+   * medians, so a course running on after most others is not cut off. */
   firstDate: string;
   lastDate: string;
-  /** Teaching weeks between firstWeek and lastWeek. */
+  /** Teaching weeks in the printed period. */
   weeks: number;
 };
 export type TypicalDate = {
   date: string;
+  /** Later than date only for an event longer than a day, whose hours alone
+   * would hide the days after the first. */
+  endDate: string;
   weekday: number;
   startMinute: number;
   endMinute: number;
@@ -418,7 +425,8 @@ export function buildTypicalWeek(
     else courseDates.push(...items);
 
   const teachingWeeks = weeksOf(recurring.flat());
-  let span: TypicalSpan | undefined;
+  let span: TypicalSpan | undefined,
+    period: { from: string; to: string } | undefined;
   if (recurring.length) {
     // Medians keep a bridging course or January revision sessions from
     // marking every regular course "from" or "until".
@@ -426,15 +434,24 @@ export function buildTypicalWeek(
       lasts = recurring.map((items) => weeksOf(items).at(-1)!).sort();
     const firstWeek = firsts[Math.floor((firsts.length - 1) / 2)],
       lastWeek = lasts[Math.floor(lasts.length / 2)];
-    const all = recurring.flat();
+    // The printed period covers every series that meets between the medians,
+    // so a full-semester course is never cut off when most series end early;
+    // disjoint outliers (bridging course, January revision) stay out.
+    const covered = recurring
+      .filter((items) => {
+        const weeks = weeksOf(items);
+        return weeks[0] <= lastWeek && weeks.at(-1)! >= firstWeek;
+      })
+      .flat();
+    const from = weeksOf(covered)[0],
+      to = weeksOf(covered).at(-1)!;
+    period = { from, to };
     span = {
       firstWeek,
       lastWeek,
-      firstDate: datesOf(all.filter((item) => item.monday === firstWeek))[0],
-      lastDate: datesOf(all.filter((item) => item.monday === lastWeek)).at(-1)!,
-      weeks: teachingWeeks.filter(
-        (week) => week >= firstWeek && week <= lastWeek,
-      ).length,
+      firstDate: datesOf(covered)[0],
+      lastDate: datesOf(covered).at(-1)!,
+      weeks: teachingWeeks.filter((week) => week >= from && week <= to).length,
     };
   }
   const teaching = new Set(teachingWeeks);
@@ -450,20 +467,29 @@ export function buildTypicalWeek(
       if (run && addDays(run.at(-1)!, 7) === week) run.push(week);
       else runs.push([week]);
     }
-  // Only a few short gaps in a full semester are read as holidays.
+  // Only a few short gaps in a full semester are read as holidays: at most one
+  // per five weeks of the printed period, so a Thursday-only spring (Easter,
+  // Ascension, Corpus Christi) keeps its holidays and a lone biweekly course
+  // does not. Gaps before or after the period (a summer block, January
+  // revision) come from outliers and never veto the rest; the period starts
+  // and ends in teaching weeks, so a gap lies wholly inside or outside it.
+  const inside = (run: string[]) =>
+    !period || (run[0] > period.from && run[0] < period.to);
+  const interior = runs.filter(inside);
+  const spanned = (span?.weeks ?? 0) + interior.flat().length;
   const holidayWeeks =
-    teachingWeeks.length >= 8 &&
-    runs.length <= Math.max(1, Math.floor(teachingWeeks.length / 6)) &&
-    runs.every((run) => run.length <= 3)
-      ? runs.flat()
+    (span?.weeks ?? 0) >= 8 &&
+    interior.length <= Math.max(1, Math.floor(spanned / 5)) &&
+    interior.every((run) => run.length <= 3)
+      ? runs.filter((run) => inside(run) || run.length <= 3).flat()
       : [];
   const context: ClassifyContext = {
     teaching: teachingWeeks,
     holidays: holidayWeeks,
     span,
   };
-  const inSpan = (item: Occurrence) =>
-    !span || (item.monday >= span.firstWeek && item.monday <= span.lastWeek);
+  const inPeriod = (item: Occurrence) =>
+    !period || (item.monday >= period.from && item.monday <= period.to);
 
   // Overlapping series of one course on one weekday become a single block:
   // at most one of them can be attended. Sequential sessions stay apart.
@@ -492,9 +518,11 @@ export function buildTypicalWeek(
   }
   let personalOneOffs = 0;
   for (const items of series.filter((items) => items[0].personal)) {
-    const kept = items.filter(inSpan);
-    if (span && weeksOf(kept).length >= MIN_GRID_WEEKS) groups.push([kept]);
-    else personalOneOffs += datesOf(kept).length;
+    const kept = items.filter(inPeriod);
+    // Without a class span a recurring series is dropped, never "one-off".
+    if (weeksOf(kept).length < MIN_GRID_WEEKS)
+      personalOneOffs += datesOf(kept).length;
+    else if (span) groups.push([kept]);
   }
 
   const slots = groups
@@ -594,8 +622,14 @@ export function buildTypicalWeek(
             item.startMinute,
           ),
           endMinute = Math.max(known?.endMinute ?? 0, item.endMinute);
+        // A session crossing midnight keeps one date; its hours show that.
+        const days =
+          endMinute - startMinute > 1440
+            ? Math.floor((endMinute - 1) / 1440)
+            : 0;
         byDate.set(item.date, {
           date: item.date,
+          endDate: addDays(item.date, days),
           weekday: item.weekday,
           startMinute,
           endMinute,
@@ -604,16 +638,24 @@ export function buildTypicalWeek(
       }
       const dates = [...byDate.values()].sort((a, b) => order(a.date, b.date));
       const runs: TypicalOtherDates["runs"] = [];
-      for (const day of dates) {
+      // Only single-day dates join a run; a longer event keeps its own range.
+      const single = (day: TypicalDate) => day.endDate === day.date;
+      for (const [i, day] of dates.entries()) {
         const run = runs.at(-1);
         if (
           run &&
+          single(dates[i - 1]) &&
+          single(day) &&
           run.timeLabel === day.timeLabel &&
           addDays(run.to, 1) === day.date
         )
           run.to = day.date;
         else
-          runs.push({ from: day.date, to: day.date, timeLabel: day.timeLabel });
+          runs.push({
+            from: day.date,
+            to: day.endDate,
+            timeLabel: day.timeLabel,
+          });
       }
       return {
         owner: items[0].event.owner,
@@ -643,10 +685,10 @@ export function buildTypicalWeek(
   }
   const allDay: TypicalAllDay[] = [],
     absences = new Map<string, TypicalAbsence>();
-  const lowerDate = span?.firstWeek ?? range.start,
-    upperDate = span ? addDays(span.lastWeek, 6) : range.end;
+  const lowerDate = period?.from ?? range.start,
+    upperDate = period ? addDays(period.to, 6) : range.end;
   for (const items of longGroups.values()) {
-    const kept = items.filter(inSpan),
+    const kept = items.filter(inPeriod),
       weeks = weeksOf(kept);
     if (span && weeks.length >= MIN_GRID_WEEKS) {
       const first = kept[0],

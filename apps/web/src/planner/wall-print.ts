@@ -359,16 +359,19 @@ export function wallPrintHtml(input: WeeklyExport, generated = new Date()) {
       const slots = typical.slots.filter((s) => s.weekday === day.weekday);
       const regular = slots.filter((s) => s.annotation.kind !== "count");
       const basis = regular.length ? regular : slots;
-      const summary = basis.length
-        ? `${minuteText(Math.min(...basis.map((s) => s.startMinute)))}–${clock(Math.max(...basis.map((s) => s.endMinute)))}`
-        : x.wallNothingFixed;
       const allDay = allDayOf(day.weekday)
         .map((entry) => {
           const mark = annotationText(entry.annotation, language, "full");
           return mark ? `${entry.label} (${mark})` : entry.label;
         })
         .join(" · ");
-      return `<div class="day-head"><b>${e(weekdayName(day.weekday, "long"))}</b><small>${e(summary)}</small>${allDay ? `<span class="all-day">${e(`${x.wallAllDay}: ${allDay}`)}</span>` : ""}</div>`;
+      // A day taken by an all-day entry is never summarised as free.
+      const summary = basis.length
+        ? `${minuteText(Math.min(...basis.map((s) => s.startMinute)))}–${clock(Math.max(...basis.map((s) => s.endMinute)))}`
+        : allDay
+          ? ""
+          : x.wallNothingFixed;
+      return `<div class="day-head"><b>${e(weekdayName(day.weekday, "long"))}</b>${summary ? `<small>${e(summary)}</small>` : ""}${allDay ? `<span class="all-day">${e(`${x.wallAllDay}: ${allDay}`)}</span>` : ""}</div>`;
     })
     .join("");
   const body = days
@@ -380,7 +383,11 @@ export function wallPrintHtml(input: WeeklyExport, generated = new Date()) {
             : group.map(renderBlock).join(""),
         )
         .join("");
-      return `<section class="wall-day">${hourLines}${blocks}</section>`;
+      // Hatched behind any blocks, so a blank column always means free.
+      const hatch = allDayOf(day.weekday).length
+        ? `<i class="wall-all-day"></i>`
+        : "";
+      return `<section class="wall-day">${hourLines}${hatch}${blocks}</section>`;
     })
     .join("");
   const ruler = `<div class="wall-ruler">${hours
@@ -483,12 +490,12 @@ export function wallPrintHtml(input: WeeklyExport, generated = new Date()) {
     )
     .join("");
   return `<!doctype html><html lang="${language}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>${e(`${input.name} · ${x.typicalWeek} · ${semesterLabel(input.term, language)}`)}</title><style>
-@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}html,body{margin:0;padding:0}body{font:8pt/${LINE_HEIGHT} Arial,Helvetica,"Liberation Sans",sans-serif;color:#10222e;background:#e9edf0}.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:16px;font:14px/1.4 Arial,sans-serif}.tools button{font:inherit;padding:10px 16px}
+@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}html,body{margin:0;padding:0}body{font:8pt/${LINE_HEIGHT} Arial,Helvetica,"Liberation Sans",sans-serif;color:#10222e;background:#e9edf0}.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:16px;font:14px/1.4 Arial,sans-serif}.tools button{font:inherit;padding:10px 16px;min-height:44px}
 .wall-sheet{width:${WALL_MM.width}mm;height:${WALL_MM.height}mm;overflow:hidden;margin:0 auto 24px;background:#fff;box-shadow:0 1mm 4mm rgba(16,34,46,.25);display:grid;grid-template-columns:${WALL_MM.ruler}mm repeat(${days.length},minmax(0,1fr));grid-template-rows:${WALL_MM.header}mm ${dayHead}mm minmax(0,1fr) ${WALL_MM.footer}mm;row-gap:${WALL_MM.rowGap}mm;break-inside:avoid;page-break-inside:avoid}
 .wall-head{grid-column:1/-1;min-width:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:end;column-gap:4mm;padding:0 1mm .8mm;border-bottom:.3mm solid #10222e}.wall-head h1{margin:0;font-size:14pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wall-head strong{align-self:end;font-size:10pt;white-space:nowrap}.wall-head p{grid-column:1/-1;margin:0;font-size:8pt;color:#364652;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day-head{min-width:0;overflow:hidden;padding:.4mm 1mm 0;border-left:.2mm solid #9aa5ad}.day-head b{display:block;font-size:10pt;text-transform:capitalize;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.day-head small,.day-head .all-day{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.day-head small{font-size:7.5pt;font-weight:bold;color:#364652}.day-head .all-day{font-size:7pt}
-.wall-ruler,.wall-day{position:relative;min-width:0}.wall-ruler span{position:absolute;right:1mm;font-size:6.5pt;transform:translateY(-50%)}.wall-ruler span:first-child{transform:none}.wall-ruler span:last-child{transform:translateY(-100%)}.wall-day{overflow:hidden;border-left:.2mm solid #9aa5ad}.hour{position:absolute;left:0;right:0;border-top:.2mm solid #d3dade}.hour:first-child,.hour:nth-child(${hours.length}){border-color:#9aa5ad}
-.wall-block,.wall-stack{position:absolute;overflow:hidden;border:.25mm solid #667b88;border-left:1.2mm solid var(--accent);padding:.35mm .25mm .35mm .35mm;border-radius:.6mm;background:var(--fill)}.wall-block.not-weekly{border-left-style:dashed}.wall-block.personal{background:repeating-linear-gradient(45deg,#fff 0 .9mm,#dde2e6 .9mm 1.5mm);border-color:#33414b;border-top-style:dotted;border-right-style:dotted;border-bottom-style:dotted}
+.wall-ruler,.wall-day{position:relative;min-width:0}.wall-ruler span{position:absolute;right:1mm;font-size:6.5pt;transform:translateY(-50%)}.wall-ruler span:first-child{transform:none}.wall-ruler span:last-child{transform:translateY(-100%)}.wall-day{overflow:hidden;border-left:.2mm solid #9aa5ad}.hour{position:absolute;left:0;right:0;border-top:.2mm solid #d3dade}.hour:first-child,.hour:nth-child(${hours.length}){border-color:#9aa5ad}.wall-all-day{position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent 0 .9mm,#dde2e6 .9mm 1.5mm)}
+.wall-block,.wall-stack{position:absolute;overflow:hidden;border:.25mm solid #667b88;border-left:1.2mm solid var(--accent);padding:.35mm .25mm .35mm .35mm;border-radius:.6mm;background:var(--fill)}.wall-block.personal{--accent:#33414b;background:repeating-linear-gradient(45deg,#fff 0 .9mm,#dde2e6 .9mm 1.5mm);border-color:#33414b;border-style:dotted}.wall-block.not-weekly{border-left-style:dashed}
 .wall-block b,.wall-block span{display:block;overflow:hidden}.wall-block b{font-size:${FONT.title}pt;overflow-wrap:anywhere;hyphens:auto}.wall-block b.t1{white-space:nowrap;text-overflow:ellipsis}.wall-block b.t2{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;max-height:${round(2 * lineMm(FONT.title))}mm}.wall-block b em{font-style:normal}.wall-block span{white-space:nowrap;text-overflow:ellipsis;font-size:${FONT.detail}pt}.wall-block .time,.wall-block .mark,.wall-block .one{font-size:${FONT.time}pt;font-weight:bold;font-variant-numeric:tabular-nums}.wall-block.narrow b{font-size:${FONT.narrowTitle}pt}.wall-block.narrow b.t2{max-height:${round(2 * lineMm(FONT.narrowTitle))}mm}.wall-block.narrow .time,.wall-block.narrow .mark,.wall-block.narrow .one{font-size:${FONT.narrowTime}pt}
 .wall-stack{left:${WALL_MM.laneGap / 2}mm;right:${WALL_MM.laneGap / 2}mm;--accent:#667b88;--fill:#fff;border-left-style:double}.stack-line{display:block;font-size:${FONT.detail}pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chip{display:inline-block;width:2.2mm;height:2.2mm;margin-right:.8mm;vertical-align:-.3mm;border:.25mm solid var(--accent);background:var(--fill)}.chip-personal{--accent:#33414b;border-style:dotted;background:repeating-linear-gradient(45deg,#fff 0 .5mm,#aab3ba .5mm .8mm)}.bar{display:inline-block;width:0;height:2.4mm;margin-right:.8mm;vertical-align:-.4mm;border-left:1.2mm dashed #216d91}

@@ -164,6 +164,7 @@ it.each<Language>(["en", "de", "fr"])(
     expect(doc.querySelectorAll(".wall-sheet")).toHaveLength(1);
     expect(html).toContain("@page{size:A4 landscape;margin:8mm}");
     expect(doc.getElementById("print")).not.toBeNull();
+    expect(html).toMatch(/\.tools button\{[^}]*min-height:44px/);
     const tools = doc.querySelector(".tools")!.textContent!;
     expect(tools.match(/A4/g)).toHaveLength(1);
     expect(tools).not.toContain("Letter");
@@ -233,7 +234,7 @@ it("marks slots that do not run every week in text and with a dashed bar", () =>
 });
 
 it("hatches personal commitments with their label and time only", () => {
-  const { doc } = sheet({
+  const { html, doc } = sheet({
     events: [
       ...series("maths", autumn, 1, "10:15", "12:00"),
       ...personal("Work", autumn, 1, "18:00", "22:00"),
@@ -251,6 +252,12 @@ it("hatches personal commitments with their label and time only", () => {
   expect(doc.body.textContent).not.toContain("Dentist");
   expect(doc.querySelector(".wall-notes")!.textContent).toContain(
     "Other commitment: 1 one-off date",
+  );
+  // Without a course colour the accent bar needs its own colour, or the whole
+  // left border is dropped; dashed "not every week" must still win over dotted.
+  expect(html).toContain(".wall-block.personal{--accent:#33414b;");
+  expect(html.indexOf(".wall-block.not-weekly{")).toBeGreaterThan(
+    html.indexOf(".wall-block.personal{"),
   );
 });
 
@@ -322,6 +329,27 @@ it("adds weekend columns only for slots drawn on the grid", () => {
   );
 });
 
+it.each<[Language, string]>([
+  ["en", "Other dates: block Fri 09.10.–Sat 10.10. 09:00–17:00"],
+  ["de", "Weitere Termine: block Fr 09.10.–Sa 10.10. 09:00–17:00"],
+  ["fr", "Autres dates: block ven. 09.10.–sam. 10.10. 09:00–17:00"],
+])(
+  "lists a course event longer than a day to its last date in %s",
+  (language, text) => {
+    const { doc } = sheet({
+      language,
+      events: [
+        ...series("maths", autumn, 1, "10:15", "12:00"),
+        {
+          ...session("block", "2026-10-09", "09:00", "17:00"),
+          end: localInstant("2026-10-10T17:00"),
+        },
+      ],
+    });
+    expect(doc.querySelector(".wall-notes")!.textContent).toContain(text);
+  },
+);
+
 it("fits the hour window tightly to the typical week", () => {
   const ruler = (events: CalendarEvent[]) =>
     [...sheet({ events }).doc.querySelectorAll(".wall-ruler span")].map(
@@ -361,11 +389,13 @@ it("summarises each day neutrally and heads it with recurring all-day entries", 
   );
   expect(heads[0]).toEqual(["Monday", "08:15–17:00"]);
   expect(heads[1]).toEqual(["Tuesday", "No fixed commitments"]);
-  expect(heads[2]).toEqual([
-    "Wednesday",
-    "No fixed commitments",
-    "All day: Internship",
-  ]);
+  // An all-day day is neither called free nor left blank.
+  expect(heads[2]).toEqual(["Wednesday", "All day: Internship"]);
+  expect(
+    [...doc.querySelectorAll(".wall-day")].map(
+      (day) => day.querySelectorAll(".wall-all-day").length,
+    ),
+  ).toEqual([0, 0, 1, 0, 0]);
 });
 
 it("lists irregular dates, breaks, missing dates, absences and notes in order", () => {
@@ -473,9 +503,28 @@ it.each<[Language, string, string]>([
   },
 );
 
+it("heads the sheet with the whole period when most courses end early", () => {
+  const { doc } = sheet({
+    language: "de",
+    events: [
+      ...series("full", autumn, 1, "10:15", "12:00"),
+      ...series("seven", autumn.slice(0, 7), 2, "10:15", "12:00"),
+      ...series("six", autumn.slice(0, 6), 3, "10:15", "12:00"),
+    ],
+  });
+  expect(doc.querySelector(".wall-head p")!.textContent).toBe(
+    "14 Wochen mit Unterricht · 14.09.2026–14.12.2026",
+  );
+  expect(blocks(doc, "full")[0].textContent).toContain("bis 14.12.");
+});
+
 it("keeps an empty term on one sheet with an explanation", () => {
   const { doc } = sheet({
-    events: [session("once", "2026-10-05", "10:15", "12:00")],
+    events: [
+      session("once", "2026-10-05", "10:15", "12:00"),
+      // Weekly, so not "14 one-off dates", even without a class span.
+      ...personal("Work", autumn, 1, "18:00", "22:00"),
+    ],
     courses: [course("once"), course("missing", { offering: null })],
   });
   expect(doc.querySelectorAll(".wall-sheet")).toHaveLength(1);
