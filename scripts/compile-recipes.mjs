@@ -29,27 +29,12 @@ const stable = (value) =>
 const serialize = (value) => JSON.stringify(stable(value), null, 2) + "\n";
 
 /**
- * The registry without display metadata: programme titles/aliases and sources that no
- * programme or rule cites (by id in `sourceIds` or by URL anywhere in their data).
+ * The registry without display metadata (programme titles and search aliases).
  * A released edition may only change outside this projection.
  */
 export function academicProjection(registry) {
-  const cited = new Set(),
-    collect = (value) => {
-      if (typeof value === "string") cited.add(value);
-      else if (value && typeof value === "object")
-        Object.values(value).forEach(collect);
-    };
-  collect([...registry.programmes, ...registry.combinationRules]);
   return {
     ...registry,
-    sources: registry.sources.filter(
-      (s) =>
-        cited.has(s.url) ||
-        [...registry.programmes, ...registry.combinationRules].some((x) =>
-          x.sourceIds.includes(s.id),
-        ),
-    ),
     programmes: registry.programmes.map(
       ({ titles: _titles, aliases: _aliases, ...academic }) => academic,
     ),

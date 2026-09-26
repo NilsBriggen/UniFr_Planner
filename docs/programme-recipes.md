@@ -155,8 +155,8 @@ from now on save a localized default plan name and legacy `programme` label.
    edition; the initial release currently ships one recipe edition plus historical
    legacy templates. Do not overwrite the current edition and thereby alter saved plans.
    Unknown editions fail visibly and remain exportable for recovery. Display-only metadata
-   (`programmes[].titles`, search `aliases` and sources that no programme or rule cites)
-   may be corrected in the current edition; academic content may not.
+   (`programmes[].titles` and search `aliases`) may be corrected in the current edition;
+   academic content, including every source record, may not.
    `scripts/compile-recipes.test.mjs` pins a digest of the current edition's academic
    projection, so any other change fails until a new edition adds its own pin. Archived editions are
    never edited; at load time they receive the current names by programme id wherever

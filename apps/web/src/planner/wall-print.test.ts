@@ -175,6 +175,20 @@ it.each<Language>(["en", "de", "fr"])(
   },
 );
 
+it.each<[Language, string, string]>([
+  ["en", "in the print dialog", "scale 100%"],
+  ["de", "im Druckdialog", "Skalierung 100 %"],
+  ["fr", "dans la boîte de dialogue d’impression", "échelle 100 %"],
+])(
+  "names the print dialog and keeps the scale on one line in %s",
+  (language, dialog, scale) => {
+    const tools = sheet({ language }).doc.querySelector(".tools")!.textContent!;
+    expect(tools).toContain(dialog);
+    // English writes no space before %; German and French never break before it.
+    expect(tools).toContain(scale);
+  },
+);
+
 it("escapes plan names, course titles and personal labels", () => {
   const { html, doc } = sheet({
     events: [
