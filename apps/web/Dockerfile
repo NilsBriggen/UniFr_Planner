@@ -5,6 +5,8 @@ COPY apps/web/package.json apps/web/package.json
 RUN npm ci
 COPY apps/web apps/web
 COPY packages/domain packages/domain
+# The build type-checks the domain tests, which read the programme-names review.
+COPY data/programmes/reviews data/programmes/reviews
 EXPOSE 5173
 CMD ["npm", "run", "dev"]
 
