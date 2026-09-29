@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
-import { loadSavedCourses } from "./catalogue-loaders";
+import { clearDiscoveryCache, loadSavedCourses } from "./catalogue-loaders";
 import type { PublishedCatalogue } from "./published";
 
 export const catalogueRefreshEvent = "unifr:catalogue-refresh";
@@ -62,6 +62,7 @@ export function usePublishedCatalogue(codes: string[]) {
     loading: !!key && loading,
     error: !!key && error,
     refresh: () => {
+      clearDiscoveryCache();
       setRevision((value) => value + 1);
       window.dispatchEvent(new Event(catalogueRefreshEvent));
     },

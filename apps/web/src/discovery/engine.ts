@@ -54,6 +54,7 @@ export type Discovery = {
   assessments: Map<string, Assessment>;
   hasProgramme: boolean;
   requirementError: boolean;
+  calendars?: Map<string, CalendarResult>;
 };
 import { offeringKey } from "./presentation";
 export { offeringKey, filterDiscovery, lessonGroups } from "./presentation";
@@ -64,6 +65,7 @@ export function discoverCourses(
   courses: Course[],
   term: string,
   language: string,
+  previousCalendars?: Map<string, CalendarResult>,
 ): Discovery {
   const scenario = activeScenario(plan);
   const base = calendarFor(scenario.courses, term, language);
@@ -98,6 +100,7 @@ export function discoverCourses(
   const beforeNodes = resultNodes(baseline.degree);
   const beforeAdditional = resultNodes(baseline.additional);
   const assessments = new Map<string, Assessment>();
+  const calendars = new Map<string, CalendarResult>();
   for (const course of courses)
     for (const offering of course.offerings) {
       const sourceAssignments = sourceAssignmentMatches(
@@ -119,7 +122,15 @@ export function discoverCourses(
       if (sameOffering) candidate.attendance = existing!.attendance;
       candidate.semester = term;
       candidate.status = "planned";
-      const calendar = calendarFor([candidate], term, language);
+      // Expanding every recurring lesson is the expensive, plan-independent
+      // part of discovery. Reuse exact previews while recalculating conflicts
+      // and requirements against the latest plan. The complete selection key
+      // also invalidates changed source data, attendance, term and language.
+      const calendarKey = JSON.stringify([candidate, term, language]);
+      const calendar =
+        previousCalendars?.get(calendarKey) ??
+        calendarFor([candidate], term, language);
+      calendars.set(calendarKey, calendar);
       // Exclude this course's stored meetings when inspecting its own offering.
       const conflicts = detectConflicts(
         [
@@ -408,6 +419,7 @@ export function discoverCourses(
         a.code.localeCompare(b.code, "en"),
     ),
     assessments,
+    calendars,
     hasProgramme: !!root || !!degree || !!plan.degreeSelection,
     requirementError,
   };

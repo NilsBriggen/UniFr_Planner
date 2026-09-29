@@ -377,3 +377,48 @@ it("keeps stale and rejected catalogue explanations distinct", async () => {
     screen.queryByText(/The source changed during import or validation failed/),
   ).not.toBeInTheDocument();
 });
+
+it("keeps rejected-import information inside source details without a global banner", async () => {
+  vi.stubGlobal("indexedDB", new IDBFactory());
+  localStorage.setItem("unifr.language", "en");
+  await new PlanStore(indexedDB).save(publishedPlan(), null);
+  const courses = publishedCourses();
+  const status = {
+    ...publishedStatus,
+    latest_sync_outcome: "rejected_validation",
+  };
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (request: Request) => {
+      const url = new URL(request.url);
+      if (url.pathname.endsWith("/status/catalogue"))
+        return Response.json(status);
+      if (url.pathname.endsWith(`/${courses[0].code}`))
+        return Response.json(courses[0]);
+      return Response.json({
+        status,
+        items: courses,
+        total: 2,
+        offset: 0,
+        limit: 100,
+      });
+    }),
+  );
+  const { container } = render(
+    <MemoryRouter initialEntries={[`/catalogue/${courses[0].code}`]}>
+      <App />
+    </MemoryRouter>,
+  );
+  const details = (
+    await screen.findByText(/The latest import could not be fully validated/)
+  ).closest("details")!;
+  expect(details).not.toHaveAttribute("open");
+  expect(container.querySelector(".source-updates")).toBeNull();
+  expect(details.querySelector("summary")).not.toHaveTextContent(
+    "last validated",
+  );
+  await userEvent.click(details.querySelector("summary")!);
+  expect(
+    screen.getByText(/The latest import could not be fully validated/),
+  ).toBeVisible();
+});

@@ -1,8 +1,80 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { loadDiscoveryCatalogue, loadSavedCourses } from "./catalogue-loaders";
+import {
+  cachedDiscoveryCatalogue,
+  clearDiscoveryCache,
+  loadDiscoveryCatalogue,
+  loadSavedCourses,
+} from "./catalogue-loaders";
 import { publishedCourses, publishedStatus } from "./published-fixture";
 
 afterEach(() => vi.unstubAllGlobals());
+it("reuses browsing data until refresh, expiry or a new published snapshot", async () => {
+  const fetcher = vi.fn(async () =>
+    Response.json({
+      status: publishedStatus,
+      items: publishedCourses(),
+    }),
+  );
+  vi.stubGlobal("fetch", fetcher);
+  const filters = { term: "AS-2026" };
+  const first = await loadDiscoveryCatalogue(filters);
+  expect(await loadDiscoveryCatalogue(filters)).toBe(first);
+  expect(fetcher).toHaveBeenCalledTimes(1);
+
+  clearDiscoveryCache();
+  expect(await loadDiscoveryCatalogue(filters)).not.toBe(first);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  const now = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(now + 5 * 60_000);
+  await loadDiscoveryCatalogue(filters);
+  clock.mockRestore();
+  expect(fetcher).toHaveBeenCalledTimes(3);
+  await loadDiscoveryCatalogue(filters, undefined, "new-publication");
+  expect(fetcher).toHaveBeenCalledTimes(4);
+});
+
+it("separates filters and keeps only three recently used semester indexes", async () => {
+  const fetcher = vi.fn(async () =>
+    Response.json({
+      status: publishedStatus,
+      items: [],
+    }),
+  );
+  vi.stubGlobal("fetch", fetcher);
+  const filters = { term: "AS-2026", q: "math" };
+  const first = await loadDiscoveryCatalogue(filters);
+  expect(await loadDiscoveryCatalogue({ q: "math", term: "AS-2026" })).toBe(
+    first,
+  );
+  await loadDiscoveryCatalogue({ term: "AS-2026", q: "other" });
+  await loadDiscoveryCatalogue({ term: "SS-2027" });
+  expect(cachedDiscoveryCatalogue(filters)).toBe(first);
+  await loadDiscoveryCatalogue({ term: "AS-2027" });
+  expect(
+    cachedDiscoveryCatalogue({ term: "AS-2026", q: "other" }),
+  ).toBeUndefined();
+  expect(cachedDiscoveryCatalogue(filters)).toBe(first);
+  expect(fetcher).toHaveBeenCalledTimes(4);
+});
+
+it("does not cache failures or cancelled reads", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(Response.json({}, { status: 503 }))
+    .mockResolvedValueOnce(
+      Response.json({ status: publishedStatus, items: [] }),
+    );
+  vi.stubGlobal("fetch", fetcher);
+  const filters = { term: "AS-2026" };
+  await expect(loadDiscoveryCatalogue(filters)).rejects.toThrow();
+  await loadDiscoveryCatalogue(filters);
+  const controller = new AbortController();
+  controller.abort();
+  await expect(
+    loadDiscoveryCatalogue(filters, controller.signal),
+  ).rejects.toMatchObject({ name: "AbortError" });
+  expect(fetcher).toHaveBeenCalledTimes(2);
+});
 it("checks only canonical saved codes and deduplicates concurrent consumers", async () => {
   const fetcher = vi.fn(async (request: Request) => {
     const query = new URL(request.url).searchParams;

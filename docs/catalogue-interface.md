@@ -34,8 +34,9 @@ Malformed values, unknown filter names and reversed ranges return HTTP 422. Miss
 courses return 404. Catalogue reads return 503 when there is no published generation or
 the database is unavailable. Status remains readable and distinguishes those causes.
 A valid published catalogue with zero courses returns 200 with an empty result set.
-Snapshots older than 48 hours are explicitly stale; a rejected later sync is displayed
-alongside the retained last published generation. With no published generation, the UI
+Snapshots older than 48 hours are explicitly stale; a rejected later sync is explained
+inside the source details for the retained last published generation, without a global
+warning banner. With no published generation, the UI
 shows unavailable/rejected status, never a misleading empty catalogue.
 
 The read service resolves the published head once and reads immutable rows by that ID.
@@ -46,6 +47,12 @@ page or detail. `/catalogue/discovery?term=AS-2026` provides the complete compac
 index, cached by immutable generation; programme ranking and clash checks run in a browser
 worker. Search stays editable during loading, requests abort after 15 seconds, and saved-plan
 source checks request only exact `codes` (up to 100 canonical codes per batch).
+
+Within a browser tab, the three most recently used discovery indexes are cached for
+five minutes. Returning from course details reuses the loaded index and completed
+analysis. Changed plans recalculate recommendations and clashes, while reusing exact
+lesson previews in the existing worker. A changed publication or explicit catalogue
+refresh invalidates browsing data; saved-course change detection always uses fresh reads.
 
 `scope=history` on courses, course detail and terms selects independent published archive
 heads. Each offering includes its own `snapshot_id` and source URL. Terms include `coverage`

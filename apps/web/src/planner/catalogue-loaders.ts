@@ -2,6 +2,43 @@ import { api, type Course, type Filters } from "../api/client";
 import { canonicalCourseCode } from "../../../../packages/domain/src/requirements";
 import { loadPublishedCatalogue, type PublishedCatalogue } from "./published";
 
+type DiscoveryFilters = Omit<Filters, "limit" | "offset"> & { term: string };
+const discoveryKey = (filters: DiscoveryFilters) =>
+  JSON.stringify(
+    Object.entries(filters).sort(([a], [b]) => a.localeCompare(b)),
+  );
+const discoveryCache = new Map<
+  string,
+  { catalogue: PublishedCatalogue; expires: number }
+>();
+let discoveryRevision = 0;
+
+// Browsing may reuse a semester index within this tab. Saved-course checks below
+// always make fresh reads, so this cache can never be used as removal evidence.
+export function clearDiscoveryCache() {
+  discoveryRevision++;
+  discoveryCache.clear();
+}
+
+export function cachedDiscoveryCatalogue(
+  filters: DiscoveryFilters,
+  snapshotId?: string | null,
+) {
+  const key = discoveryKey(filters);
+  const cached = discoveryCache.get(key);
+  if (!cached) return undefined;
+  if (
+    cached.expires <= Date.now() ||
+    (snapshotId && cached.catalogue.status.snapshot_id !== snapshotId)
+  ) {
+    discoveryCache.delete(key);
+    return undefined;
+  }
+  discoveryCache.delete(key);
+  discoveryCache.set(key, cached);
+  return cached.catalogue;
+}
+
 // Share only pending reads. A publication can change between visits, so successful
 // results are never reused as evidence that a saved course was removed.
 const pending = new Map<
@@ -91,14 +128,20 @@ export function loadSavedCourses(
 }
 
 export function loadDiscoveryCatalogue(
-  filters: Omit<Filters, "limit" | "offset"> & { term: string },
+  filters: DiscoveryFilters,
   signal?: AbortSignal,
+  snapshotId?: string | null,
 ): Promise<PublishedCatalogue> {
-  const key = JSON.stringify(
-    Object.entries(filters).sort(([a], [b]) => a.localeCompare(b)),
-  );
+  if (signal?.aborted)
+    return Promise.reject(
+      signal.reason ?? new DOMException("Aborted", "AbortError"),
+    );
+  const cached = cachedDiscoveryCatalogue(filters, snapshotId);
+  if (cached) return Promise.resolve(cached);
+  const key = discoveryKey(filters);
+  const revision = discoveryRevision;
   return shared(
-    `discovery:${key}`,
+    `discovery:${revision}:${key}`,
     async (sharedSignal) => {
       const { data, response } = await api.GET("/api/v1/catalogue/discovery", {
         params: { query: filters },
@@ -111,7 +154,17 @@ export function loadDiscoveryCatalogue(
         !data.status.snapshot_id
       )
         throw new Error("Discovery catalogue unavailable");
-      return { status: data.status, courses: data.items };
+      const catalogue = { status: data.status, courses: data.items };
+      if (revision === discoveryRevision && !sharedSignal.aborted) {
+        discoveryCache.set(key, {
+          catalogue,
+          expires: Date.now() + 5 * 60_000,
+        });
+        // A complete index is large; retain only the three most recent searches.
+        while (discoveryCache.size > 3)
+          discoveryCache.delete(discoveryCache.keys().next().value!);
+      }
+      return catalogue;
     },
     signal,
   );

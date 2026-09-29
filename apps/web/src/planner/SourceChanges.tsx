@@ -26,8 +26,7 @@ export default function SourceChanges({ language }: { language: Language }) {
   if (
     location.pathname.startsWith("/catalogue") &&
     !changes.length &&
-    !published.error &&
-    !rejected
+    !published.error
   )
     return null;
   return (
@@ -74,11 +73,6 @@ export default function SourceChanges({ language }: { language: Language }) {
           </div>
         </section>
       )}
-      {rejected && (
-        <p className="source-warning" role="status">
-          {catalogueMessages[language].rejected}
-        </p>
-      )}
       {published.error && (
         <p className="source-warning" role="alert">
           {t.error}
@@ -94,6 +88,7 @@ export default function SourceChanges({ language }: { language: Language }) {
               : ""}
         </summary>
         <div className="source-check-details">
+          {rejected && <p>{catalogueMessages[language].rejectedBody}</p>}
           {published.loading && <p role="status">{t.loading}</p>}
           {!published.loading && !published.error && published.checkedAt && (
             <p role="status">

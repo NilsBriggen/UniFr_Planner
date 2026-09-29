@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Filters } from "../api/client";
 import type { Plan } from "../planner/domain";
 import {
+  cachedDiscoveryCatalogue,
   loadDiscoveryCatalogue,
   loadSuggestionCatalogue,
 } from "../planner/catalogue-loaders";
@@ -12,11 +13,16 @@ import type { Discovery } from "./engine";
 export function useDiscoveryIndex(
   filters: Omit<Filters, "limit" | "offset"> & { term: string },
   enabled: boolean,
+  snapshotId?: string | null,
 ) {
   const key = JSON.stringify(
     Object.entries(filters).sort(([a], [b]) => a.localeCompare(b)),
   );
   const [revision, setRevision] = useState(0);
+  const requestKey = JSON.stringify([key, snapshotId, revision]);
+  const cached = enabled
+    ? cachedDiscoveryCatalogue(filters, snapshotId)
+    : undefined;
   const [state, setState] = useState<{
     key: string;
     catalogue?: PublishedCatalogue;
@@ -31,25 +37,41 @@ export function useDiscoveryIndex(
   useEffect(() => {
     if (!enabled) return;
     const controller = new AbortController();
-    setState({ key, loading: true, error: false });
-    void loadDiscoveryCatalogue(
-      Object.fromEntries(JSON.parse(key)) as typeof filters,
-      controller.signal,
-    )
+    const filters = Object.fromEntries(
+      JSON.parse(key),
+    ) as DiscoveryIndexFilters;
+    const catalogue = cachedDiscoveryCatalogue(filters, snapshotId);
+    if (catalogue) {
+      setState({ key: requestKey, catalogue, loading: false, error: false });
+      return;
+    }
+    setState({ key: requestKey, loading: true, error: false });
+    void loadDiscoveryCatalogue(filters, controller.signal, snapshotId)
       .then((catalogue) => {
         if (!controller.signal.aborted)
-          setState({ key, catalogue, loading: false, error: false });
+          setState({
+            key: requestKey,
+            catalogue,
+            loading: false,
+            error: false,
+          });
       })
       .catch(() => {
         if (!controller.signal.aborted)
-          setState({ key, loading: false, error: true });
+          setState({ key: requestKey, loading: false, error: true });
       });
     return () => controller.abort();
-  }, [key, enabled, revision]);
-  return enabled && key === state.key
+  }, [key, enabled, requestKey, snapshotId]);
+  return enabled && requestKey === state.key
     ? state
-    : { loading: enabled, error: false, catalogue: undefined };
+    : { loading: enabled && !cached, error: false, catalogue: cached };
 }
+
+type DiscoveryIndexFilters = Parameters<typeof loadDiscoveryCatalogue>[0];
+const assessments = new WeakMap<
+  PublishedCatalogue,
+  { key: string; discovery: Discovery }
+>();
 
 export function useDiscovery(
   plan: Plan | null | undefined,
@@ -57,19 +79,37 @@ export function useDiscovery(
   term: string,
   language: string,
 ) {
+  const key = JSON.stringify([plan, term, language]);
+  const cached = catalogue ? assessments.get(catalogue) : undefined;
+  const worker = useRef<Worker | null>(null);
+  const request = useRef(0);
   const [state, setState] = useState<{
     plan: Plan;
     catalogue: PublishedCatalogue;
     term: string;
     language: string;
+    key: string;
     discovery?: Discovery;
     error?: boolean;
   }>();
+  useEffect(
+    () => () => {
+      worker.current?.terminate();
+      worker.current = null;
+    },
+    [catalogue],
+  );
   useEffect(() => {
     if (!plan || !catalogue) return;
+    if (assessments.get(catalogue)?.key === key) return;
+    const calendars = assessments.get(catalogue)?.discovery.calendars;
     let active = true;
     const store = (result: { discovery?: Discovery; error?: boolean }) => {
-      if (active) setState({ plan, catalogue, term, language, ...result });
+      if (active) {
+        if (result.discovery)
+          assessments.set(catalogue, { key, discovery: result.discovery });
+        setState({ plan, catalogue, term, language, key, ...result });
+      }
     };
     // A worker keeps search, navigation and semester controls responsive while
     // evaluating every offering. Only tests/older environments use the fallback.
@@ -83,6 +123,7 @@ export function useDiscovery(
                 catalogue.courses,
                 term,
                 language,
+                calendars,
               ),
             });
         })
@@ -91,28 +132,45 @@ export function useDiscovery(
         active = false;
       };
     }
-    const worker = new Worker(new URL("./worker.ts", import.meta.url), {
-      type: "module",
+    const initialise = !worker.current;
+    const currentWorker = (worker.current ??= new Worker(
+      new URL("./worker.ts", import.meta.url),
+      {
+        type: "module",
+      },
+    ));
+    const requestId = ++request.current;
+    currentWorker.onmessage = (event) => {
+      if (event.data.requestId === requestId) store(event.data);
+    };
+    currentWorker.onerror = () => {
+      currentWorker.terminate();
+      worker.current = null;
+      store({ error: true });
+    };
+    currentWorker.postMessage({
+      requestId,
+      plan,
+      term,
+      language,
+      ...(initialise ? { courses: catalogue.courses, calendars } : {}),
     });
-    worker.onmessage = (event) => store(event.data);
-    worker.onerror = () => store({ error: true });
-    worker.postMessage({ plan, courses: catalogue.courses, term, language });
     return () => {
       active = false;
-      worker.terminate();
     };
-  }, [plan, catalogue, term, language]);
+  }, [plan, catalogue, term, language, key]);
   const current =
-    state?.plan === plan &&
+    state?.key === key &&
     state?.catalogue === catalogue &&
     state?.term === term &&
     state?.language === language
       ? state
       : undefined;
+  const discovery = cached?.key === key ? cached.discovery : current?.discovery;
   return {
-    discovery: current?.discovery,
+    discovery,
     error: current?.error,
-    loading: !!plan && !!catalogue && !current,
+    loading: !!plan && !!catalogue && !discovery && !current?.error,
   };
 }
 

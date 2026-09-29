@@ -459,7 +459,7 @@ export function DegreeSelectionForm({
           </p>
         )}
         {track && (!setupMode || structures.length > 1) && (
-          <label>
+          <label className="recipe-structure-field">
             {t.structure}
             <select
               aria-label={t.structure}
@@ -490,7 +490,7 @@ export function DegreeSelectionForm({
           </label>
         )}
         {setupMode && track && structures.length === 1 && layout && (
-          <p className="recipe-choice-summary">
+          <p className="recipe-choice-summary recipe-structure-field">
             {t.structure}:{" "}
             {layout.slots
               .map(

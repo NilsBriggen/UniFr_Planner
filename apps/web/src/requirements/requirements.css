@@ -318,6 +318,9 @@
   line-height: 1.5;
   color: var(--color-muted);
 }
+.recipe-structure-field {
+  grid-column: 1 / -1;
+}
 .recipe-chooser .planner-form > button {
   grid-column: 1 / -1;
 }

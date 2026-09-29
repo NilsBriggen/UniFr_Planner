@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, vi } from "vitest";
+import { clearDiscoveryCache } from "./planner/catalogue-loaders";
 
 // jsdom has no layout/scrolling; navigation scrolling is exercised in Playwright.
 window.scrollTo = vi.fn();
@@ -54,6 +55,7 @@ Object.defineProperty(window, "localStorage", {
 });
 afterEach(() => {
   cleanup();
+  clearDiscoveryCache();
   localStorage.clear();
   sessionStorage.clear();
 });

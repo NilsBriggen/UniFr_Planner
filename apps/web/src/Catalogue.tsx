@@ -133,7 +133,8 @@ function Provenance({
   const t = catalogueMessages[language];
   const warning = status.development_fixture
     ? t.fixture
-    : status.latest_sync_outcome?.startsWith("rejected")
+    : status.availability === "unavailable" &&
+        status.latest_sync_outcome?.startsWith("rejected")
       ? t.rejected
       : status.stale
         ? t.stale
@@ -162,7 +163,7 @@ function Provenance({
             · {t.age}: {Math.floor((status.age_seconds ?? 0) / 86400)} {t.days}
           </p>
         )}
-        {warning && (
+        {(warning || status.latest_sync_outcome?.startsWith("rejected")) && (
           <p>
             {status.development_fixture
               ? t.fixtureBody
@@ -766,6 +767,7 @@ function Search({
   const index = useDiscoveryIndex(
     indexFilters,
     !!plan && !!indexFilters.term && !invalid,
+    serverPage?.status.snapshot_id,
   );
   const assessed = useDiscovery(plan, index.catalogue, term, language);
   const discovery = assessed.discovery;
@@ -829,17 +831,18 @@ function Search({
         Math.max(0, Math.floor((filtered.length - 1) / 20) * 20),
       )
     : 0;
-  const page =
-    loading || findingMatches
-      ? undefined
-      : filtered && index.catalogue
-        ? {
-            status: index.catalogue.status,
-            items: ordered!.slice(offset, offset + 20),
-            offset,
-            limit: 20,
-            total: filtered.length,
-          }
+  const page = findingMatches
+    ? undefined
+    : filtered && index.catalogue
+      ? {
+          status: index.catalogue.status,
+          items: ordered!.slice(offset, offset + 20),
+          offset,
+          limit: 20,
+          total: filtered.length,
+        }
+      : loading
+        ? undefined
         : serverPage;
   const hasPage = !!page;
   useEffect(() => {
@@ -876,10 +879,23 @@ function Search({
       filterKeys.includes(key as (typeof filterKeys)[number]),
     ),
   ).toString();
-  useEffect(
-    () => setDraft(new URLSearchParams(appliedFilterKey)),
-    [appliedFilterKey],
-  );
+  const previousAppliedFilters = useRef(appliedFilterKey);
+  useEffect(() => {
+    const before = new URLSearchParams(previousAppliedFilters.current);
+    const after = new URLSearchParams(appliedFilterKey);
+    previousAppliedFilters.current = appliedFilterKey;
+    // Default-semester navigation can finish after typing has begun. Update only
+    // filters that actually changed in the URL, preserving other unsent edits.
+    setDraft((previous) => {
+      const next = new URLSearchParams(previous);
+      for (const key of filterKeys) {
+        if (before.get(key) === after.get(key)) continue;
+        if (after.has(key)) next.set(key, after.get(key)!);
+        else next.delete(key);
+      }
+      return next;
+    });
+  }, [appliedFilterKey]);
   const setDraftField = (key: string, value: string) =>
     setDraft((previous) => {
       const next = new URLSearchParams(previous);
@@ -1270,6 +1286,9 @@ function Search({
               }[language]
             }
           </p>
+        )}
+        {loading && !page && !findingMatches && (
+          <p role="status">{t.loading}</p>
         )}
         {(index.error || assessed.error) && (
           <p role="status">
@@ -1733,7 +1752,7 @@ export default function Catalogue({ language }: { language: Language }) {
         {title}
       </h1>
       {state.status && <Provenance status={state.status} language={language} />}
-      {state.loading && (
+      {state.loading && course_code && (
         <StatusNotice>
           <p>{t.loading}</p>
         </StatusNotice>

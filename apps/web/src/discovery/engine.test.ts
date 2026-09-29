@@ -73,6 +73,43 @@ it("requires configuration and never guesses recommendations from programme text
     filterDiscovery(result, { programme: true, fits: false, hideAdded: false }),
   ).toEqual([]);
 });
+
+it("reuses unchanged lesson previews while refreshing clashes and changed source dates", () => {
+  const p = plan();
+  const courses = [course("A", "First"), course("B", "Second")];
+  const key = offeringKey(courses[1].offerings[0]);
+  const first = discoverCourses(p, courses, "AS-2026", "en");
+  const before = first.assessments.get(key)!;
+  expect(before.fit).toBe("fits");
+  const selected = fromOffering(
+    courses[0].offerings[0],
+    "selected",
+    "test",
+    false,
+  );
+  selected.semester = "AS-2026";
+  selected.status = "planned";
+  p.scenarios[0].courses = [selected];
+  const updated = discoverCourses(p, courses, "AS-2026", "en", first.calendars);
+  expect(updated.assessments.get(key)!.calendar).toBe(before.calendar);
+  expect(updated.assessments.get(key)!.fit).toBe("conflict");
+  expect(updated).toEqual(discoverCourses(p, courses, "AS-2026", "en"));
+  courses[1].offerings[0].meetings[0].starts_at = "2026-09-22T08:00:00Z";
+  courses[1].offerings[0].meetings[0].ends_at = "2026-09-22T09:00:00Z";
+  const changed = discoverCourses(
+    p,
+    courses,
+    "AS-2026",
+    "en",
+    updated.calendars,
+  );
+  expect(changed.assessments.get(key)!.calendar).not.toBe(before.calendar);
+  expect(changed.assessments.get(key)!.fit).toBe("fits");
+  expect(changed).toEqual(discoverCourses(p, courses, "AS-2026", "en"));
+  expect(
+    discoverCourses(p, courses, "SS-2027", "fr", changed.calendars),
+  ).toEqual(discoverCourses(p, courses, "SS-2027", "fr"));
+});
 it("uses the complete result set before pagination", () => {
   const configured = publishedPlan();
   configured.scenarios[0].courses = [];
@@ -433,8 +470,12 @@ it.each(["planned", "unscheduled"] as const)(
     saved.attendance = attendanceChoice(saved, [1]);
     p.scenarios[0].courses = [saved];
     const before = JSON.stringify(saved);
-    const assess = () =>
-      discoverCourses(p, [c], "AS-2026", "en").assessments.get(offeringKey(o))!;
+    let calendars: ReturnType<typeof discoverCourses>["calendars"];
+    const assess = () => {
+      const result = discoverCourses(p, [c], "AS-2026", "en", calendars);
+      calendars = result.calendars;
+      return result.assessments.get(offeringKey(o))!;
+    };
     const a = assess();
     expect(a.calendar).toEqual(
       calendarFor(
