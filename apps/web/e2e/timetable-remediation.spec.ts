@@ -5,6 +5,7 @@ test("personal attendance, later weekday navigation and explicit semester print 
   page,
   isMobile,
 }, info) => {
+  await page.clock.setFixedTime(new Date("2026-09-22T12:00:00Z"));
   await page.addInitScript(() => localStorage.setItem("unifr.language", "en"));
   const plan = createPlan({
     id: "attendance-plan",
