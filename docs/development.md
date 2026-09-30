@@ -88,8 +88,8 @@ state. A view change must not mark the academic plan as changed.
 FastAPI service and persistence adapters. `packages/domain` contains the TypeScript
 academic/planning rules and Python domain modules. `packages/ingest` owns Python
 source adapters and ingestion. [Programme recipes](programme-recipes.md) describes
-configuration compilation and review boundaries. The supplied logo asset remains
-unchanged.
+configuration compilation and review boundaries. The planner's own mark and
+browser icons are documented in [the brand assets](../assets/brand/README.md).
 
 ## Checks
 

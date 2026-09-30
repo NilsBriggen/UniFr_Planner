@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 
 test("shell is accessible in each language and every navigation destination opens", async ({
   page,
@@ -39,23 +39,33 @@ test("shell is accessible in each language and every navigation destination open
   }
 });
 
-test("logo stays unchanged and the responsive shell has a visual baseline", async ({
+test("project branding loads and the responsive shell has a visual baseline", async ({
   page,
   request,
 }, testInfo) => {
   await page.addInitScript(() => localStorage.setItem("unifr.language", "de"));
-  const response = await request.get("/unifr-logo.png");
-  expect(
-    createHash("sha256")
-      .update(await response.body())
-      .digest("hex"),
-  ).toBe("25b77cd630c0719122273e085269bea29df9806ecbd24a3dd1b64d4de23b1ab1");
+  const response = await request.get("/planner-mark.png");
+  expect(response.ok()).toBe(true);
+  expect(await response.body()).toEqual(
+    await readFile(
+      new URL("../../../assets/brand/planner-mark.png", import.meta.url),
+    ),
+  );
   await page.goto("/");
-  const logo = page.getByRole("img", {
-    name: "Universität Freiburg / Université de Fribourg",
-  });
+  const logo = page.getByRole("link", { name: "UniFr Planner" }).locator("img");
+  await expect(logo).toBeVisible();
+  expect(
+    await logo.evaluate((element: HTMLImageElement) => element.naturalWidth),
+  ).toBe(256);
   const box = await logo.boundingBox();
-  expect(box!.width / box!.height).toBeCloseTo(500 / 82, 1);
+  expect(box!.width / box!.height).toBeCloseTo(1, 2);
+  for (const icon of await page
+    .locator('link[rel="icon"], link[rel="apple-touch-icon"]')
+    .all()) {
+    const iconResponse = await request.get((await icon.getAttribute("href"))!);
+    expect(iconResponse.ok()).toBe(true);
+    expect(iconResponse.headers()["content-type"]).toMatch(/^image\//);
+  }
   await expect(page).toHaveScreenshot("home.png", { animations: "disabled" });
   await page.goto("/semester/HS-2026");
   await page.getByRole("button", { name: "Tag", exact: true }).click();

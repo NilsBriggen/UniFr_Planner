@@ -250,12 +250,10 @@ function AppShell() {
       </a>
       <header className="header">
         <Link to="/" className="brand">
-          <img
-            src="/unifr-logo.png"
-            width="500"
-            height="82"
-            alt="Universität Freiburg / Université de Fribourg"
-          />
+          <img src="/planner-mark.png" width="52" height="52" alt="" />
+          <span className="brand-name">
+            UniFr <strong>Planner</strong>
+          </span>
         </Link>
         <div className="header-tools">
           <label className="plan-switcher">
