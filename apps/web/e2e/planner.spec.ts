@@ -245,7 +245,7 @@ for (const language of ["de", "fr", "en"] as const) {
     const futureSemester = page.locator("details.semester-column", {
       has: page.getByLabel(`${t.semester} · DEMO-001`, { exact: true }),
     });
-    await futureSemester.locator("summary").click();
+    await futureSemester.locator(":scope > summary").click();
     await expect(
       futureSemester.getByText(t.future, { exact: true }),
     ).toBeVisible();

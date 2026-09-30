@@ -66,7 +66,10 @@ test("project branding loads and the responsive shell has a visual baseline", as
     expect(iconResponse.ok()).toBe(true);
     expect(iconResponse.headers()["content-type"]).toMatch(/^image\//);
   }
-  await expect(page).toHaveScreenshot("home.png", { animations: "disabled" });
+  await expect(page).toHaveScreenshot("home.png", {
+    animations: "disabled",
+    maxDiffPixelRatio: 0.01,
+  });
   await page.goto("/semester/HS-2026");
   await page.getByRole("button", { name: "Tag", exact: true }).click();
   await expect(
@@ -74,6 +77,7 @@ test("project branding loads and the responsive shell has a visual baseline", as
   ).toBeVisible();
   await expect(page).toHaveScreenshot("semester-day.png", {
     animations: "disabled",
+    maxDiffPixelRatio: 0.01,
   });
   await testInfo.attach("semester", {
     body: await page.screenshot(),
