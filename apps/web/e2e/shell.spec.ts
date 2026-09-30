@@ -75,9 +75,14 @@ test("project branding loads and the responsive shell has a visual baseline", as
   await expect(
     page.getByText("Keine Veranstaltungen für diesen Tag."),
   ).toBeVisible();
+  await expect(logo).toHaveJSProperty("complete", true);
+  expect(
+    await logo.evaluate((element: HTMLImageElement) => element.naturalWidth),
+  ).toBe(256);
   await expect(page).toHaveScreenshot("semester-day.png", {
     animations: "disabled",
-    maxDiffPixelRatio: 0.01,
+    // Ubuntu's Arial fallback wraps the empty-state copy differently.
+    maxDiffPixelRatio: 0.05,
   });
   await testInfo.attach("semester", {
     body: await page.screenshot(),
