@@ -245,6 +245,9 @@ for (const language of ["de", "fr", "en"] as const) {
     const futureSemester = page.locator("details.semester-column", {
       has: page.getByLabel(`${t.semester} · DEMO-001`, { exact: true }),
     });
+    // Wait for React to move the course before opening its new semester.
+    // Otherwise this locator can still resolve to the old AS-2026 panel.
+    await expect(futureSemester).toHaveAttribute("aria-label", /2027/);
     await futureSemester.locator(":scope > summary").click();
     await expect(
       futureSemester.getByText(t.future, { exact: true }),
