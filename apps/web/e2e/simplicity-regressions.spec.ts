@@ -56,11 +56,11 @@ test("timetable remembers its date and view after visiting another destination",
   );
 });
 
-test("the university logo returns to the home route", async ({ page }) => {
+test("the planner logo returns to the home route", async ({ page }) => {
   await page.goto("/catalogue?q=Algebra");
   await page
     .getByRole("link", {
-      name: "Universität Freiburg / Université de Fribourg",
+      name: "UniFr Planner",
       exact: true,
     })
     .click();

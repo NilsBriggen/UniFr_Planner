@@ -239,6 +239,7 @@ test("share owner updates automatically while another guest can only import a co
     await recipient
       .getByRole("button", { name: "Import as my plan", exact: true })
       .click();
+    await recipient.getByLabel("Date", { exact: true }).fill("2026-09-21");
     await expect(
       recipient.locator(".timetable-grid .calendar-event"),
     ).toHaveCount(1);

@@ -14,7 +14,7 @@
 - The first verified programme templates cover Computer Science with Business Informatics for students entering from 2024 through 2026.
 - The catalogue sync runs daily at 05:00 in `Europe/Zurich` and never replaces the last valid snapshot with an incomplete import.
 - Guest planning works without an account; optional accounts synchronize plans without requiring an outgoing email service.
-- The interface uses the checked-in UniFr logo and follows the visual language currently used by UniFr.
+- The original first release used the checked-in UniFr logo. The 2026-09-30 brand update replaces it with the planner's own book/calendar mark and wordmark.
 - Unknown or unpublished meeting times are visibly unresolved and are never treated as conflict-free.
 - Sourced requirements, personal overrides, and unresolved interpretations remain visibly distinct.
 - The planner never claims that a plan is an official graduation decision.
@@ -151,7 +151,7 @@ Each suggestion states exactly what changes, which requirement it advances, its 
 
 ## 6. Interface and UniFr design language
 
-Use the downloaded public UniFr header asset from [`assets/brand/unifr-logo.png`](../../../assets/brand/unifr-logo.png). Its provenance and checksum remain in [`assets/brand/README.md`](../../../assets/brand/README.md). Copy it into the frontend build unchanged; do not redraw, recolour, crop, stretch, or separate its bilingual wordmark from the UniFr symbol.
+Updated 2026-09-30: use the planner's original book/calendar mark and the “UniFr Planner” wordmark. The user requested replacement of all university branding with the project's own identity. Assets and generation provenance are documented in [`assets/brand/README.md`](../../../assets/brand/README.md); the former university logo is no longer shipped.
 
 Create design tokens from the current UniFr corporate palette:
 
@@ -179,7 +179,7 @@ Routes:
 
 Meet WCAG 2.2 AA, including visible focus, keyboard operation, text alternatives, reduced motion, 44-pixel touch targets, and patterns/icons in addition to colour for status and conflicts.
 
-No outreach or brand-approval task blocks implementation. The running prototype uses the checked-in public logo. Any later formal review or asset replacement is handled by the project owner after the application works.
+No outreach or brand-approval task blocks implementation. The public logo used during the prototype was replaced with the planner's own identity on 2026-09-30.
 
 ## 7. Persistence and account model
 
@@ -323,6 +323,6 @@ Production acceptance uses a realistic student history and proves this complete 
 
 ## 12. Defaults and later expansion
 
-The first release uses manual completed-course entry, in-app change notifications, Arial, the checked-in public UniFr logo, a configurable 30-ECTS semester target, a 15-minute travel buffer, and guest-first onboarding.
+The first release used manual completed-course entry, in-app change notifications, Arial, the checked-in public UniFr logo, a configurable 30-ECTS semester target, a 15-minute travel buffer, and guest-first onboarding. The logo was replaced on 2026-09-30.
 
 After the first release is stable, add programme packs faculty by faculty using the same source/review workflow. Grade and attempt rules, transcript import, SWITCH edu-ID, MyUnifr integration, collaborative advising, and native mobile applications require separate designs and are not assumed by this plan.

@@ -1,17 +1,17 @@
-"""Check the shipped repository's authoritative brand asset and frontend copy."""
+"""Check the planner's own brand assets and frontend copy."""
 
 from hashlib import sha256
 from pathlib import Path
 
 REPOSITORY = Path(__file__).resolve().parents[3]
-SOURCE = REPOSITORY / "assets/brand/unifr-logo.png"
-PUBLIC_COPY = REPOSITORY / "apps/web/public/unifr-logo.png"
-REQUIRED_SHA256 = "25b77cd630c0719122273e085269bea29df9806ecbd24a3dd1b64d4de23b1ab1"
+SOURCE = REPOSITORY / "assets/brand/planner-mark.png"
+PUBLIC_COPY = REPOSITORY / "apps/web/public/planner-mark.png"
 
 
-def test_authoritative_logo_is_shipped_with_required_checksum():
-    assert SOURCE.is_file(), "The repository must ship assets/brand/unifr-logo.png"
-    assert sha256(SOURCE.read_bytes()).hexdigest() == REQUIRED_SHA256
+def test_project_logo_replaces_the_university_asset():
+    assert SOURCE.is_file(), "The repository must ship its own planner mark"
+    assert not (SOURCE.parent / "unifr-logo.png").exists()
+    assert not (PUBLIC_COPY.parent / "unifr-logo.png").exists()
 
 
 def test_frontend_logo_is_an_unchanged_copy_of_authoritative_asset():
@@ -24,5 +24,5 @@ def test_brand_provenance_is_shipped_with_source_and_checksum():
     provenance = REPOSITORY / "assets/brand/README.md"
     assert provenance.is_file(), "The repository must ship the brand provenance README"
     content = provenance.read_text(encoding="utf-8")
-    assert "https://cdn.unifr.ch/uf/v2.4.5/gfx/logo.png" in content
-    assert REQUIRED_SHA256 in content
+    assert SOURCE.name in content
+    assert sha256(SOURCE.read_bytes()).hexdigest() in content

@@ -56,7 +56,7 @@ describe("application shell", () => {
       screen.getByRole("link", { name: "Settings" }),
     );
   });
-  it("offers guest planning and the unchanged bilingual logo", () => {
+  it("offers guest planning and the project's own home logo", () => {
     mount();
     expect(
       screen.getByRole("heading", {
@@ -64,11 +64,12 @@ describe("application shell", () => {
         name: "Dein Studium. Dein Plan.",
       }),
     ).toBeVisible();
-    expect(
-      screen.getByRole("img", {
-        name: "Universität Freiburg / Université de Fribourg",
-      }),
-    ).toHaveAttribute("src", "/unifr-logo.png");
+    const brand = screen.getByRole("link", { name: "UniFr Planner" });
+    expect(brand).toHaveAttribute("href", "/");
+    expect(brand.querySelector("img")).toHaveAttribute(
+      "src",
+      "/planner-mark.png",
+    );
     expect(screen.getByText("Pläne auf diesem Gerät")).toBeVisible();
     expect(
       screen.getByRole("link", { name: "Planung starten" }),

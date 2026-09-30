@@ -110,13 +110,25 @@ p {
 .brand {
   display: flex;
   align-items: center;
+  gap: 10px;
   min-height: 44px;
   flex-shrink: 0;
+  text-decoration: none;
 }
 .brand img {
-  width: 264px;
-  height: auto;
+  width: 52px;
+  height: 52px;
   display: block;
+}
+.brand-name {
+  color: var(--color-blue);
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+.brand-name strong {
+  font-weight: 700;
 }
 .header-tools {
   display: flex;
@@ -604,9 +616,6 @@ input {
   .header {
     padding: 20px 24px;
   }
-  .brand img {
-    width: 240px;
-  }
   .header-tools {
     gap: 16px;
   }
@@ -626,7 +635,11 @@ input {
     gap: 4px;
   }
   .brand img {
-    width: min(280px, calc(100vw - 40px));
+    width: 48px;
+    height: 48px;
+  }
+  .brand-name {
+    font-size: 22px;
   }
   .header-tools {
     width: 100%;
